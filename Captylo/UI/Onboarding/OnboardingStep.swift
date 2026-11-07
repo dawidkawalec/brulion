@@ -1,12 +1,14 @@
 import Foundation
 
-/// The five resumable onboarding steps (brief 1.1), persisted by raw value in
-/// `AppSettings.onboardingStep` so a relaunch (for example after granting Accessibility)
-/// continues where the user left off. Pure value logic; the views live in `OnboardingSteps`.
+/// The six resumable onboarding steps (brief 1.1, plus "Pobierz Bielika" after the speech
+/// model, PRD 7.1), persisted by raw value in `AppSettings.onboardingStep` so a relaunch (for
+/// example after granting Accessibility) continues where the user left off. Pure value logic;
+/// the views live in `OnboardingSteps` and `BielikStep`.
 enum OnboardingStep: String, CaseIterable, Sendable, Identifiable {
     case welcome
     case permissions
     case model
+    case bielik
     case shortcut
     case tryIt = "tryit"
 
@@ -35,7 +37,7 @@ enum OnboardingStep: String, CaseIterable, Sendable, Identifiable {
         index > 0 ? Self.allCases[index - 1] : nil
     }
 
-    /// 0...1 fill of the progress bar: 1/5 on the first step, 1 on the last.
+    /// 0...1 fill of the progress bar: 1/6 on the first step, 1 on the last.
     var progress: Double {
         Double(index + 1) / Double(Self.allCases.count)
     }
@@ -45,6 +47,7 @@ enum OnboardingStep: String, CaseIterable, Sendable, Identifiable {
         case .welcome: return String(localized: "Witaj")
         case .permissions: return String(localized: "Uprawnienia")
         case .model: return String(localized: "Model")
+        case .bielik: return String(localized: "Bielik")
         case .shortcut: return String(localized: "Skrót")
         case .tryIt: return String(localized: "Wypróbuj")
         }
@@ -55,6 +58,7 @@ enum OnboardingStep: String, CaseIterable, Sendable, Identifiable {
         case .welcome: return "waveform"
         case .permissions: return "lock.shield"
         case .model: return "cpu"
+        case .bielik: return "brain"
         case .shortcut: return "keyboard"
         case .tryIt: return "text.cursor"
         }

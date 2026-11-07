@@ -107,6 +107,7 @@ struct OnboardingView: View {
         case .welcome: EmptyView()
         case .permissions: PermissionsStep(model: model)
         case .model: ModelStep(model: model)
+        case .bielik: BielikStep(model: model)
         case .shortcut: ShortcutStep(model: model)
         case .tryIt: TryItStep(model: model)
         }

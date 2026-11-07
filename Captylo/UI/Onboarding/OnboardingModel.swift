@@ -55,6 +55,20 @@ final class OnboardingModel {
         go(to: target)
     }
 
+    /// "Pobierz" on "Pobierz Bielika": starts the recommended models still missing (the downloads
+    /// go on in the background, also after the onboarding) and turns the dictation AI on, since
+    /// the user chose the local Bielik. `start` begins one download (the model store's).
+    /// Nothing happens when nothing can start (all in, or no room on the disk).
+    func downloadBielik(plan: BielikDownloadPlan, start: ((String) -> Void)? = nil) {
+        guard plan.canStart else { return }
+        let start = start ?? { [store = appState.localAI.store] id in store.download(id) }
+        for spec in plan.pending {
+            start(spec.id)
+        }
+        settings.aiEnabled = true
+        Log.ui.info("Onboarding: \(plan.pending.count) Bielik download(s) started")
+    }
+
     func skip() {
         Log.ui.info("Onboarding skipped on step \(self.step.rawValue, privacy: .public)")
         finish()

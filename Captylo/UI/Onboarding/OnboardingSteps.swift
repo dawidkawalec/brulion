@@ -299,8 +299,8 @@ struct ModelStep: View {
                 }
                 .accessibilityLabel(Text("Język transkrypcji"))
             }
-            // Transcription is local only. The AI models ("Pobierz Bielika") get their own
-            // onboarding step later, next to this one (see `OnboardingStep`).
+            // Transcription is local only. The AI models come next, in their own step
+            // ("Pobierz Bielika", `BielikStep`).
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

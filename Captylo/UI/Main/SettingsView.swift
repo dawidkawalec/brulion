@@ -102,6 +102,8 @@ struct SettingsView: View {
             )
         }
 
+        PrivacyPanel(cloudEnabled: settings.cloudAIEnabled)
+
         GlassPanel(spacing: 4) {
             sectionHeader("Aplikacja", systemImage: "macwindow")
             AppLanguageRow(appState: appState)

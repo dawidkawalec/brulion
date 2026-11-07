@@ -6793,29 +6793,434 @@
         "en": { "stringUnit": { "state": "translated", "value": "The local model is still being prepared, this text may arrive later than usual." } }
       }
     },
-    "Modele lokalne": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Local models" } }
-      }
-    },
-    "Bielik na tym Macu poprawi dyktowanie i obsłuży funkcje AI bez internetu. Pobieranie modeli pojawi się tutaj.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Bielik on this Mac will clean up your dictation and run the AI features offline. Model downloads will appear here." } }
-      }
-    },
     "Gdzie działa AI": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "Where the AI runs" } }
       }
     },
-    "Na tym Macu, gdy pobierzesz model lokalny": {
+    "%@ (zalecany)": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "On this Mac, once you download a local model" } }
+        "en": { "stringUnit": { "state": "translated", "value": "%@ (recommended)" } }
       }
     },
-    "Bielik w chmurze CloudFerro (%@), na Twój klucz": {
+    "%@ · %@ na dysku · ok. %@ RAM": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the CloudFerro cloud (%@), on your key" } }
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@ · %2$@ on disk · about %3$@ RAM" } }
+      }
+    },
+    "%@: %@ na tym Macu": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@: %2$@ on this Mac" } }
+      }
+    },
+    "%@: %@, jeszcze nie pobrany (bez AI)": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@: %2$@, not downloaded yet (no AI)" } }
+      }
+    },
+    "%@: Bielik w chmurze CloudFerro (%@), na Twój klucz": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@: Bielik in the CloudFerro cloud (%2$@), on your key" } }
+      }
+    },
+    "%@: Bielik w chmurze, wyłączony (bez AI)": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@: Bielik in the cloud, turned off (no AI)" } }
+      }
+    },
+    "%@: dokładniej, wolniej": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@: more accurate, slower" } }
+      }
+    },
+    "%@: może zabraknąć pamięci": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@: may run out of memory" } }
+      }
+    },
+    "Awarie serwera modelu": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Model server failures" } }
+      }
+    },
+    "Bez pobranego modelu dyktowanie działa dalej i wkleja surową transkrypcję.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Without a downloaded model dictation keeps working and pastes the raw transcript." } }
+      }
+    },
+    "Bez telemetrii, bez sprawdzania aktualizacji, bez konta. Dyktowania, notatki, spotkania i statystyki zostają na tym Macu.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No telemetry, no update check, no account. Dictations, notes, meetings and statistics stay on this Mac." } }
+      }
+    },
+    "Bielik": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik" } }
+      }
+    },
+    "Bielik jest gotowy do pracy.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik is ready to work." } }
+      }
+    },
+    "Bielik na tym Macu": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik on this Mac" } }
+      }
+    },
+    "Polski model językowy, który na tym Macu poprawia dyktowanie i obsługuje funkcje AI.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "A Polish language model that cleans up your dictation and runs the AI features on this Mac." } }
+      }
+    },
+    "Bielik w chmurze jest wyłączony albo nie ma klucza: ta rola działa bez AI, dopóki go nie włączysz poniżej.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the cloud is off or has no key: this role runs without AI until you turn it on below." } }
+      }
+    },
+    "Bielik w chmurze jest włączony: tekst do poprawienia i pytania o spotkania idą prosto do polskiej chmury CloudFerro.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the cloud is on: text to clean up and questions about meetings go straight to CloudFerro's Polish cloud." } }
+      }
+    },
+    "Chmura (Bielik 11B)": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cloud (Bielik 11B)" } }
+      }
+    },
+    "Czas korekty": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Correction time" } }
+      }
+    },
+    "Czyszczenie dyktowania, poprawki transkryptu spotkań, tytuły notatek.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Dictation cleanup, meeting transcript fixes, note titles." } }
+      }
+    },
+    "Dyktowania": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Dictations" } }
+      }
+    },
+    "Funkcje AI": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "AI features" } }
+      }
+    },
+    "Korekta dyktowania": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Dictation correction" } }
+      }
+    },
+    "Korekta i funkcje AI": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Correction and AI features" } }
+      }
+    },
+    "Korekty odrzucone przez strażnika": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Corrections rejected by the guard" } }
+      }
+    },
+    "Korekty przyjęte": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Corrections accepted" } }
+      }
+    },
+    "Który Bielik obsługuje każdą rolę. Zalecany wybór zależy od pamięci tego Maca.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Which Bielik serves each role. The recommended pick depends on this Mac's memory." } }
+      }
+    },
+    "Liczniki zaczną od zera. Jeśli chcesz je zachować, najpierw je wyeksportuj.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The counters start from zero. To keep them, export them first." } }
+      }
+    },
+    "Liczone od %@": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Counted since %@" } }
+      }
+    },
+    "Liczone tylko na tym Macu i nigdzie nie wysyłane. Eksport zapisuje same liczby, bez żadnego tekstu.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Counted only on this Mac and never sent anywhere. The export saves numbers only, no text at all." } }
+      }
+    },
+    "Modele AI": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "AI models" } }
+      }
+    },
+    "Modele pochodzą z oficjalnych repozytoriów SpeakLeash na Hugging Face. Tekst nie opuszcza Maca, dopóki nie włączysz Bielika w chmurze.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The models come from SpeakLeash's official Hugging Face repositories. Text never leaves the Mac unless you turn on Bielik in the cloud." } }
+      }
+    },
+    "Na tym Macu ten model może nie zmieścić się w pamięci obok innych aplikacji.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "On this Mac this model may not fit in memory next to other apps." } }
+      }
+    },
+    "Na tym Macu ten model może nie zmieścić się w pamięci.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "On this Mac this model may not fit in memory." } }
+      }
+    },
+    "Nic więcej": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Nothing else" } }
+      }
+    },
+    "Nie pobrano": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Not downloaded" } }
+      }
+    },
+    "Od 16 GB RAM korekta dyktowania i funkcje AI działają na tym Macu. Przy 8 GB korekta działa na Macu, a funkcje AI najlepiej w chmurze (Bielik w chmurze) albo słabiej na Bieliku 1.5B.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "With 16 GB of RAM or more, dictation correction and the AI features run on this Mac. With 8 GB the correction runs on the Mac and the AI features best in the cloud (Bielik in the cloud) or, weaker, on Bielik 1.5B." } }
+      }
+    },
+    "Odpowiedź modelu za bardzo różni się od dyktowania, więc zostaje oryginał.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The model's answer differs too much from the dictation, so the original stays." } }
+      }
+    },
+    "Odrzucono: zbyt duża zmiana treści": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Rejected: too much of the content changed" } }
+      }
+    },
+    "Piszę notatki, krok %lld z %lld...": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Writing the notes, step %1$lld of %2$lld..." } }
+      }
+    },
+    "Plik zajmuje %@. Funkcje, które go używają, będą działać bez AI, dopóki nie pobierzesz go ponownie.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The file takes %@. Features that use it will run without AI until you download it again." } }
+      }
+    },
+    "Po %lld min": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "After %lld min" } }
+      }
+    },
+    "Po tylu minutach bez użycia Bielik oddaje pamięć RAM. Następne użycie uruchamia go ponownie, co trwa kilka sekund.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "After this many minutes without use Bielik gives back its RAM. The next use starts it again, which takes a few seconds." } }
+      }
+    },
+    "Pobieram... %lld%% · %@ z %@": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Downloading... %1$lld%% · %2$@ of %3$@" } }
+      }
+    },
+    "Pobieram... %lld%% · %@ z %@ · zostało ok. %lld min": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Downloading... %1$lld%% · %2$@ of %3$@ · about %4$lld min left" } }
+      }
+    },
+    "Pobieranie trwa w tle, możesz przejść dalej.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The download runs in the background, you can go on." } }
+      }
+    },
+    "Pobierz (%@)": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Download (%@)" } }
+      }
+    },
+    "Pobierz Bielika": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Download Bielik" } }
+      }
+    },
+    "Pobierz zalecane": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Download recommended" } }
+      }
+    },
+    "Pobrano %@, pobieranie możesz wznowić.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%@ downloaded, you can resume the download." } }
+      }
+    },
+    "Pobrany": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Downloaded" } }
+      }
+    },
+    "Pomiń": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Skip" } }
+      }
+    },
+    "Szpak działa też bez AI: wklei wtedy surową transkrypcję.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Szpak works without AI too: it then pastes the raw transcript." } }
+      }
+    },
+    "Pozostałe tryby AI, własne prompty, Przetwórz przez AI, notatki ze spotkań i Zapytaj.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The other AI modes, your own prompts, Process with AI, meeting notes and Ask." } }
+      }
+    },
+    "Prywatność": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Privacy" } }
+      }
+    },
+    "Przekroczone limity czasu": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Time limits exceeded" } }
+      }
+    },
+    "Silnik, który zamienia mowę na tekst, i Bielik, który poprawia dyktowanie i obsługuje funkcje AI.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The engine that turns speech into text, and Bielik, which cleans up your dictation and runs the AI features." } }
+      }
+    },
+    "Spotkania z notatkami AI": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Meetings with AI notes" } }
+      }
+    },
+    "Sprawdzam pobrany plik...": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Checking the downloaded file..." } }
+      }
+    },
+    "Sprawdzam, czy plik jest kompletny (suma SHA-256)...": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Checking that the file is complete (SHA-256)..." } }
+      }
+    },
+    "Statystyki lokalnej AI": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Local AI statistics" } }
+      }
+    },
+    "Statystyki wyzerowane.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Statistics reset." } }
+      }
+    },
+    "Szpak łączy się z internetem tylko w tych dwóch sytuacjach:": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Szpak connects to the internet only in these two cases:" } }
+      }
+    },
+    "Ten model jeszcze się pobiera. Do tego czasu ta rola działa bez AI.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This model is still downloading. Until then this role runs without AI." } }
+      }
+    },
+    "Ten model nie jest pobrany. Pobierz go w zakładce Podstawowe, do tego czasu ta rola działa bez AI.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This model is not downloaded. Download it on the Basic tab; until then this role runs without AI." } }
+      }
+    },
+    "Teraz nieużywany": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Not used now" } }
+      }
+    },
+    "To spotkanie jest za długie, żeby zapytać o nie naraz. Zajrzyj do notatek AI albo zapytaj wszystkie spotkania.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This meeting is too long to ask about in one go. Look at the AI notes or ask all meetings." } }
+      }
+    },
+    "Twój Mac: %@ RAM": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Your Mac: %@ RAM" } }
+      }
+    },
+    "Twój Mac: %@ RAM, %@ wolnego miejsca": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Your Mac: %1$@ RAM, %2$@ free disk space" } }
+      }
+    },
+    "Tylko gdy włączysz Bielika w chmurze (Modele > Zaawansowane). Bez tego AI działa wyłącznie na tym Macu.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Only when you turn on Bielik in the cloud (Models > Advanced). Without it the AI runs only on this Mac." } }
+      }
+    },
+    "Tylko podczas pobierania modeli: Whisper do rozpoznawania mowy i Bielik do AI. Bez konta i bez ciasteczek.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Only while models download: Whisper for speech recognition and Bielik for the AI. No account and no cookies." } }
+      }
+    },
+    "Usunąć %@?": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Delete %@?" } }
+      }
+    },
+    "Użycia trybów AI": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "AI mode uses" } }
+      }
+    },
+    "Weryfikuję": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Verifying" } }
+      }
+    },
+    "Wyzerować statystyki?": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reset the statistics?" } }
+      }
+    },
+    "Wyzeruj": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Reset" } }
+      }
+    },
+    "Wyłączony": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Off" } }
+      }
+    },
+    "Włączony": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "On" } }
+      }
+    },
+    "Za mało miejsca na dysku. Szpak działa też bez AI.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Not enough disk space. Szpak works without AI too." } }
+      }
+    },
+    "Za mało wolnego miejsca na zalecane modele. Zwolnij miejsce na dysku albo pobierz tylko mniejszy model.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Not enough free space for the recommended models. Free up disk space or download only the smaller model." } }
+      }
+    },
+    "Zainstalowany": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Installed" } }
+      }
+    },
+    "Zalecany dla tego Maca (%@)": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recommended for this Mac (%@)" } }
+      }
+    },
+    "Zalecany zestaw dla tego Maca: %@ do pobrania, zostało %@.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Recommended set for this Mac: %1$@ to download, %2$@ left." } }
+      }
+    },
+    "Zwalniaj model z pamięci": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Free the model's memory" } }
+      }
+    },
+    "średnio %lld ms, p95 %lld ms": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "average %1$lld ms, p95 %2$lld ms" } }
       }
     },
     "OK, %@, %lld ms": {

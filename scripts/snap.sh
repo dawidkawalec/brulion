@@ -52,6 +52,11 @@
 #   CAPTYLO_PREVIEW_SIZE=<w>x<h>  passed through: main window size (tall captures of long pages)
 #   CAPTYLO_PREVIEW_SCROLL=<f>    passed through: a long page opens scrolled to `f` (0 top,
 #                             1 bottom), e.g. 0.45 shows "Spotkania" in main-ustawienia
+#   CAPTYLO_PREVIEW_LEVEL=advanced  passed through, main-modele / main-ustawienia: the page
+#                             opens on "Zaawansowane"
+#   CAPTYLO_PREVIEW_BIELIK=<s>    passed through, main-modele / onboarding-bielik: the Bielik
+#                             download states, `none`, `downloading` (default: 1.5B ready,
+#                             Minitron at 42 %) or `installed`
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -60,7 +65,7 @@ PRODUCT="${PRODUCT:-Szpak}"
 BIN="${CAPTYLO_BIN:-$ROOT/.local-build/Build/Products/Debug/$PRODUCT.app/Contents/MacOS/$PRODUCT}"
 SETTLE="${SNAP_SETTLE:-2.5}"
 DUSK="$ROOT/docs/design/backdrops/dusk-wallpaper.jpg"
-TARGETS="widget-compact widget-compact-mode widget-expanded widget-transcribing widget-enhancing onboarding-welcome onboarding-permissions onboarding-model onboarding-shortcut onboarding-tryit main-pulpit main-spotkania main-notatki main-historia main-plik main-slownik main-modele main-ustawienia glass-gallery popraw"
+TARGETS="widget-compact widget-compact-mode widget-expanded widget-transcribing widget-enhancing onboarding-welcome onboarding-permissions onboarding-model onboarding-bielik onboarding-shortcut onboarding-tryit main-pulpit main-spotkania main-notatki main-historia main-plik main-slownik main-modele main-ustawienia glass-gallery popraw"
 
 if [[ "${1:-}" == "--list" ]]; then
     tr ' ' '\n' <<<"$TARGETS"

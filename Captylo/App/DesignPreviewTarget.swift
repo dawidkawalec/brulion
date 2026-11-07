@@ -12,6 +12,8 @@ enum DesignPreviewTarget: String, CaseIterable, Sendable {
     case onboardingWelcome = "onboarding-welcome"
     case onboardingPermissions = "onboarding-permissions"
     case onboardingModel = "onboarding-model"
+    /// "Pobierz Bielika" with the download states of `CAPTYLO_PREVIEW_BIELIK`.
+    case onboardingBielik = "onboarding-bielik"
     case onboardingShortcut = "onboarding-shortcut"
     case onboardingTryIt = "onboarding-tryit"
     case mainPulpit = "main-pulpit"
@@ -51,6 +53,7 @@ enum DesignPreviewTarget: String, CaseIterable, Sendable {
         case .onboardingWelcome: return .onboarding(.welcome)
         case .onboardingPermissions: return .onboarding(.permissions)
         case .onboardingModel: return .onboarding(.model)
+        case .onboardingBielik: return .onboarding(.bielik)
         case .onboardingShortcut: return .onboarding(.shortcut)
         case .onboardingTryIt: return .onboarding(.tryIt)
         case .mainPulpit: return .main(.pulpit)

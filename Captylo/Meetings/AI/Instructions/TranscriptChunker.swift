@@ -7,8 +7,10 @@ import Foundation
 /// estimate from the UTF-8 length. Pure functions; `MeetingNotesWriter` runs the calls.
 enum TranscriptChunker {
     /// UTF-8 bytes per token of Polish meeting text, behind every estimate here. Lower counts
-    /// more tokens, so a smaller value is the safer side.
-    static let bytesPerToken = 3.0
+    /// more tokens, so a smaller value is the safer side. Measured with the Bielik v3 tokenizer
+    /// (llama-server `/tokenize`, Minitron 7B): 2.35 on a 44-minute transcript in the notes
+    /// layout, 2.43 on the notes system prompt; rounded down.
+    static let bytesPerToken = 2.3
     /// Input tokens one call may use, system prompt and data together (PRD 7.4).
     static let defaultInputBudget = 20_000
     /// Tokens the chat template and the rounding of the estimate may add.
@@ -29,14 +31,16 @@ enum TranscriptChunker {
     /// One call with `MeetingNotesPrompt.user` when it fits `budget` together with `system`;
     /// otherwise parts whose data, with `system`, each stay within it. Echo lines never go.
     /// A single line longer than a whole part goes alone in its own part (lines are never cut).
+    /// `closing` (`MeetingPrompts.notesReminder`) ends every user message after a blank line.
     static func plan(
         meeting: MeetingRecord,
         segments: [MeetingSegmentRecord],
         system: String,
+        closing: String = "",
         budget: Int = defaultInputBudget
     ) -> MeetingNotesPlan {
         let spoken = segments.filter { !$0.isEcho }.sorted { $0.start < $1.start }
-        let whole = MeetingNotesPrompt.user(meeting: meeting, segments: spoken)
+        let whole = appending(closing, to: MeetingNotesPrompt.user(meeting: meeting, segments: spoken))
         if fits(system: system, user: whole, budget: budget) {
             return .single(user: whole)
         }
@@ -44,8 +48,9 @@ enum TranscriptChunker {
         // Nothing to split (only a budget smaller than the frame gets here): one call anyway.
         guard !lines.isEmpty else { return .single(user: whole) }
         let header = header(meeting)
-        // The frame of a part at its longest: header, part line and the empty tags.
-        let frame = render(header: header, partLine: partLine(number: 99, count: 99, start: 359_999, end: 359_999), lines: [])
+        // The frame of a part at its longest: header, part line, the empty tags and the closing.
+        let longest = partLine(number: 99, count: 99, start: 359_999, end: 359_999)
+        let frame = appending(closing, to: render(header: header, partLine: longest, lines: []))
         let room = budget - estimatedTokens(system) - overheadTokens
         let limit = Int(Double(room) * bytesPerToken) - frame.utf8.count
         let groups = ranges(costs: lines.map { $0.text.utf8.count + 1 }, limit: limit)
@@ -63,7 +68,7 @@ enum TranscriptChunker {
                 start: start,
                 end: end,
                 segmentCount: spokenTimes.count,
-                user: render(header: header, partLine: line, lines: slice)
+                user: appending(closing, to: render(header: header, partLine: line, lines: slice))
             )
         }
         return .parts(parts)
@@ -104,14 +109,15 @@ enum TranscriptChunker {
     // MARK: Merge
 
     /// The data of a merge call: the meeting header, then the notes of each part (or of parts
-    /// merged before) in time order, each in `<part>` with its time span.
-    static func mergeUser(meeting: MeetingRecord, parts: [MeetingNotesPlan.PartNotes]) -> String {
+    /// merged before) in time order, each in `<part>` with its time span, then `closing`
+    /// (`MeetingPrompts.notesMergeReminder`) after a blank line.
+    static func mergeUser(meeting: MeetingRecord, parts: [MeetingNotesPlan.PartNotes], closing: String = "") -> String {
         var blocks = [header(meeting), "Notatki z \(parts.count) części spotkania, w kolejności czasu."]
         for (offset, part) in parts.enumerated() {
             let span = "Część \(offset + 1) z \(parts.count), od \(MeetingTime.stamp(part.start)) do \(MeetingTime.stamp(part.end)):"
             blocks.append("<part>\n\(span)\n\(part.markdown.trimmingCharacters(in: .whitespacesAndNewlines))\n</part>")
         }
-        return blocks.joined(separator: "\n")
+        return appending(closing, to: blocks.joined(separator: "\n"))
     }
 
     /// Neighbors whose notes fit one merge call within `budget`; every range has at least one
@@ -121,13 +127,14 @@ enum TranscriptChunker {
         _ parts: [MeetingNotesPlan.PartNotes],
         meeting: MeetingRecord,
         system: String,
+        closing: String = "",
         budget: Int = defaultInputBudget
     ) -> [Range<Int>] {
         guard parts.count > 1 else { return parts.isEmpty ? [] : [0..<1] }
-        if fits(system: system, user: mergeUser(meeting: meeting, parts: parts), budget: budget) {
+        if fits(system: system, user: mergeUser(meeting: meeting, parts: parts, closing: closing), budget: budget) {
             return [0..<parts.count]
         }
-        let frame = mergeUser(meeting: meeting, parts: []).utf8.count
+        let frame = mergeUser(meeting: meeting, parts: [], closing: closing).utf8.count
         let room = budget - estimatedTokens(system) - overheadTokens
         let limit = Int(Double(room) * bytesPerToken) - frame
         // Each part also carries its tags and span line.
@@ -141,6 +148,11 @@ enum TranscriptChunker {
     }
 
     // MARK: Pieces
+
+    /// `text`, then `closing` after a blank line; `text` alone when there is no closing.
+    static func appending(_ closing: String, to text: String) -> String {
+        closing.isEmpty ? text : text + "\n\n" + closing
+    }
 
     /// A transcript or note line as the prompt shows it, with its meeting time.
     private struct Line {

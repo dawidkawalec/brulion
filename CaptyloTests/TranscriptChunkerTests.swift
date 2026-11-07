@@ -46,13 +46,14 @@ struct TranscriptChunkerTests {
     // MARK: Estimate
 
     @Test func tokensAreEstimatedFromUTF8Length() {
-        #expect(TranscriptChunker.bytesPerToken == 3.0)
+        #expect(TranscriptChunker.bytesPerToken == 2.3)
         #expect(TranscriptChunker.defaultInputBudget == 20_000)
         #expect(TranscriptChunker.estimatedTokens("") == 0)
-        #expect(TranscriptChunker.estimatedTokens("abc") == 1)
+        #expect(TranscriptChunker.estimatedTokens("ab") == 1)
         #expect(TranscriptChunker.estimatedTokens("abcd") == 2)
-        // Polish letters are two bytes each.
-        #expect(TranscriptChunker.estimatedTokens("żółć") == 3)
+        #expect(TranscriptChunker.estimatedTokens("abcde") == 3)
+        // Polish letters are two bytes each: 8 bytes.
+        #expect(TranscriptChunker.estimatedTokens("żółć") == 4)
     }
 
     // MARK: Ranges
@@ -149,6 +150,23 @@ struct TranscriptChunkerTests {
         #expect(try #require(parts.last).user.contains("termin startu"))
     }
 
+    @Test func theClosingEndsEveryPartAndCountsInTheBudget() {
+        let (meeting, segments) = Self.meeting(lines: 240)
+        let closing = MeetingPrompts.notesReminder(templateID: "general")
+        let budget = 4_000
+        guard case .parts(let parts) = TranscriptChunker.plan(meeting: meeting, segments: segments, system: Self.system, closing: closing, budget: budget) else {
+            Issue.record("expected parts")
+            return
+        }
+        #expect(parts.allSatisfy { $0.user.hasSuffix("</transcript>\n\n" + closing) })
+        #expect(parts.allSatisfy { TranscriptChunker.fits(system: Self.system, user: $0.user, budget: budget) })
+        // A meeting that fits gets today's data with the closing after it.
+        let (short, few) = Self.meeting(lines: 10)
+        let single = TranscriptChunker.plan(meeting: short, segments: few, system: Self.system, closing: closing)
+        #expect(single == .single(user: MeetingNotesPrompt.user(meeting: short, segments: few.filter { !$0.isEcho }) + "\n\n" + closing))
+        #expect(TranscriptChunker.appending("", to: "x") == "x")
+    }
+
     @Test func oneGiantSegmentGetsAPartOfItsOwnAndStaysWhole() {
         let id = UUID()
         let meeting = MeetingRecord(id: id, title: "Monolog")
@@ -193,6 +211,8 @@ struct TranscriptChunkerTests {
         - Ewa: raport [1:02:05]
         </part>
         """)
+        let closed = TranscriptChunker.mergeUser(meeting: meeting, parts: [], closing: "Scal.")
+        #expect(closed.hasSuffix("w kolejności czasu.\n\nScal."))
     }
 
     @Test func mergeGroupsAlwaysShrink() {
@@ -205,7 +225,7 @@ struct TranscriptChunkerTests {
 
         let big = String(repeating: "- długi punkt notatek [1:00]\n", count: 200)
         let large = (0..<6).map { MeetingNotesPlan.PartNotes(start: Double($0), end: Double($0), markdown: big) }
-        let groups = TranscriptChunker.mergeGroups(large, meeting: meeting, system: mergeSystem, budget: 6_000)
+        let groups = TranscriptChunker.mergeGroups(large, meeting: meeting, system: mergeSystem, budget: 8_000)
         #expect(groups.count > 1 && groups.count < large.count)
         #expect(groups.flatMap { Array($0) } == Array(0..<6))
         // No two fit at all: pairs, so a round still halves them.
@@ -244,7 +264,9 @@ struct TranscriptChunkerTests {
         let made = await calls.made
         #expect(made.count == 1)
         #expect(made.first?.system == MeetingPrompts.notesSystem(templateID: "client", customInstructions: nil))
-        #expect(made.first?.user == MeetingNotesPrompt.user(meeting: meeting, segments: segments.filter { !$0.isEcho }))
+        // Today's data, then the reminder of the sections and the citations.
+        let reminder = MeetingPrompts.notesReminder(templateID: "client")
+        #expect(made.first?.user == MeetingNotesPrompt.user(meeting: meeting, segments: segments.filter { !$0.isEcho }) + "\n\n" + reminder)
         #expect(made.first?.maxTokens == MeetingNotesWriter.wholeMaxTokens)
         #expect(log.steps == [[0, 1], [1, 1]])
     }
@@ -266,10 +288,12 @@ struct TranscriptChunkerTests {
         let partCalls = made.filter { $0.system == partSystem }
         #expect(partCalls.count >= 3)
         #expect(partCalls.allSatisfy { $0.maxTokens == MeetingNotesWriter.partMaxTokens && $0.user.contains("Część ") })
+        #expect(partCalls.allSatisfy { $0.user.hasSuffix("\n\n" + MeetingPrompts.notesReminder(templateID: "standup")) })
         #expect(made.count == partCalls.count + 1)
         let merge = try #require(made.last)
         #expect(merge.system == mergeSystem)
         #expect(merge.maxTokens == MeetingNotesWriter.mergeMaxTokens)
+        #expect(merge.user.hasSuffix("</part>\n\n" + MeetingPrompts.notesMergeReminder(templateID: "standup")))
         for number in 1...partCalls.count {
             #expect(merge.user.contains("- notatki \(number) [0:00]"))
         }

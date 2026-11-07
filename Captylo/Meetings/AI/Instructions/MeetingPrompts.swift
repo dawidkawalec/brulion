@@ -2,10 +2,12 @@ import Foundation
 
 /// The system prompts of the meeting AI, open and in Polish, written for small local models
 /// (Bielik 7B for the notes and "Zapytaj", 1.5B for the transcript fixes): one job per prompt,
-/// numbered rules, the exact answer layout the app's parsers read, nothing made up, every
-/// point tied to a time of the transcript. The user message is the data the existing builders
-/// make (`MeetingNotesPrompt`, `MeetingCorrectionPrompt`, `MeetingAskPrompt`,
-/// `LibraryAskPrompt`, and `TranscriptChunker` for the parts of a long meeting).
+/// numbered rules, a worked example, the exact answer layout the app's parsers read, nothing
+/// made up, every point tied to a time of the transcript. The user message is the data the
+/// existing builders make (`MeetingNotesPrompt`, `MeetingCorrectionPrompt`, `MeetingAskPrompt`,
+/// `LibraryAskPrompt`, and `TranscriptChunker` for the parts of a long meeting), followed by the
+/// matching reminder below: a 7B model follows the layout and the citations far better when
+/// they are restated after a long transcript.
 enum MeetingPrompts {
     // MARK: Notes
 
@@ -16,15 +18,21 @@ enum MeetingPrompts {
     /// sections, never over the rules on facts and times.
     static func notesSystem(templateID: String, customInstructions: String?) -> String {
         let skeleton = MeetingNotesSkeleton.forTemplate(id: templateID)
-        let rules = [
-            "Pisz tylko to, co jest w transkrypcie albo w notatkach użytkownika. Nie wymyślaj faktów, liczb, nazwisk ani terminów.",
-            "Każdy punkt zakończ czasem linii transkryptu, z której pochodzi informacja, w nawiasie kwadratowym, np. [12:34] albo [1:02:03]. Przepisz ten czas dokładnie z początku linii. Nie podawaj czasów, których nie ma w transkrypcie.",
+        var rules = [
+            "Pisz tylko to, co jest w transkrypcie albo w notatkach użytkownika. Nie wymyślaj faktów, liczb, nazwisk, dat ani terminów.",
+            "Każdy punkt kończy się czasem w nawiasie kwadratowym: czasem z początku linii transkryptu, w której pada ta informacja, np. [12:34] albo [1:02:03]. Punkt bez czasu jest błędem. Czas to jeden moment, nigdy zakres. Każdy czas w osobnym nawiasie.",
+            "Jeden punkt to jedno krótkie zdanie, najwyżej 20 słów. Lepiej kilka krótkich punktów niż jeden długi, także w podsumowaniu.",
+        ]
+        if skeleton.sections.contains(where: \.isTasks) {
+            rules.append("W sekcji \(MeetingNotesSkeleton.tasksHeading) jedno zadanie to jeden punkt: \"Osoba: co zrobić, termin\". Gdy osoba ma kilka zadań, wpisz każde osobno.")
+        }
+        rules += [
             "Pisz w języku transkryptu, zwykle po polsku. Nagłówki przepisz dokładnie tak, jak są we wzorze.",
-            "Pisz zwięźle: jeden punkt to jedno krótkie zdanie. Bez wstępu i bez komentarza na końcu.",
             "Osoby nazywaj tak jak w transkrypcie: imieniem, \"Ja\" albo \"Mówca 2\".",
-            "Pomiń sekcję, do której nic nie pasuje. Nie pisz \"brak\".",
+            "Pomiń sekcję, do której nic nie pasuje. Nie pisz \"brak\". Bez wstępu i bez komentarza na końcu.",
             "Gdy dane mówią, że to część dłuższego spotkania, pisz tylko o tej części.",
-        ] + skeleton.extraRules
+        ]
+        rules += skeleton.extraRules
         return [
             "Piszesz notatki ze spotkania na podstawie transkryptu. Rodzaj spotkania: \(skeleton.focus)",
             """
@@ -35,6 +43,14 @@ enum MeetingPrompts {
             """,
             sectionList(skeleton),
             numbered("Zasady:", rules),
+            """
+            Przykład, jak z linii transkryptu powstają punkty (inne spotkanie):
+            [3:10] Ja: Proponuję przesunąć premierę katalogu na maj.
+            [3:18] Ewa: Zgoda, maj. Przygotuję nowy plan do piątku.
+            Punkty:
+            - Premiera katalogu przesunięta na maj [3:18]
+            - Ewa: nowy plan premiery, do piątku [3:18]
+            """,
             layout(skeleton),
             custom(customInstructions),
         ]
@@ -42,22 +58,35 @@ enum MeetingPrompts {
         .joined(separator: "\n\n")
     }
 
+    /// Goes after the data of a notes call (`MeetingNotesWriter` adds it): the sections and the
+    /// citation rule once more, where the model reads them last.
+    static func notesReminder(templateID: String) -> String {
+        let skeleton = MeetingNotesSkeleton.forTemplate(id: templateID)
+        let headings = skeleton.sections.map(\.heading).joined(separator: ", ")
+        return "Napisz teraz notatki z powyższych danych według wzoru z instrukcji, z sekcjami: \(headings). Każdy punkt to jedno krótkie zdanie zakończone czasem linii transkryptu w nawiasie kwadratowym, np. [12:34]."
+    }
+
     /// One set of notes from the notes of a long meeting's parts (`TranscriptChunker.mergeUser`),
     /// same sections and layout as `notesSystem`, each point once.
     static func notesMergeSystem(templateID: String, customInstructions: String?) -> String {
         let skeleton = MeetingNotesSkeleton.forTemplate(id: templateID)
-        let rules = [
+        let hasTasks = skeleton.sections.contains(where: \.isTasks)
+        var rules = [
             "Używaj tylko treści z notatek części. Niczego nie dopisuj.",
-            "Każdy punkt zakończ czasem w nawiasie kwadratowym, przepisanym dokładnie z notatek części, np. [12:34] albo [1:02:03].",
-            "Połącz punkty z tych samych sekcji. Ten sam fakt, decyzję albo zadanie zapisz tylko raz, z najwcześniejszym czasem.",
-            "Gdy późniejsza część zmienia wcześniejsze ustalenie, np. termin albo kwotę, zostaw wersję z późniejszej części i jej czas.",
-            skeleton.sections.contains(where: \.isTasks)
-                ? "Podsumowanie napisz od nowa dla całego spotkania, krótko. Zadania wypisz wszystkie."
-                : "Podsumowanie napisz od nowa dla całego spotkania, krótko.",
+            "Każdy punkt kończy się czasem w nawiasie kwadratowym, przepisanym dokładnie z notatek części, np. [12:34] albo [1:02:03]. Każdy czas w osobnym nawiasie.",
+            "Ten sam fakt, decyzję albo zadanie zapisz tylko raz, z najwcześniejszym czasem.",
+            "Gdy późniejsza część zmienia wcześniejsze ustalenie, np. termin albo kwotę, zostaw tylko wersję z późniejszej części i jej czas.",
+            "Podsumowanie napisz od nowa dla całego spotkania: 3-7 krótkich punktów.",
+        ]
+        if hasTasks {
+            rules.append("Jedno zadanie to jeden punkt: \"Osoba: co zrobić, termin\". Zadań nie łącz w jeden punkt. Wypisz wszystkie zadania.")
+        }
+        rules += [
             "Pisz o spotkaniu jako całości. Nie wspominaj o częściach.",
             "Pisz w języku notatek, zwykle po polsku. Nagłówki przepisz dokładnie tak, jak są we wzorze.",
-            "Pomiń sekcję, do której nic nie pasuje. Nie pisz \"brak\".",
-        ] + skeleton.extraRules
+            "Pomiń sekcję, do której nic nie pasuje. Nie pisz \"brak\". Bez wstępu i bez komentarza na końcu.",
+        ]
+        rules += skeleton.extraRules
         return [
             "Scalasz notatki z kolejnych części jednego długiego spotkania w jedne notatki. Rodzaj spotkania: \(skeleton.focus)",
             "Dane: nagłówek spotkania, potem notatki z kolejnych części w kolejności czasu, każda w <part>.",
@@ -68,6 +97,13 @@ enum MeetingPrompts {
         ]
         .compactMap { $0 }
         .joined(separator: "\n\n")
+    }
+
+    /// Goes after the data of a merge call (`MeetingNotesWriter` adds it).
+    static func notesMergeReminder(templateID: String) -> String {
+        let skeleton = MeetingNotesSkeleton.forTemplate(id: templateID)
+        let headings = skeleton.sections.map(\.heading).joined(separator: ", ")
+        return "Scal teraz te notatki w jedne według wzoru z instrukcji, z sekcjami: \(headings). Każdą informację zapisz raz, jako krótki punkt zakończony czasem z notatek części w nawiasie kwadratowym, np. [12:34]."
     }
 
     // MARK: Transcript fixes
@@ -99,9 +135,10 @@ enum MeetingPrompts {
 
     // MARK: Zapytaj
 
-    /// "Zapytaj" about one meeting (`MeetingAskPrompt.user`): a short answer from the transcript
-    /// and notes only, each claim cited with its line's `[mm:ss]` (`MeetingCitations`), exactly
-    /// `MeetingAskPrompt.notFound` (or its English twin) when the meeting has no answer.
+    /// "Zapytaj" about one meeting (`MeetingAskPrompt.user`, then `askReminder`): a short answer
+    /// from the transcript and notes only, each claim cited with its line's `[mm:ss]`
+    /// (`MeetingCitations`), exactly `MeetingAskPrompt.notFound` (or, asked in English, its
+    /// English twin) when the meeting has no answer.
     static func askSystem() -> String {
         """
         Odpowiadasz na pytanie o jedno spotkanie, tylko na podstawie jego transkryptu i notatek.
@@ -114,19 +151,31 @@ enum MeetingPrompts {
         - <question>: pytanie, na które odpowiadasz.
 
         Zasady:
-        1. Odpowiadaj tylko na podstawie transkryptu i notatek. Nie zgaduj i nie dodawaj wiedzy spoza spotkania.
-        2. Po każdym zdaniu albo punkcie podaj czas linii, z której pochodzi informacja, w nawiasie kwadratowym, np. [12:34] albo [1:02:03]. Przepisz czas dokładnie z transkryptu.
-        3. Odpowiadaj krótko: 1-3 zdania albo krótka lista z punktami "- ". Bez wstępu.
-        4. Odpowiadaj w języku pytania.
-        5. Gdy w spotkaniu nie ma odpowiedzi, napisz dokładnie: \(MeetingAskPrompt.notFound)
-        Gdy pytanie jest po angielsku, napisz wtedy dokładnie: \(MeetingAskPrompt.notFoundEnglish)
+        1. Odpowiedź musi wynikać wprost z konkretnych linii transkryptu albo notatek. Nie zgaduj, nie myl podobnych rzeczy i nie dodawaj wiedzy spoza spotkania.
+        2. Po każdym zdaniu albo punkcie podaj czas linii, z której pochodzi informacja, w nawiasie kwadratowym, np. [12:34] albo [1:02:03]. Każdy czas w osobnym nawiasie, np. [4:52] [5:10]. Przepisz czas dokładnie z transkryptu.
+        3. Odpowiadaj krótko, własnymi słowami: 1-3 zdania albo krótka lista z punktami "- ". Bez wstępu. Nie przepisuj linii transkryptu.
+        4. Odpowiadaj w języku pytania: na pytanie po polsku po polsku, na pytanie po angielsku po angielsku.
+        5. Gdy spotkanie nie mówi o tym wprost, napisz tylko jedno zdanie: \(MeetingAskPrompt.notFound)
+        Na pytanie po angielsku to zdanie brzmi: \(MeetingAskPrompt.notFoundEnglish)
+
+        Przykład (inne spotkanie):
+        [2:10] Ewa: Stany magazynowe liczymy w programie Stock.
+        Pytanie: Jakiego programu do faktur używają?
+        Odpowiedź: \(MeetingAskPrompt.notFound)
+        Pytanie: Gdzie liczą stany magazynowe?
+        Odpowiedź: W programie Stock [2:10].
         """
     }
 
-    /// "Zapytaj wszystkie spotkania" (`LibraryAskPrompt.user`): a short answer from the
-    /// excerpts and notes it is given, each claim cited as `[S1 12:34]`, `[S1]` or `[N1]`
-    /// (`LibraryCitation`), exactly `LibraryAskPrompt.notFound` (or its English twin) when
-    /// nothing has the answer.
+    /// Goes after the data of a "Zapytaj" call, after `</question>`.
+    static func askReminder() -> String {
+        "Odpowiedz krótko, w języku pytania, na pytanie z <question>, tylko na podstawie tego spotkania, z czasem linii w nawiasie kwadratowym po każdym zdaniu, np. [12:34]. Gdy spotkanie nie mówi o tym wprost, napisz tylko: \(MeetingAskPrompt.notFound)"
+    }
+
+    /// "Zapytaj wszystkie spotkania" (`LibraryAskPrompt.user`, then `libraryAskReminder`): a
+    /// short answer from the excerpts and notes it is given, each claim cited as `[S1 12:34]`,
+    /// `[S1]` or `[N1]` (`LibraryCitation`), exactly `LibraryAskPrompt.notFound` (or, asked in
+    /// English, its English twin) when nothing has the answer.
     static func libraryAskSystem() -> String {
         """
         Odpowiadasz na pytanie o spotkania i notatki użytkownika, tylko na podstawie podanych danych.
@@ -138,31 +187,55 @@ enum MeetingPrompts {
         - <question>: pytanie, na które odpowiadasz.
 
         Zasady:
-        1. Odpowiadaj tylko na podstawie tych danych. Nie zgaduj i nie dodawaj wiedzy spoza nich.
-        2. Po każdym zdaniu albo punkcie podaj źródło w nawiasie kwadratowym: [S1 12:34] dla spotkania S1 i czasu z jego fragmentu albo notatek AI, [S1] gdy nie ma czasu, [N1] dla notatki N1. Numery i czasy przepisz dokładnie.
+        1. Odpowiedź musi wynikać wprost z tych danych. Nie zgaduj, nie myl podobnych rzeczy i nie dopisuj szczegółów, których w nich nie ma, np. roku.
+        2. Po każdym zdaniu albo punkcie podaj źródło w nawiasie kwadratowym. Informacja z linii z czasem: numer spotkania i ten czas, np. [S1 12:34]. Samo [S1] tylko wtedy, gdy przy informacji nie ma czasu. Notatka N1: [N1]. Każde źródło w osobnym nawiasie.
         3. Gdy odpowiedź pochodzi z kilku spotkań, podaj przy każdej informacji datę albo tytuł spotkania.
         4. Odpowiadaj krótko: 1-4 zdania albo krótka lista z punktami "- ". Bez wstępu.
-        5. Odpowiadaj w języku pytania.
-        6. Gdy w danych nie ma odpowiedzi, napisz dokładnie: \(LibraryAskPrompt.notFound)
-        Gdy pytanie jest po angielsku, napisz wtedy dokładnie: \(LibraryAskPrompt.notFoundEnglish)
+        5. Odpowiadaj w języku pytania: na pytanie po polsku po polsku, na pytanie po angielsku po angielsku.
+        6. Gdy dane nie mówią o tym wprost, napisz tylko jedno zdanie: \(LibraryAskPrompt.notFound)
+        Na pytanie po angielsku to zdanie brzmi: \(LibraryAskPrompt.notFoundEnglish)
+
+        Przykład (inne dane):
+        S2: Kampania jesienna, 3 października 2026 10:00
+        <excerpts>
+        [14:05] Ewa: Na kampanię dajemy dwadzieścia tysięcy.
+        </excerpts>
+        N1: Hasła, 2 października 2026 9:00
+        Kod do sejfu: 4512.
+        Pytanie: Ile wydajemy na kampanię i jaki jest kod do sejfu?
+        Odpowiedź: Na kampanię jesienną 20 tys. zł [S2 14:05]. Kod do sejfu to 4512 [N1].
         """
+    }
+
+    /// Goes after the data of a "Zapytaj wszystkie spotkania" call, after `</question>`.
+    static func libraryAskReminder() -> String {
+        "Odpowiedz krótko, w języku pytania, na pytanie z <question>, tylko na podstawie tych danych, ze źródłem w nawiasie kwadratowym po każdym zdaniu: numer spotkania z czasem linii, np. [S1 12:34], albo notatka, np. [N1]. Gdy dane nie mówią o tym wprost, napisz tylko: \(LibraryAskPrompt.notFound)"
     }
 
     // MARK: Pieces
 
-    /// "Sekcje (w tej kolejności):" with each heading and its guide.
+    /// "Sekcje, w tej kolejności:" with each heading and its guide.
     private static func sectionList(_ skeleton: MeetingNotesSkeleton) -> String {
         let lines = skeleton.sections.map { "- \($0.heading): \($0.guide)" }
         return (["Sekcje, w tej kolejności:"] + lines).joined(separator: "\n")
     }
 
-    /// The exact answer layout: every heading with one sample row, a task row for "Zadania".
-    /// `[czas]` stands for a stamp so the model never copies a made-up time.
+    /// The exact answer layout: every heading with sample rows (two in the first section and
+    /// two tasks of one person, so the model sees short points and one task per row). `[czas]`
+    /// stands for a stamp so the model never copies a made-up time.
     private static func layout(_ skeleton: MeetingNotesSkeleton, timesFrom source: String = "z transkryptu") -> String {
         var lines = ["Wzór odpowiedzi (sam Markdown: nagłówki \"## \", punkty \"- \", po każdym punkcie [czas] zamieniony na czas \(source)):"]
-        for section in skeleton.sections {
+        for (index, section) in skeleton.sections.enumerated() {
             lines.append("## \(section.heading)")
-            lines.append(section.isTasks ? "- Osoba: co zrobić, termin [czas]" : "- Jedna informacja w jednym zdaniu [czas]")
+            if section.isTasks {
+                lines.append("- Osoba: pierwsze zadanie, termin [czas]")
+                lines.append("- Osoba: drugie zadanie tej samej osoby [czas]")
+            } else if index == 0 {
+                lines.append("- Pierwsza najważniejsza sprawa w jednym zdaniu [czas]")
+                lines.append("- Druga najważniejsza sprawa w jednym zdaniu [czas]")
+            } else {
+                lines.append("- Jedna informacja w jednym zdaniu [czas]")
+            }
         }
         return lines.joined(separator: "\n")
     }

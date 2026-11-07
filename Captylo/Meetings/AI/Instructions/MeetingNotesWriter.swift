@@ -29,7 +29,8 @@ enum MeetingNotesWriter {
         complete: Complete
     ) async throws -> String {
         let system = MeetingPrompts.notesSystem(templateID: templateID, customInstructions: customInstructions)
-        switch TranscriptChunker.plan(meeting: meeting, segments: segments, system: system, budget: budget) {
+        let reminder = MeetingPrompts.notesReminder(templateID: templateID)
+        switch TranscriptChunker.plan(meeting: meeting, segments: segments, system: system, closing: reminder, budget: budget) {
         case .single(let user):
             progress?(0, 1)
             let notes = try await complete(system, user, wholeMaxTokens)
@@ -38,6 +39,7 @@ enum MeetingNotesWriter {
 
         case .parts(let parts):
             let mergeSystem = MeetingPrompts.notesMergeSystem(templateID: templateID, customInstructions: customInstructions)
+            let mergeReminder = MeetingPrompts.notesMergeReminder(templateID: templateID)
             var done = 0
             var total = parts.count + 1
             progress?(done, total)
@@ -50,7 +52,7 @@ enum MeetingNotesWriter {
                 progress?(done, total)
             }
             while notes.count > 1 {
-                let groups = TranscriptChunker.mergeGroups(notes, meeting: meeting, system: mergeSystem, budget: budget)
+                let groups = TranscriptChunker.mergeGroups(notes, meeting: meeting, system: mergeSystem, closing: mergeReminder, budget: budget)
                 // This round's merges, plus one more round when it leaves several notes.
                 total = done + groups.filter { $0.count > 1 }.count + (groups.count > 1 ? 1 : 0)
                 progress?(done, total)
@@ -62,7 +64,7 @@ enum MeetingNotesWriter {
                         continue
                     }
                     try Task.checkCancellation()
-                    let user = TranscriptChunker.mergeUser(meeting: meeting, parts: slice)
+                    let user = TranscriptChunker.mergeUser(meeting: meeting, parts: slice, closing: mergeReminder)
                     let markdown = try await complete(mergeSystem, user, mergeMaxTokens)
                     merged.append(MeetingNotesPlan.PartNotes(start: first.start, end: last.end, markdown: markdown))
                     done += 1

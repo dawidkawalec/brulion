@@ -21,7 +21,13 @@ struct MeetingInstructionsTests {
             MeetingPrompts.correctionSystem(),
             MeetingPrompts.askSystem(),
             MeetingPrompts.libraryAskSystem(),
-        ]
+        ] + reminders
+    }
+
+    private static var reminders: [String] {
+        builtInIDs.flatMap { id in
+            [MeetingPrompts.notesReminder(templateID: id), MeetingPrompts.notesMergeReminder(templateID: id)]
+        } + [MeetingPrompts.askReminder(), MeetingPrompts.libraryAskReminder()]
     }
 
     // MARK: Notes
@@ -73,9 +79,12 @@ struct MeetingInstructionsTests {
             #expect(document.sections.allSatisfy { section in
                 section.items.allSatisfy { $0.line.citations == [65] && !$0.line.text.contains("[") }
             })
-            let taskSections = skeleton.sections.filter(\.isTasks).count
-            #expect(document.tasks.count == taskSections)
-            #expect(MeetingNotesParser.actionItems(in: layout).count == taskSections)
+            // Two sample tasks of one person: one task per row.
+            let taskRows = 2 * skeleton.sections.filter(\.isTasks).count
+            #expect(document.tasks.count == taskRows)
+            #expect(MeetingNotesParser.actionItems(in: layout).count == taskRows)
+            // Short points: two sample rows under the first heading.
+            #expect(document.sections.first?.items.count == 2)
         }
     }
 
@@ -93,6 +102,26 @@ struct MeetingInstructionsTests {
             #expect(merge.contains("<part>"))
             #expect(merge.contains("tylko raz"))
         }
+    }
+
+    @Test func notesRemindersRepeatTheSectionsAndTheCitationRule() {
+        for id in Self.builtInIDs {
+            let headings = MeetingNotesSkeleton.forTemplate(id: id).sections.map(\.heading).joined(separator: ", ")
+            for reminder in [MeetingPrompts.notesReminder(templateID: id), MeetingPrompts.notesMergeReminder(templateID: id)] {
+                #expect(reminder.contains("z sekcjami: \(headings)."))
+                #expect(reminder.contains("[12:34]"))
+            }
+        }
+    }
+
+    /// The worked example in the notes prompt shows rows the parsers read as cited points.
+    @Test func notesExampleRowsAreCitedPoints() throws {
+        let prompt = MeetingPrompts.notesSystem(templateID: "general", customInstructions: nil)
+        let start = try #require(prompt.range(of: "Punkty:\n"))
+        let end = try #require(prompt.range(of: "\n\n", range: start.upperBound..<prompt.endIndex))
+        let rows = MeetingNotesDocument(markdown: String(prompt[start.upperBound..<end.lowerBound])).sections.flatMap(\.items)
+        #expect(rows.count == 2)
+        #expect(rows.allSatisfy { $0.line.citations == [198] })
     }
 
     @Test func customInstructionsGoLastAndTrimmed() {
@@ -131,23 +160,29 @@ struct MeetingInstructionsTests {
     @Test func askPromptCitesStampsAndEndsWithTheExactNotFound() {
         let prompt = MeetingPrompts.askSystem()
         #expect(prompt.contains("[12:34]"))
-        #expect(prompt.contains("napisz dokładnie: \(MeetingAskPrompt.notFound)"))
-        #expect(prompt.contains("napisz wtedy dokładnie: \(MeetingAskPrompt.notFoundEnglish)"))
+        #expect(prompt.contains("Każdy czas w osobnym nawiasie"))
+        #expect(prompt.contains("napisz tylko jedno zdanie: \(MeetingAskPrompt.notFound)"))
+        #expect(prompt.contains("to zdanie brzmi: \(MeetingAskPrompt.notFoundEnglish)"))
         #expect(prompt.contains("<previous_questions>"))
-        #expect(MeetingCitations.split("Tak [12:34]").citations == [754])
+        // The worked example: the exact not-found sentence, and a cited answer.
+        #expect(prompt.contains("Odpowiedź: \(MeetingAskPrompt.notFound)\n"))
+        #expect(MeetingCitations.split("W programie Stock [2:10].").citations == [130])
+        let reminder = MeetingPrompts.askReminder()
+        #expect(reminder.hasSuffix("napisz tylko: \(MeetingAskPrompt.notFound)"))
+        #expect(reminder.contains("[12:34]"))
     }
 
     @Test func libraryPromptCitesSourcesTheWayLibraryCitationReads() {
         let prompt = MeetingPrompts.libraryAskSystem()
-        #expect(prompt.contains("napisz dokładnie: \(LibraryAskPrompt.notFound)"))
-        #expect(prompt.contains("napisz wtedy dokładnie: \(LibraryAskPrompt.notFoundEnglish)"))
+        #expect(prompt.contains("napisz tylko jedno zdanie: \(LibraryAskPrompt.notFound)"))
+        #expect(prompt.contains("to zdanie brzmi: \(LibraryAskPrompt.notFoundEnglish)"))
+        #expect(MeetingPrompts.libraryAskReminder().hasSuffix("napisz tylko: \(LibraryAskPrompt.notFound)"))
         for tag in ["<meetings>", "<excerpts>", "<ai_notes>", "<notes>", "Dzisiaj"] {
             #expect(prompt.contains(tag))
         }
-        let meeting = UUID()
-        let note = UUID()
-        let citations = LibraryCitation.parse(prompt, meetings: [meeting], notes: [note])
-        #expect(citations.map(\.label) == ["S1 12:34", "S1", "N1"])
+        // The rule's forms, then the worked example's answer.
+        let citations = LibraryCitation.parse(prompt, meetings: [UUID(), UUID()], notes: [UUID()])
+        #expect(citations.map(\.label) == ["S1 12:34", "S1", "N1", "S2 14:05", "N1"])
     }
 
     // MARK: Every prompt
@@ -160,9 +195,9 @@ struct MeetingInstructionsTests {
     }
 
     @Test func promptsStayShortForASmallModel() {
-        // About 1k tokens at most, so the data keeps the context.
+        // About 1.1k real tokens at most (1.2k estimated), so the data keeps the context.
         for prompt in Self.allPrompts {
-            #expect(TranscriptChunker.estimatedTokens(prompt) < 1_200)
+            #expect(TranscriptChunker.estimatedTokens(prompt) < 1_400)
         }
         #expect(MeetingPrompts.correctionSystem().utf8.count < 1_200)
     }

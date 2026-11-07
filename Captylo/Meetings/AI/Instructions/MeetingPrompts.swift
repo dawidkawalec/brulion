@@ -111,25 +111,30 @@ enum MeetingPrompts {
     /// "Poprawiaj transkrypt przez AI" on the small model: every line back as `numer|tekst`
     /// (`MeetingCorrectionPrompt.parse`), fixed but never shortened, merged or reworded. All
     /// lines, not only the changed ones: copying with fixes is what a 1.5B model does reliably,
-    /// the parser keeps only lines that differ, and an answer is never empty.
+    /// the parser keeps only lines that differ, and an answer is never empty. The scope is
+    /// narrow on purpose (punctuation, capitals, typos, glossary spellings): in trials the 1.5B
+    /// model asked to fix "misheard words" swapped correct words and changed the meaning.
     static func correctionSystem() -> String {
         """
         Poprawiasz transkrypt z automatycznego rozpoznawania mowy. Każda linia ma format numer|tekst.
 
         Zasady:
-        1. Popraw tylko błędy: interpunkcję, wielkie litery, literówki i źle rozpoznane słowa. Nazwy i terminy pisz tak jak w słowniku.
-        2. Nie zmieniaj sensu. Nie skracaj, nie streszczaj, nie tłumacz i niczego nie dopisuj.
-        3. Każdą linię przepisz osobno, z tym samym numerem. Nie łącz i nie dziel linii.
-        4. Zwróć wszystkie linie, także te bez zmian, w formacie numer|tekst. Bez komentarzy.
+        1. Poprawiaj tylko interpunkcję, wielkie litery i literówki, np. brakujące polskie znaki. Nazwy i terminy ze słownika pisz dokładnie tak jak w słowniku.
+        2. Nie zmieniaj poprawnych słów ani ich form. Nie skracaj, nie streszczaj, nie tłumacz i niczego nie dopisuj.
+        3. Pytanie zostaje pytaniem. Poprawna linia zostaje bez zmian.
+        4. Każdą linię przepisz osobno, z tym samym numerem. Nie łącz i nie dziel linii.
+        5. Zwróć wszystkie linie, także te bez zmian, w formacie numer|tekst. Bez komentarzy.
 
         Przykład:
         Słownik: Kowalski
         Transkrypt:
         1|no to w piątek wysyłamy oferte do pana kowalskiego
-        2|dobrze
+        2|Dobrze, zrobię to jutro.
+        3|anno akceptujesz
         Odpowiedź:
         1|No to w piątek wysyłamy ofertę do pana Kowalskiego.
-        2|Dobrze.
+        2|Dobrze, zrobię to jutro.
+        3|Anno, akceptujesz?
         """
     }
 

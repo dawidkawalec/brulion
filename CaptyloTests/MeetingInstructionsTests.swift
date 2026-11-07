@@ -149,12 +149,17 @@ struct MeetingInstructionsTests {
     @Test func correctionPromptAsksForTheParsedLineFormat() {
         let prompt = MeetingPrompts.correctionSystem()
         #expect(prompt.contains("numer|tekst"))
-        #expect(prompt.contains("Nie zmieniaj sensu"))
+        #expect(prompt.contains("Nie zmieniaj poprawnych słów"))
+        #expect(prompt.contains("Pytanie zostaje pytaniem"))
         #expect(prompt.contains("Nie łącz i nie dziel linii"))
         // The example answer is what `MeetingCorrectionPrompt.parse` reads.
         let parts = prompt.components(separatedBy: "Odpowiedź:\n")
         #expect(parts.count == 2)
-        #expect(MeetingCorrectionPrompt.parse(parts.last ?? "") == [1: "No to w piątek wysyłamy ofertę do pana Kowalskiego.", 2: "Dobrze."])
+        #expect(MeetingCorrectionPrompt.parse(parts.last ?? "") == [
+            1: "No to w piątek wysyłamy ofertę do pana Kowalskiego.",
+            2: "Dobrze, zrobię to jutro.",
+            3: "Anno, akceptujesz?",
+        ])
     }
 
     @Test func askPromptCitesStampsAndEndsWithTheExactNotFound() {
@@ -183,6 +188,63 @@ struct MeetingInstructionsTests {
         // The rule's forms, then the worked example's answer.
         let citations = LibraryCitation.parse(prompt, meetings: [UUID(), UUID()], notes: [UUID()])
         #expect(citations.map(\.label) == ["S1 12:34", "S1", "N1", "S2 14:05", "N1"])
+    }
+
+    // MARK: Correction guard
+
+    /// Fixes of punctuation, case, diacritics, spacing and glossary spellings pass.
+    @Test func correctionGuardKeepsFormFixes() {
+        let glossary = ["BramTech", "TestFlight", "FitLine", "Agnieszka Mazur"]
+        let safe: [(String, String)] = [
+            ("proponuje przenieść płatności", "Proponuję przenieść płatności."),
+            ("nie mam wyjścia akceptuję ale prosze", "Nie mam wyjścia, akceptuję, ale proszę."),
+            ("w tedy kod musi być podpisany", "Wtedy kod musi być podpisany."),
+            ("to dla nas na prawdę ważne", "To dla nas naprawdę ważne."),
+            ("bramki dostarcza firma bram tek", "Bramki dostarcza firma BramTech."),
+            ("betę na test flajt dla klubowiczów", "Betę na TestFlight dla klubowiczów."),
+            ("w aplikacji fitlajn", "W aplikacji FitLine."),
+            ("dzwoniła agnieszka mazur", "Dzwoniła Agnieszka Mazur."),
+            ("Dobrze, zrobię to jutro.", "Dobrze, zrobię to jutro."),
+        ]
+        for (original, fixed) in safe {
+            #expect(CorrectionGuard.isSafe(original: original, fixed: fixed, glossary: glossary), "\(fixed)")
+        }
+    }
+
+    /// Changes the 1.5B model made in the trials, and summaries, are refused.
+    @Test func correctionGuardRefusesWordChanges() {
+        let glossary = ["Kasa Plus", "BramTech", "TestFlight"]
+        let unsafe: [(String, String)] = [
+            // Not the glossary spelling: the line keeps its own words.
+            ("betę na test flajt", "Betę na Test Flight."),
+            ("czat z trenerem to osiemnaście tysięcy", "Czas z trenerem to osiemnaście tysięcy."),
+            ("mamy system kasowy Kasa Plus", "Mamy system kasowy Kas Plus."),
+            ("Czy Kasa Plus ma API?", "Czy Kas a Plus ma API?"),
+            ("Integracja z kasą może poczekać.", "Integracja z kas a Plus może poczekać."),
+            ("Rozmawiałam z sześcioma osobami.", "Rozmawialam z sześcioma osobami."),
+            ("Integracja z kasą może poczekać.", "Integracja z Kasa Plus może poczekać."),
+            ("Tak, zapiszę to jako otwartą sprawę.", "Tak, zapisałem to jako otwartą sprawę."),
+            ("Dzień dobry wszystkim, zaczynamy.", "Dzień dobry wszsytkim, zaczynamy."),
+            ("proponuje przenieść płatności agnieszko akceptujesz", "Proponuję przenieść płatności. Agnieszka akceptuje."),
+            ("mamy dziś kilka tematów stan sprintu bramki i harmonogram", "Mamy dziś kilka tematów."),
+            ("To zróbmy ulubione kluby.", "To zróbmy ulubione kluby i przypomnienia dwie godziny przed."),
+            ("firma bram tek", "Firma Bram Tek Plus."),
+            ("coś", ""),
+        ]
+        for (original, fixed) in unsafe {
+            #expect(!CorrectionGuard.isSafe(original: original, fixed: fixed, glossary: glossary), "\(fixed)")
+        }
+    }
+
+    @Test func correctionGuardFoldsPolishLetters() {
+        #expect(CorrectionGuard.fold("Łódź, Żółć!") == "lodzzolc")
+        #expect(CorrectionGuard.words("  Ja: proszę -  tak? ") == ["ja", "prosze", "tak"])
+        #expect(CorrectionGuard.distance("bramtek", "bramtech") == 2)
+        #expect(CorrectionGuard.distance("", "abc") == 3)
+        #expect(CorrectionGuard.distance("kasa", "kasa") == 0)
+        #expect(CorrectionGuard.keepsPolishLetters("prosze", "proszę"))
+        #expect(!CorrectionGuard.keepsPolishLetters("rozmawiałam", "rozmawialam"))
+        #expect(!CorrectionGuard.keepsPolishLetters("zrobię", "zrobie"))
     }
 
     // MARK: Citation repair

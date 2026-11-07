@@ -1,9 +1,9 @@
 import Foundation
 import os
 
-/// "Zapytaj wszystkie spotkania" (Pro): finds the meetings that talk about the question in the
-/// search index (`context`), sends the excerpts of the best eight to the meetings model with the
-/// user's AI key or through the Pro relay (`LibraryAskPrompt`, one non-streaming call on `HTTP.meetingLLMSession`, like
+/// "Zapytaj wszystkie spotkania": finds the meetings that talk about the question in the
+/// search index (`context`), sends the excerpts of the best eight to the stronger model
+/// (`MeetingAITask.libraryAsk`, `LibraryAskPrompt`, one non-streaming call on `HTTP.meetingLLMSession`, like
 /// the one-meeting ask) and returns the answer with its sources. Nothing matched: the
 /// `noHitsAnswer` without an AI call. Nothing is stored. Never logs the question or the answer.
 actor LibraryAsker {
@@ -21,24 +21,21 @@ actor LibraryAsker {
     private let database: Database
     private let index: MeetingSearchIndex
     private let chat: MeetingChat
-    private let routeProvider: @Sendable () async -> AIRoute?
     private let now: @Sendable () -> Date
     private let calendar: Calendar
 
-    /// - Parameter route: the Pro relay, or nil (`noKey`).
     /// - Parameter calendar: what "wczoraj" or "w tym tygodniu" means (`LibraryAskRetrieval.period`).
     init(
         database: Database,
         index: MeetingSearchIndex,
         session: URLSession = HTTP.meetingLLMSession,
-        route: @escaping @Sendable () async -> AIRoute?,
+        routes: any AIRouteProviding,
         now: @escaping @Sendable () -> Date = { Date() },
         calendar: Calendar = LibraryAskRetrieval.calendar
     ) {
         self.database = database
         self.index = index
-        chat = MeetingChat(session: session)
-        routeProvider = route
+        chat = MeetingChat(session: session, routes: routes)
         self.now = now
         self.calendar = calendar
     }
@@ -62,10 +59,10 @@ actor LibraryAsker {
                 result.answer = Self.noHitsAnswer
                 return result
             }
-            let route = try await MeetingChat.resolve(routeProvider)
+            let route = try await chat.route(for: .libraryAsk)
             let user = LibraryAskPrompt.user(context: context, question: trimmed, now: now())
             let started = ContinuousClock.now
-            let reply = try await chat.complete(route: route, task: CaptyloAITask(kind: .libraryAsk), user: user, maxTokens: Self.maxTokens)
+            let reply = try await chat.complete(route: route, task: .libraryAsk, user: user, maxTokens: Self.maxTokens)
             if reply.finishReason == "length" {
                 Log.enhancement.notice("Library answer reached the \(Self.maxTokens) token cap")
             }

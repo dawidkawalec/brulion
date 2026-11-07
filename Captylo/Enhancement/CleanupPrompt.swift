@@ -1,6 +1,6 @@
 import Foundation
 
-/// System prompt for the OpenRouter cleanup call. The user message is the transcript alone.
+/// System prompt for the cleanup call. The user message is the transcript alone.
 enum CleanupPrompt {
     static let dictionaryPlaceholder = "{DICTIONARY}"
     static let maxTerms = 150

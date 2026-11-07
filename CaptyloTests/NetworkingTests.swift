@@ -37,7 +37,7 @@ struct NetworkingTests {
         defer { StubURLProtocol.unregister(baseURL) }
         let session = StubURLProtocol.makeSession()
         let prewarmer = Prewarmer()
-        let request = URLRequest(url: baseURL.appending(path: "auth/key"))
+        let request = URLRequest(url: baseURL.appending(path: "models"))
 
         await prewarmer.fire(request, using: session, minInterval: .seconds(20))
         await prewarmer.fire(request, using: session, minInterval: .seconds(20))
@@ -83,9 +83,9 @@ struct NetworkingTests {
     }
 
     @Test func keyStoreSeedSkipsTheKeychain() {
-        let store = KeyStore(service: "com.captylo.app.tests", seed: ["openrouter": "sk-test"])
-        #expect(store.get(KeyStore.Account.openRouter) == "sk-test")
-        #expect(KeyStore.Account.openRouter == "openrouter")
+        let store = KeyStore(service: "com.captylo.app.tests", seed: ["cloudferro-sherlock": "sk-test"])
+        #expect(store.get(KeyStore.Account.cloudFerroSherlock) == "sk-test")
+        #expect(KeyStore.Account.cloudFerroSherlock == "cloudferro-sherlock")
     }
 
     @Test func keyStoreCachesOnlyDefiniteAnswers() {
@@ -112,10 +112,10 @@ struct NetworkingTests {
             gate.wait()
             return KeyStore.ReadResult(value: "sk-late", status: errSecSuccess)
         }
-        #expect(await store.load("openrouter", timeout: .milliseconds(50)) == .timedOut)
+        #expect(await store.load("cloudferro-sherlock", timeout: .milliseconds(50)) == .timedOut)
         gate.signal()
         // The abandoned read still lands in the cache.
-        #expect(await store.load("openrouter") == .value("sk-late"))
+        #expect(await store.load("cloudferro-sherlock") == .value("sk-late"))
     }
 
     @Test func keyStoreLookupTellsAMissingItemFromAnUnreadableOne() async {

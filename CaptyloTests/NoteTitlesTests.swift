@@ -19,7 +19,7 @@ private final class TitleFakeEnhancer: TextEnhancing, Sendable {
         return outcome
     }
 
-    func prewarm() async {}
+    func prewarm(_ role: AIRole) async {}
 }
 
 private final class TitleNoRouter: TranscriptionRouting, Sendable {

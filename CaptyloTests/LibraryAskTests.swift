@@ -7,7 +7,7 @@ import Testing
 /// the prompt, the `[S1 12:34]` citations, `LibraryAsker` over the stubbed network and the
 /// session list in `MeetingAskRuns`.
 struct LibraryAskTests {
-    private static let model = Enhancer.relayModelPlaceholder
+    private static let model = "bielik-minitron-test"
 
     private static func chat(_ content: String) -> String {
         let escaped = content
@@ -204,17 +204,16 @@ struct LibraryAskTests {
     private static func asker(
         _ fixture: Fixture,
         index: MeetingSearchIndex? = nil,
-        key: String? = "sk-or-test",
+        key: String? = "local-token",
         now: Date = Date(timeIntervalSince1970: 1_790_000_000),
         _ handler: @escaping StubURLProtocol.Handler
     ) -> (LibraryAsker, URL) {
-        let baseURL = StubURLProtocol.register(handler)
-        let client = OpenRouterClient(baseURL: baseURL)
+        let (route, baseURL) = AIRouteFixtures.stubRoute(model: model, key: key ?? "", handler)
         let asker = LibraryAsker(
             database: fixture.database,
             index: index ?? fixture.index,
             session: StubURLProtocol.makeSession(),
-            route: { key.map { AIRoute(client: client, key: $0, model: nil) } },
+            routes: FakeAIRoutes(key == nil ? nil : route),
             now: { now },
             calendar: Self.utc
         )
@@ -443,8 +442,8 @@ struct LibraryAskTests {
 
     // MARK: Prompt
 
-    /// The relay asks the model for exactly these answers: they must match the server's.
-    @Test func notFoundAnswersMatchTheRelay() {
+    /// The instructions ask the model for exactly these answers: keep both sides in step.
+    @Test func notFoundAnswersStayFixed() {
         #expect(LibraryAskPrompt.notFound == "Nie znalazłem tego w spotkaniach.")
         #expect(LibraryAskPrompt.notFoundEnglish == "I couldn't find that in your meetings.")
     }
@@ -558,8 +557,9 @@ struct LibraryAskTests {
         let body = seen.withLock { $0 }
         let messages = Self.messages(body)
         #expect(messages.count == 1)
-        let task = (try? JSONSerialization.jsonObject(with: body)) as? [String: Any]
-        #expect((task?["captylo_task"] as? [String: Any])?["kind"] as? String == "library_ask")
+        let json = (try? JSONSerialization.jsonObject(with: body)) as? [String: Any]
+        #expect(json?["captylo_task"] == nil)
+        #expect(json?["model"] as? String == Self.model)
         let user = try #require(messages.last)
         #expect(user.contains("S1: Budżet Q4"))
         #expect(user.contains("[0:10] Rozmówcy: Na test LinkedIn mamy pięć tysięcy."))
@@ -587,8 +587,8 @@ struct LibraryAskTests {
         defer { StubURLProtocol.unregister(secondURL) }
         let failed = try #require(await rejected.ask(question: "Ile na reklamy?"))
         #expect(failed.answer == nil)
-        // The relay's 401 is a session it no longer accepts: no access, as without Pro.
-        #expect(failed.error == MeetingSummaryError.noKey.errorDescription)
+        // A rejected key reads the same as everywhere else in the app.
+        #expect(failed.error == ChatCompletionsError.unauthorized.errorDescription)
     }
 
     // MARK: Notes (1.0.16)
@@ -609,7 +609,7 @@ struct LibraryAskTests {
         #expect(user.contains(String(repeating: "b", count: LibraryAskPrompt.noteBodyLimit) + "...\n</notes>"))
         #expect(user.range(of: "</meetings>")!.lowerBound < user.range(of: "<notes>")!.lowerBound)
         #expect(user.hasSuffix("<question>\nJaki kod?\n</question>"))
-        // No notes: no empty block (the relay prompt of older apps stays the same).
+        // No notes: no empty block.
         let plain = LibraryAskPrompt.user(context: LibraryAskContext(sources: context.sources, notesOnly: false), question: "?", now: created)
         #expect(!plain.contains("<notes>"))
     }

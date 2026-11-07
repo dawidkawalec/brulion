@@ -42,9 +42,9 @@ final class AppState {
     @ObservationIgnored let keyStore: KeyStore
     @ObservationIgnored let transcriptionRouter: TranscriptionRouter
 
-    // AI cleanup
-    @ObservationIgnored let openRouter: OpenRouterClient
-    @ObservationIgnored let openRouterModels: OpenRouterModels
+    // AI
+    /// Where every AI request goes (dictation, notes, history, meetings): see "AI routes" in `init`.
+    @ObservationIgnored let aiRoutes: any AIRouteProviding
     @ObservationIgnored let enhancer: Enhancer
     /// Off the hot path ("Przetwórz przez AI", "Testuj tryb"): the file session, a 15 s
     /// deadline and the file token cap, with the same model as dictation.
@@ -149,9 +149,9 @@ final class AppState {
     }
 
     @ObservationIgnored private let hotkeyRelay: HotkeyRelay
-    /// The dictation AI route runs off the main actor, so it reads this snapshot of `settings.aiModel`.
-    @ObservationIgnored private let aiModelSnapshot: OSAllocatedUnfairLock<String>
-    @ObservationIgnored private let aiCaptyloSnapshot: OSAllocatedUnfairLock<Bool>
+    /// The AI routes run off the main actor, so the cloud route reads this snapshot of
+    /// `settings.cloudAIEnabled` and `settings.cloudAIModel`.
+    @ObservationIgnored private let cloudAISnapshot: OSAllocatedUnfairLock<CloudAIRouteProvider.Configuration>
     @ObservationIgnored private var wakeObserver: (any NSObjectProtocol)?
     /// ⌃⌥⌘M, registered while "Skrót ⌃⌥⌘M" is on (`applyMeetingShortcut`).
     @ObservationIgnored private var meetingShortcut: GlobalShortcut?
@@ -196,14 +196,6 @@ final class AppState {
         self.account = account
         let access = ProAccess(settings: settings, account: account, pinned: overrides.pinnedPro)
         proAccess = access
-        // Every cloud request: own key -> vendor, else the Pro session -> relay, else no route.
-        let openRouter = OpenRouterClient()
-        self.openRouter = openRouter
-        let cloudRouter = CloudRouter(
-            keyStore: keyStore,
-            accountToken: { timeout in await account.relayToken(timeout: timeout) },
-            aiClient: openRouter
-        )
 
         // Transcription is local only (Whisper on this Mac).
         transcriptionRouter = TranscriptionRouter(
@@ -212,32 +204,23 @@ final class AppState {
             localReady: { engine.state == .ready }
         )
 
-        // AI cleanup
-        openRouterModels = OpenRouterModels(settings: settings, client: openRouter)
-        let modelSnapshot = OSAllocatedUnfairLock(initialState: settings.aiModel)
-        aiModelSnapshot = modelSnapshot
-        let captyloSnapshot = OSAllocatedUnfairLock(initialState: settings.aiCaptylo)
-        aiCaptyloSnapshot = captyloSnapshot
-        let modelsCache = settings.openRouterModelsCacheReader
-        let reasoningPolicy: @Sendable (String) -> ReasoningPolicy = { ReasoningPolicy.lookup($0, inCache: modelsCache()) }
-        // Dictation, files and "Testuj tryb": Captylo AI in Pro while it is chosen in Modele,
-        // else the model chosen there with the own key (or the relay without one).
-        let dictationRoute: @Sendable (Duration) async -> KeyStore.Lookup<AIRoute> = { timeout in
-            await cloudRouter.aiRoute(
-                timeout: timeout,
-                model: modelSnapshot.withLock { $0 },
-                preferRelay: captyloSnapshot.withLock { $0 }
-            )
-        }
-        enhancer = Enhancer(
-            client: openRouter,
-            route: dictationRoute,
-            reasoningProvider: reasoningPolicy
-        )
+        // MARK: AI routes (the one place)
+        // Every AI request asks `aiRoutes` for its role (`AIRole`): dictation, files, notes,
+        // history, the style profile and the meeting AI. Today that is only "Bielik w chmurze"
+        // (CloudFerro Sherlock on the user's key, off by default). The local model server's
+        // provider (Captylo/LocalAI) goes in front of it here at integration, so a request uses
+        // the local model and falls back to the cloud only when the user turned it on.
+        let cloudSnapshot = OSAllocatedUnfairLock(initialState: settings.cloudAIConfiguration)
+        cloudAISnapshot = cloudSnapshot
+        let cloudRoutes = CloudAIRouteProvider(keyStore: keyStore, configuration: { cloudSnapshot.withLock { $0 } })
+        let routes: any AIRouteProviding = cloudRoutes
+        aiRoutes = routes
+
+        // AI on the dictation path (the mode's deadline) and off it ("Przetwórz przez AI",
+        // "Testuj tryb", the style profile: the file session, 15 s, the file token cap).
+        enhancer = Enhancer(routes: routes)
         utilityEnhancer = Enhancer(
-            client: openRouter,
-            route: dictationRoute,
-            reasoningProvider: reasoningPolicy,
+            routes: routes,
             session: HTTP.fileLLMSession,
             deadline: FileTranscriptionQueue.enhancementDeadline,
             tokenCap: FileTranscriptionQueue.enhancementTokenCap
@@ -260,9 +243,9 @@ final class AppState {
         // Meetings: nothing records until the user starts a meeting (the design preview and the
         // test host never do), and never without the speech model on disk. The VAD loads once,
         // on the first meeting, and serves both tracks. After a meeting stops, in the background:
-        // speaker labels (Pro, macOS 15+; the diarizer loads on first use), the AI fixes of the transcript (Pro,
-        // setting) and the AI notes (Pro), both as "Captylo AI" on the Pro relay (`meetingRoute`),
-        // so the notes see "Mówca N" and the fixed text.
+        // speaker labels (Pro, macOS 15+; the diarizer loads on first use), the AI fixes of the
+        // transcript (setting, the correction model) and the AI notes (the features model), both
+        // on `aiRoutes`, so the notes see "Mówca N" and the fixed text.
         let meetingVAD = SpeechDetectorCache { try await FluidSpeechDetector.load() }
         let detectorStatus = SpeechDetectorStatus(load: { try await meetingVAD.prewarm() }, pinned: overrides.pinnedSpeechDetectorStatus)
         speechDetectorStatus = detectorStatus
@@ -272,16 +255,6 @@ final class AppState {
         }
         let dictionaryStore = dictionary
         let meetingVocabulary: @Sendable () async -> [String] = { @MainActor in dictionaryStore.data.vocabulary }
-        // The Pro relay only (own keys are for dictation). Off the hot path: a longer wait than
-        // dictation, still bounded if an ACL prompt hangs.
-        let meetingRoute: @Sendable () async -> AIRoute? = {
-            switch await cloudRouter.relayAIRoute(timeout: .seconds(10)) {
-            case .value(let route): return route
-            case .timedOut:
-                Log.enhancement.error("Meeting AI: the account token did not come in time")
-                return nil
-            }
-        }
         let speakerLabels = SpeakerLabelProcessor(
             database: database,
             diarizer: FluidSpeakerDiarizer(),
@@ -290,11 +263,11 @@ final class AppState {
         )
         let meetingCorrection = MeetingCorrectionProcessor(
             database: database,
-            corrector: MeetingTranscriptCorrector(route: meetingRoute),
+            corrector: MeetingTranscriptCorrector(routes: routes),
             isEnabled: { @MainActor in access.allows(.meetingTranscriptCorrection) && settings.meetingsAICorrection },
             vocabulary: meetingVocabulary
         )
-        let meetingSummarizer = MeetingSummarizer(route: meetingRoute)
+        let meetingSummarizer = MeetingSummarizer(routes: routes)
         let meetingNotes = MeetingNotesProcessor(
             database: database,
             summarizer: meetingSummarizer,
@@ -305,8 +278,8 @@ final class AppState {
             guard await access.allows(.meetingAINotes) else { return }
             await meetingNotes.regenerate(meetingID: id, templateID: templateID)
         }
-        let meetingAsker = MeetingAsker(database: database, route: meetingRoute)
-        let libraryAsker = LibraryAsker(database: database, index: searchIndex, route: meetingRoute)
+        let meetingAsker = MeetingAsker(database: database, routes: routes)
+        let libraryAsker = LibraryAsker(database: database, index: searchIndex, routes: routes)
         // The design preview never reaches the network: its questions are seeded.
         let asksOffline = overrides.isDesignPreview
         meetingAskRuns = MeetingAskRuns(
@@ -406,7 +379,8 @@ final class AppState {
             toasts: toasts,
             distill: { system, input in
                 guard settings.aiEnabled else { return nil }
-                let job = EnhancementJob(systemPrompt: system, kind: .rewrite, deadline: .seconds(15))
+                // The style profile runs in the background on the stronger model (PRD 7.3).
+                let job = EnhancementJob(systemPrompt: system, kind: .rewrite, role: .features, deadline: .seconds(15))
                 if case .enhanced(let text, _, _) = await styleEnhancer.enhance(input, job: job) {
                     return text
                 }
@@ -548,8 +522,7 @@ final class AppState {
             router: transcriptionRouter,
             dictionary: dictionary,
             database: database,
-            client: openRouter,
-            route: dictationRoute,
+            routes: routes,
             stats: stats,
             persistsHistory: !isFallback
         ))
@@ -604,7 +577,7 @@ final class AppState {
         }
 
         // API keys and the account token: read once on the Keychain queue so the hot path hits the cache.
-        keyStore.preload([KeyStore.Account.openRouter, KeyStore.Account.captyloAccount])
+        keyStore.preload([KeyStore.Account.cloudFerroSherlock, KeyStore.Account.captyloAccount])
         // The plan: refreshed now and every 6 hours (the cache already answered at init).
         account.start()
 
@@ -854,8 +827,8 @@ final class AppState {
     private func observeSettings() {
         withObservationTracking {
             _ = settings.hotkey
-            _ = settings.aiModel
-            _ = settings.aiCaptylo
+            _ = settings.cloudAIEnabled
+            _ = settings.cloudAIModel
             _ = settings.paragraphs
             _ = settings.menuBarOnly
             _ = settings.meetingsShortcut
@@ -876,10 +849,8 @@ final class AppState {
         if hotkeyTap.hotkey != nil, hotkeyTap.hotkey != hotkey {
             hotkeyTap.setHotkey(hotkey)
         }
-        let model = settings.aiModel
-        aiModelSnapshot.withLock { $0 = model }
-        let captylo = settings.aiCaptylo
-        aiCaptyloSnapshot.withLock { $0 = captylo }
+        let cloud = settings.cloudAIConfiguration
+        cloudAISnapshot.withLock { $0 = cloud }
         if dictionary.paragraphs != settings.paragraphs {
             dictionary.setParagraphs(settings.paragraphs)
         }

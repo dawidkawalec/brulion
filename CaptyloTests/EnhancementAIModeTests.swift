@@ -106,11 +106,11 @@ struct EnhancementAIModeTests {
         #expect(AIModeSymbols.label(for: "wand.and.stars") == "Różdżka")
     }
 
-    @Test func noKeyMessagePointsAtModele() {
-        let message = OpenRouterError.missingKeyMessage
+    @Test func noAIMessagePointsAtModele() {
+        let message = ChatCompletionsError.missingKeyMessage
         #expect(message.contains("Modele > Zaawansowane"))
-        #expect(message.contains("Pro"))
-        #expect(!message.contains("Ustawieni"))
-        #expect(OpenRouterError.missingKey.errorDescription == message)
+        #expect(message.contains("model lokalny"))
+        #expect(!message.contains("Pro"))
+        #expect(ChatCompletionsError.missingKey.errorDescription == message)
     }
 }

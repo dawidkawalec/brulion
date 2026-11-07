@@ -1,9 +1,9 @@
 import Foundation
 import os
 
-/// "Zapytaj" about one meeting (Pro): one non-streaming call with the whole transcript and the
-/// user's notes (`MeetingAskPrompt`), on `HTTP.meetingLLMSession` with the meetings model and the
-/// user's AI key, or through the Pro relay, like the AI notes. The question and its answer, or the Polish reason it failed,
+/// "Zapytaj" about one meeting: one non-streaming call with the whole transcript and the
+/// user's notes (`MeetingAskPrompt`), on `HTTP.meetingLLMSession` and the stronger model
+/// (`MeetingAITask.ask`), like the AI notes. The question and its answer, or the Polish reason it failed,
 /// go onto the meeting row in one `modifyMeeting` step, newest last, the newest
 /// `maxStoredQuestions` kept. Never logs the question or the answer.
 actor MeetingAsker {
@@ -26,17 +26,14 @@ actor MeetingAsker {
 
     private let database: Database
     private let chat: MeetingChat
-    private let routeProvider: @Sendable () async -> AIRoute?
 
-    /// - Parameter route: the Pro relay, or nil (`noKey`).
     init(
         database: Database,
         session: URLSession = HTTP.meetingLLMSession,
-        route: @escaping @Sendable () async -> AIRoute?
+        routes: any AIRouteProviding
     ) {
         self.database = database
-        chat = MeetingChat(session: session)
-        routeProvider = route
+        chat = MeetingChat(session: session, routes: routes)
     }
 
     /// Asks `question` about the meeting and stores the exchange on its row. Nil (and nothing
@@ -84,14 +81,14 @@ actor MeetingAsker {
 
     private func answer(_ question: String, meeting: MeetingRecord, segments: [MeetingSegmentRecord]) async throws -> (String, String) {
         guard meeting.status != .recording else { throw AskError(message: Self.recordingMessage) }
-        let route = try await MeetingChat.resolve(routeProvider)
+        let route = try await chat.route(for: .ask)
         let spoken = segments.filter { !$0.isEcho }
         let words = spoken.reduce(WordCounter.count(meeting.notes)) { $0 + WordCounter.count($1.text) }
         guard words >= Self.minimumWords else { throw AskError(message: Self.nothingToAskMessage) }
 
         let user = MeetingAskPrompt.user(meeting: meeting, segments: spoken, question: question, history: meeting.questions)
         let started = ContinuousClock.now
-        let reply = try await chat.complete(route: route, task: CaptyloAITask(kind: .meetingAsk), user: user, maxTokens: Self.maxTokens)
+        let reply = try await chat.complete(route: route, task: .ask, user: user, maxTokens: Self.maxTokens)
         if reply.finishReason == "length" {
             Log.enhancement.notice("Meeting answer reached the \(Self.maxTokens) token cap")
         }

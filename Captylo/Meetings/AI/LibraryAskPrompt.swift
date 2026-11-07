@@ -1,13 +1,13 @@
 import Foundation
 
-/// The data of "Zapytaj wszystkie spotkania" (`CaptyloAITask.Kind.libraryAsk`): the excerpts of
+/// The data of "Zapytaj wszystkie spotkania" (`MeetingAITask.libraryAsk`): the excerpts of
 /// the picked meetings (`LibraryAskContext`), numbered `S1`...`S8`, and the matching notes,
-/// `N1`...`N5`, with today's date for "ostatnio" or "w zeszłym tygodniu". The relay holds the
-/// instructions; the answer cites each claim as `[S1 12:34]` or `[N1]` (parsed by
+/// `N1`...`N5`, with today's date for "ostatnio" or "w zeszłym tygodniu". The instructions come
+/// from `MeetingAIInstructions`; the answer cites each claim as `[S1 12:34]` or `[N1]` (parsed by
 /// `LibraryCitation`) and is exactly `notFound` when nothing has the answer.
 enum LibraryAskPrompt {
-    /// The exact answer when the meetings do not contain one (asked in Polish); the relay asks
-    /// the model for exactly this text, so change both sides together.
+    /// The exact answer when the meetings do not contain one (asked in Polish); the instructions
+    /// ask the model for exactly this text, so change both sides together.
     static let notFound = "Nie znalazłem tego w spotkaniach."
     /// The same, asked in English.
     static let notFoundEnglish = "I couldn't find that in your meetings."

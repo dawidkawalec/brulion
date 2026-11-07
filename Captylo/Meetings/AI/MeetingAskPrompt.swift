@@ -1,11 +1,12 @@
 import Foundation
 
-/// The data of "Zapytaj" about one meeting (`CaptyloAITask.Kind.meetingAsk`): the relay holds the
-/// instructions. The answer cites moments as `[mm:ss]` (the line stamps it is given, so
-/// `MeetingCitations` can play them) and is exactly `notFound` when the meeting has no answer.
+/// The data of "Zapytaj" about one meeting (`MeetingAITask.ask`, the user message): the
+/// instructions come from `MeetingAIInstructions`. The answer cites moments as `[mm:ss]` (the
+/// line stamps it is given, so `MeetingCitations` can play them) and is exactly `notFound` when
+/// the meeting has no answer.
 enum MeetingAskPrompt {
-    /// The exact answer when the meeting does not contain one (asked in Polish); the relay asks
-    /// the model for exactly this text, so change both sides together.
+    /// The exact answer when the meeting does not contain one (asked in Polish); the instructions
+    /// ask the model for exactly this text, so change both sides together.
     static let notFound = "Nie znalazłem tego w tym spotkaniu."
     /// The same, asked in English.
     static let notFoundEnglish = "I couldn't find that in this meeting."

@@ -1,21 +1,16 @@
 import AppKit
 import SwiftUI
 
-/// "Modele" in two tabs (`SettingsLevel`). "Podstawowe": the Captylo Pro card (`ProStatusCard`),
-/// the speech engine (local model download, where the cloud audio goes, language), the "Tryby AI"
-/// list (`AIModesPanel`) and AI cleanup (master switch, the model in use and where it runs, test
-/// call). "Zaawansowane": the own keys, the cloud source ("Chmura Captylo" or the own key) and the
-/// model list. With Pro the cloud and AI run on Captylo by default, even with own keys saved
-/// (`AppSettings.sttCaptylo` / `aiCaptylo`, `CloudRouter`); "Podstawowe" always says which one runs,
-/// so a hidden key never sends anything unseen.
+/// "Modele" in two tabs (`SettingsLevel`). "Podstawowe": the speech engine (local model
+/// download, language), "Modele lokalne" (the Bielik models for the AI; their download comes
+/// with the local AI module), the "Tryby AI" list (`AIModesPanel`) and AI cleanup (master
+/// switch, where the AI runs, test call). "Zaawansowane": "Bielik w chmurze" (CloudFerro
+/// Sherlock on the user's own key, off by default). "Podstawowe" always says where the AI runs,
+/// so nothing goes to the cloud unseen.
 @MainActor
 struct ModelsView: View {
-    static let openRouterKeysURL = URL(string: "https://openrouter.ai/settings/keys")!
-
     @Environment(AppState.self) private var appState
     @State private var level: SettingsLevel = .basic
-    /// Whether an own key is saved (read on appear, updated by the key field).
-    @State private var hasOwnAIKey = false
 
     var body: some View {
         ToolPage(subtitle: "Silnik, który zamienia mowę na tekst, i opcjonalne poprawianie przez AI.") {
@@ -26,13 +21,6 @@ struct ModelsView: View {
             case .advanced: advanced
             }
         }
-        .onAppear {
-            hasOwnAIKey = Self.isSaved(appState.keyStore.get(KeyStore.Account.openRouter))
-        }
-    }
-
-    private static func isSaved(_ key: String?) -> Bool {
-        !(key ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var showAdvanced: () -> Void {
@@ -42,9 +30,6 @@ struct ModelsView: View {
     @ViewBuilder
     private var basic: some View {
         @Bindable var settings = appState.settings
-        let isPro = appState.account.isPro
-
-        ProStatusCard(account: appState.account)
 
         GlassPanel {
             GlassSectionHeader("Silnik mowy", systemImage: "waveform")
@@ -58,102 +43,145 @@ struct ModelsView: View {
             LanguagePicker(language: $settings.language)
         }
 
+        // The local AI models (Bielik on this Mac). Their download, sizes and status come with
+        // the local AI module (Captylo/LocalAI) and replace this placeholder.
+        GlassPanel {
+            GlassSectionHeader("Modele lokalne", systemImage: "cpu")
+            ToolCaption("Bielik na tym Macu poprawi dyktowanie i obsłuży funkcje AI bez internetu. Pobieranie modeli pojawi się tutaj.")
+                .padding(.horizontal, GlassTokens.Padding.rowHorizontal)
+                .padding(.bottom, 4)
+        }
+
         AIModesPanel(settings: settings, tester: appState.modeTester)
 
         GlassPanel {
             GlassSectionHeader("Poprawianie przez AI", systemImage: "sparkles")
             GlassToggleRow("Poprawiaj transkrypcję przez AI", systemImage: "wand.and.stars", isOn: $settings.aiEnabled)
             GlassRowSeparator()
-            AISummary(
-                source: CloudSource(isPro: isPro, prefersCaptylo: settings.aiCaptylo, hasOwnKey: hasOwnAIKey),
-                models: appState.openRouterModels,
-                model: settings.aiModel,
-                onChange: showAdvanced
-            )
-            TestButtonRow(enhancer: appState.enhancer, model: settings.aiModel)
+            AIRouteSummary(cloudEnabled: settings.cloudAIEnabled, cloudModel: settings.cloudAIModel, onChange: showAdvanced)
+            TestButtonRow(enhancer: appState.enhancer)
         }
     }
 
     @ViewBuilder
     private var advanced: some View {
-        @Bindable var settings = appState.settings
-        let isPro = appState.account.isPro
-
-        GlassPanel {
-            GlassSectionHeader("Klucz i model AI", systemImage: "sparkles")
-            OpenRouterKeySection(
-                keyStore: appState.keyStore,
-                enhancer: appState.enhancer,
-                models: appState.openRouterModels,
-                settings: settings,
-                isPro: isPro,
-                onKeyPresence: { hasOwnAIKey = $0 }
-            )
-            GlassRowSeparator()
-            // Pro: Captylo AI first; the own key's models below it only while a key is saved.
-            ModelPicker(
-                models: appState.openRouterModels,
-                selection: $settings.aiModel,
-                captylo: isPro ? $settings.aiCaptylo : nil,
-                showsModels: !isPro || hasOwnAIKey
-            )
-            TestButtonRow(enhancer: appState.enhancer, model: settings.aiModel)
-        }
+        CloudBielikSection(keyStore: appState.keyStore, settings: appState.settings)
     }
 }
 
-// MARK: - Where the cloud and AI run
+// MARK: - Where the AI runs
 
-/// What runs a cloud service (transcription or AI) right now, the same rule as `CloudRouter`:
-/// Pro with the Captylo choice (or without an own key) = Captylo, else the own key, else nothing.
-struct CloudSource: Equatable, Sendable {
-    enum Kind: Equatable, Sendable {
-        case captylo
-        case ownKey
-        case none
-    }
-
-    let kind: Kind
-
-    init(isPro: Bool, prefersCaptylo: Bool, hasOwnKey: Bool) {
-        if isPro, prefersCaptylo || !hasOwnKey {
-            kind = .captylo
-        } else if hasOwnKey {
-            kind = .ownKey
-        } else {
-            kind = .none
-        }
-    }
-}
-
-/// "Podstawowe", AI cleanup: the model in use and where the text goes, with "Zmień" /
-/// "Dodaj klucz" opening "Zaawansowane".
+/// "Podstawowe", AI cleanup: where the text goes, with "Zmień" opening "Zaawansowane".
 @MainActor
-private struct AISummary: View {
-    let source: CloudSource
-    let models: OpenRouterModels
-    let model: String
+private struct AIRouteSummary: View {
+    let cloudEnabled: Bool
+    let cloudModel: String
     let onChange: () -> Void
 
     var body: some View {
-        GlassRow(title: Text("Model"), subtitle: subtitle, systemImage: "brain") {
-            Button(source.kind == .none ? "Dodaj klucz" : "Zmień", action: onChange)
+        GlassRow(title: Text("Gdzie działa AI"), subtitle: subtitle, systemImage: "brain") {
+            Button("Zmień", action: onChange)
                 .buttonStyle(.glass(.neutral, size: .small, shape: .capsule))
-        }
-        .task {
-            await models.refresh()
         }
     }
 
     private var subtitle: Text {
-        switch source.kind {
-        case .captylo:
-            return Text("\(Enhancer.relayModelName), nasz model w ramach Pro")
-        case .ownKey:
-            let name = models.models.first { $0.id == model }?.name ?? model
-            return Text("\(name), przez Twój klucz API do AI")
-        case .none:
-            return Text("Poprawianie przez AI działa w Pro albo z własnym kluczem.")
+        if cloudEnabled {
+            return Text("Bielik w chmurze CloudFerro (\(CloudAIRouteProvider.model(cloudModel))), na Twój klucz")
+        }
+        return Text("Na tym Macu, gdy pobierzesz model lokalny")
+    }
+}
+
+// MARK: - Bielik in the cloud
+
+/// "Zaawansowane": "Bielik w chmurze" (CloudFerro Sherlock on the user's own key, PRD 7.5).
+/// Off by default; the note says plainly where the text goes when it is on.
+@MainActor
+private struct CloudBielikSection: View {
+    /// Sherlock's documentation (the key is created in the Sherlock console it describes).
+    static let docsURL = URL(string: "https://docs.cloudferro.com/en/latest/sherlock/Sherlock-chat-completion-endpoint-on-CloudFerro-Cloud.html")!
+
+    let keyStore: KeyStore
+    @Bindable var settings: AppSettings
+
+    @State private var key = ""
+    @State private var isSaved = false
+    @State private var status: (text: String, tone: InlineStatus.Tone)?
+    @State private var isChecking = false
+
+    var body: some View {
+        GlassPanel {
+            GlassSectionHeader("Bielik w chmurze", systemImage: "cloud")
+            ToolCaption("Dla Maców, na których model lokalny działa za wolno. Gdy to włączysz, tekst do poprawienia i pytania o spotkania idą z Twojego Maca prosto do polskiej chmury CloudFerro (Bielik 11B) i nigdzie indziej. Klucz zostaje w pęku kluczy macOS.")
+                .padding(.horizontal, GlassTokens.Padding.rowHorizontal)
+            GlassToggleRow("Używaj Bielika w chmurze", systemImage: "cloud", isOn: $settings.cloudAIEnabled)
+            if settings.cloudAIEnabled, !isSaved {
+                ToolStatusLine(text: String(localized: "Bez zapisanego klucza AI działa tylko na tym Macu."), tone: .error)
+                    .padding(.leading, GlassTokens.Size.rowIconColumn + 16)
+            }
+            GlassRowSeparator()
+            APIKeyField(
+                title: "Klucz CloudFerro Sherlock",
+                placeholder: "Klucz API",
+                key: $key,
+                status: status,
+                isChecking: isChecking,
+                linkTitle: "Skąd wziąć klucz",
+                linkURL: Self.docsURL,
+                isSaved: isSaved,
+                removeMessage: String(localized: "Bez klucza Bielik w chmurze nie zadziała, AI zostanie na tym Macu."),
+                onSave: save,
+                onVerify: verify,
+                onRemove: remove
+            )
+            GlassRow(title: Text("Model"), subtitle: Text("Nazwa modelu w CloudFerro Sherlock"), systemImage: "brain") {
+                TextField("Model", text: $settings.cloudAIModel, prompt: Text(verbatim: CloudAIRouteProvider.defaultModel))
+                    .textFieldStyle(.glass)
+                    .frame(maxWidth: 260)
+                    .accessibilityLabel(Text("Model"))
+            }
+        }
+        .onAppear {
+            key = keyStore.get(KeyStore.Account.cloudFerroSherlock) ?? ""
+            isSaved = !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+    }
+
+    private func save() {
+        do {
+            try keyStore.set(key.trimmingCharacters(in: .whitespacesAndNewlines), account: KeyStore.Account.cloudFerroSherlock)
+            isSaved = true
+            status = (String(localized: "Klucz zapisany w pęku kluczy."), .success)
+        } catch {
+            status = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)
+        }
+    }
+
+    private func remove() {
+        do {
+            try keyStore.delete(account: KeyStore.Account.cloudFerroSherlock)
+            key = ""
+            isSaved = false
+            status = (String(localized: "Klucz usunięty."), .success)
+        } catch {
+            status = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)
+        }
+    }
+
+    /// "Testuj połączenie": the typed key and model, saved or not, cloud on or off.
+    private func verify() {
+        isChecking = true
+        let candidate = key
+        let model = settings.cloudAIModel
+        Task {
+            switch await CloudAIRouteProvider.testConnection(key: candidate, model: model) {
+            case .success(let ms):
+                status = (String(localized: "OK, Bielik w chmurze odpowiada (\(ms) ms)."), .success)
+            case .failure(let error):
+                status = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)
+            }
+            isChecking = false
         }
     }
 }
@@ -320,9 +348,9 @@ private struct LegacyParakeetRow: View {
 
 // MARK: - API key field
 
-/// "Klucz API ..." label, the glass secure field with Zapisz / Sprawdź and, while a key is saved,
-/// "Usuń klucz" (asks first, `removeMessage` says what happens without it), then the status line
-/// and the link to the provider's key page. Shared by ElevenLabs and OpenRouter.
+/// "Klucz ..." label, the glass secure field with Zapisz / Testuj połączenie and, while a key is
+/// saved, "Usuń klucz" (asks first, `removeMessage` says what happens without it), then the status
+/// line and the link to the provider's documentation.
 @MainActor
 private struct APIKeyField: View {
     let title: LocalizedStringKey
@@ -380,7 +408,7 @@ private struct APIKeyField: View {
                     if isChecking {
                         ProgressView().controlSize(.mini)
                     } else {
-                        Text("Sprawdź")
+                        Text("Testuj połączenie")
                     }
                 }
                 .disabled(isEmpty || isChecking)
@@ -471,292 +499,12 @@ private struct LanguagePicker: View {
     }
 }
 
-// MARK: - OpenRouter key
-
-@MainActor
-private struct OpenRouterKeySection: View {
-    let keyStore: KeyStore
-    let enhancer: Enhancer
-    let models: OpenRouterModels
-    let settings: AppSettings
-    /// Pro runs the AI through Captylo when no own key is saved.
-    let isPro: Bool
-    /// Whether an own key is saved (on appear, after "Zapisz" and after "Usuń klucz").
-    let onKeyPresence: (Bool) -> Void
-
-    @State private var key = ""
-    @State private var isSaved = false
-    @State private var status: (text: String, tone: InlineStatus.Tone)?
-    @State private var isChecking = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            APIKeyField(
-                title: "Klucz API do AI",
-                placeholder: "sk-or-...",
-                key: $key,
-                status: status,
-                isChecking: isChecking,
-                linkTitle: "Skąd wziąć klucz",
-                linkURL: ModelsView.openRouterKeysURL,
-                isSaved: isSaved,
-                removeMessage: isPro
-                    ? String(localized: "Poprawianie przez AI przejdzie na Captylo AI w ramach Pro.")
-                    : String(localized: "Bez klucza poprawianie przez AI nie zadziała, dopóki nie dodasz klucza albo nie przejdziesz na Pro."),
-                onSave: save,
-                onVerify: verify,
-                onRemove: remove
-            )
-            if isPro, isSaved {
-                ToolCaption("Z własnym kluczem wybierzesz poniżej inny model niż Captylo AI.")
-                    .padding(.leading, GlassTokens.Size.rowIconColumn + 16)
-            }
-        }
-        .onAppear {
-            key = keyStore.get(KeyStore.Account.openRouter) ?? ""
-            isSaved = !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            onKeyPresence(isSaved)
-        }
-    }
-
-    private func remove() {
-        do {
-            try keyStore.delete(account: KeyStore.Account.openRouter)
-            key = ""
-            isSaved = false
-            onKeyPresence(false)
-            if isPro {
-                settings.aiCaptylo = true
-            }
-            status = (isPro ? String(localized: "Klucz usunięty. Działa Captylo AI.") : String(localized: "Klucz usunięty."), .success)
-        } catch {
-            status = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)
-        }
-    }
-
-    private func save() {
-        do {
-            try keyStore.set(key.trimmingCharacters(in: .whitespacesAndNewlines), account: KeyStore.Account.openRouter)
-            isSaved = true
-            onKeyPresence(true)
-            status = (String(localized: "Klucz zapisany w pęku kluczy."), .success)
-            // Gotcha 67: validate the chosen model id against the live list once a key is saved.
-            let models = models
-            let settings = settings
-            Task {
-                await models.refresh(force: true)
-                if !models.models.isEmpty, !models.isKnown(id: settings.aiModel) {
-                    status = (String(localized: "Klucz zapisany, ale model \(settings.aiModel) nie jest już dostępny. Wybierz inny."), .error)
-                }
-            }
-        } catch {
-            status = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)
-        }
-    }
-
-    private func verify() {
-        isChecking = true
-        let candidate = key
-        let enhancer = enhancer
-        Task {
-            switch await enhancer.verifyKey(candidate) {
-            case .success:
-                status = (String(localized: "OK, klucz działa."), .success)
-            case .failure(let error):
-                status = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)
-            }
-            isChecking = false
-        }
-    }
-}
-
-// MARK: - Model picker
-
-/// "Model": the search field and the list of the own key's models. In Pro (`captylo` set) the
-/// list starts with Captylo AI, which `captylo` turns on; picking any other model turns it off.
-/// Without an own key in Pro (`showsModels` false) only Captylo AI is listed.
-@MainActor
-private struct ModelPicker: View {
-    let models: OpenRouterModels
-    @Binding var selection: String
-    var captylo: Binding<Bool>? = nil
-    var showsModels = true
-
-    @State private var query = ""
-
-    private var results: [OpenRouterModel] {
-        models.search(query)
-    }
-
-    private var usesCaptylo: Bool {
-        captylo?.wrappedValue == true || (captylo != nil && !showsModels)
-    }
-
-    /// The chosen model by its display name ("GPT-4.1 Mini"), the raw id only while the list
-    /// is not loaded yet; the ids stay in the list below.
-    private var selectionName: String {
-        if usesCaptylo { return Enhancer.relayModelName }
-        return models.models.first { $0.id == selection }?.name ?? selection
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            GlassRow(
-                title: Text("Model"),
-                subtitle: Text(verbatim: selectionName),
-                systemImage: "brain"
-            ) {
-                HStack(spacing: 8) {
-                    if !usesCaptylo, !models.models.isEmpty, !models.isKnown(id: selection) {
-                        GlassBadge("Model niedostępny", systemImage: "exclamationmark", tone: .danger)
-                    }
-                    if models.isLoading {
-                        ProgressView()
-                            .controlSize(.small)
-                            .frame(width: 30, height: 30)
-                    } else {
-                        ToolIconButton("arrow.clockwise", label: Text("Odśwież listę modeli")) {
-                            Task { await models.refresh(force: true) }
-                        }
-                    }
-                }
-            }
-            VStack(alignment: .leading, spacing: 8) {
-                if showsModels {
-                    ToolSearchField("Szukaj modelu (np. gemini, haiku)", text: $query)
-                    if let error = models.errorMessage {
-                        ToolStatusLine(text: error, tone: .error)
-                    }
-                }
-                ScrollView {
-                    LazyVStack(spacing: 2) {
-                        if let captylo {
-                            ModelRow(
-                                name: Enhancer.relayModelName,
-                                detail: String(localized: "Nasz model, w ramach Pro, bez klucza"),
-                                detailIsID: false,
-                                trailing: String(localized: "w Pro"),
-                                symbol: "sparkles",
-                                isSelected: usesCaptylo
-                            ) {
-                                withAnimation(GlassMotion.selection) {
-                                    captylo.wrappedValue = true
-                                }
-                            }
-                        }
-                        if showsModels {
-                            if results.isEmpty {
-                                Text(models.models.isEmpty ? "Lista modeli nie jest jeszcze pobrana." : "Brak modeli pasujących do zapytania.")
-                                    .font(GlassFont.body)
-                                    .foregroundStyle(GlassColor.textTertiary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(12)
-                            }
-                            ForEach(results) { model in
-                                ModelRow(
-                                    name: model.name,
-                                    detail: model.id,
-                                    detailIsID: true,
-                                    trailing: models.displayPrice(for: model),
-                                    symbol: OpenRouterModel.quickPickIDs.contains(model.id) ? "bolt.fill" : nil,
-                                    isSelected: !usesCaptylo && model.id == selection
-                                ) {
-                                    withAnimation(GlassMotion.selection) {
-                                        selection = model.id
-                                        captylo?.wrappedValue = false
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .padding(6)
-                }
-                .scrollContentBackground(.hidden)
-                .frame(maxHeight: showsModels ? 250 : 70)
-                .glassSurface(.card, cornerRadius: GlassTokens.Radius.card, shadow: false)
-                if !showsModels {
-                    ToolCaption("Inny model wybierzesz, gdy zapiszesz własny klucz API do AI.")
-                }
-            }
-            .padding(.leading, GlassTokens.Size.rowIconColumn + 16)
-        }
-        .task {
-            await models.refresh()
-        }
-    }
-}
-
-/// One choice of the model list: name, a second line (the model id in monospace, or a plain
-/// note), the price or another short note on the right, an optional symbol after the name
-/// (the bolt of a quick pick, the sparkles of Captylo AI).
-@MainActor
-private struct ModelRow: View {
-    let name: String
-    let detail: String
-    let detailIsID: Bool
-    let trailing: String
-    let symbol: String?
-    let isSelected: Bool
-    let onSelect: () -> Void
-
-    @State private var isHovered = false
-
-    var body: some View {
-        Button(action: onSelect) {
-            HStack(spacing: 12) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 15))
-                    .foregroundStyle(isSelected ? GlassColor.toggle : GlassColor.textTertiary)
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(verbatim: name)
-                            .font(GlassFont.ui(13, isSelected ? .semibold : .regular))
-                            .foregroundStyle(GlassColor.textPrimary)
-                            .lineLimit(1)
-                        if let symbol {
-                            Image(systemName: symbol)
-                                .font(.system(size: 9))
-                                .foregroundStyle(symbol == "bolt.fill" ? GlassColor.warning : GlassColor.toggle)
-                                .accessibilityLabel(Text(symbol == "bolt.fill" ? "Polecany" : "Captylo AI"))
-                        }
-                    }
-                    Text(verbatim: detail)
-                        .font(detailIsID ? .system(size: 11, design: .monospaced) : GlassFont.ui(11))
-                        .foregroundStyle(GlassColor.textSecondary)
-                        .lineLimit(1)
-                }
-                Spacer(minLength: 8)
-                Text(verbatim: trailing)
-                    .font(GlassFont.ui(12).monospacedDigit())
-                    .foregroundStyle(GlassColor.textSecondary)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.white.opacity(isSelected ? GlassTokens.Opacity.control : (isHovered ? 0.06 : 0)))
-                    .overlay {
-                        if isSelected {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .strokeBorder(GlassColor.rim(top: 0.35, bottom: 0.06), lineWidth: 1)
-                        }
-                    }
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .onHover { isHovered = $0 }
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
-}
-
 // MARK: - Test
 
+/// "Testuj": one tiny call on the route the correction model uses now (local or cloud).
 @MainActor
 private struct TestButtonRow: View {
     let enhancer: Enhancer
-    let model: String
 
     @State private var isTesting = false
     @State private var result: (text: String, tone: InlineStatus.Tone)?
@@ -783,11 +531,10 @@ private struct TestButtonRow: View {
     private func run() {
         isTesting = true
         let enhancer = enhancer
-        let model = model
         Task {
-            switch await enhancer.test(model: model) {
-            case .success(let ms):
-                result = (String(localized: "OK, \(ms) ms"), .success)
+            switch await enhancer.test(role: .correction) {
+            case .success(let answer):
+                result = (String(localized: "OK, \(answer.model), \(answer.ms) ms"), .success)
             case .failure(let error):
                 result = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)
             }

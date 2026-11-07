@@ -1,7 +1,7 @@
 import Foundation
 
-/// The data of the AI notes (`CaptyloAITask.Kind.meetingNotes`): the relay holds the
-/// instructions; the answer is Markdown with the sections `MeetingNotesDocument` reads.
+/// The data of the AI notes (`MeetingAITask.notes`, the user message): the instructions come
+/// from `MeetingAIInstructions`; the answer is Markdown with the sections `MeetingNotesDocument` reads.
 /// Speaker labels come from `MeetingRecord.promptLabel(for:)`.
 enum MeetingNotesPrompt {
     /// Title, the participants from the calendar when there are any (so the names are spelled

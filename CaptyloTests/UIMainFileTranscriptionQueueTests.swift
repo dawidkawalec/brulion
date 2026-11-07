@@ -48,7 +48,7 @@ private final class UIMainFakeEnhancer: TextEnhancing, Sendable {
         return outcome
     }
 
-    func prewarm() async {}
+    func prewarm(_ role: AIRole) async {}
 }
 
 /// Router fake that fails the first call and succeeds afterwards.

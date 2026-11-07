@@ -21,7 +21,7 @@ struct AppSettingsTests {
         #expect(settings.sttEngine == .local)
         #expect(settings.livePreview)
         #expect(!settings.aiEnabled)
-        #expect(settings.aiModel == "openai/gpt-4.1-mini")
+        #expect(!settings.cloudAIEnabled)
         #expect(settings.aiPrompt.isEmpty)
         #expect(settings.aiPromptTemplate == CleanupPrompt.defaultTemplate)
         #expect(settings.micSelection == .systemDefault)
@@ -38,8 +38,6 @@ struct AppSettingsTests {
         #expect(settings.dashboardRange == 14)
         #expect(settings.dashboardMode == .daily)
         #expect(settings.dashboardMetric == .words)
-        #expect(settings.openRouterModelsCache == nil)
-        #expect(settings.openRouterModelsCachedAt == nil)
         #expect(settings.supportCardHiddenUntil == nil)
         #expect(settings.outputSettings == OutputSettings())
     }
@@ -52,9 +50,7 @@ struct AppSettingsTests {
         settings.language = "auto"
         settings.dashboardMode = .cumulative
         settings.dashboardMetric = .minutes
-        let cachedAt = Date(timeIntervalSince1970: 1_700_000_000)
-        settings.openRouterModelsCache = Data([1, 2, 3])
-        settings.openRouterModelsCachedAt = cachedAt
+        settings.cloudAIModel = "Bielik-11B-v3.0-Instruct-test"
 
         let reloaded = AppSettings(defaults: try #require(UserDefaults(suiteName: Self.suiteName)))
         #expect(reloaded.hotkey == custom)
@@ -63,8 +59,7 @@ struct AppSettingsTests {
         #expect(reloaded.transcriptionLanguage == nil)
         #expect(reloaded.dashboardMode == .cumulative)
         #expect(reloaded.dashboardMetric == .minutes)
-        #expect(reloaded.openRouterModelsCache == Data([1, 2, 3]))
-        #expect(reloaded.openRouterModelsCachedAt == cachedAt)
+        #expect(reloaded.cloudAIModel == "Bielik-11B-v3.0-Instruct-test")
     }
 
     @Test func resetRestoresDefaults() throws {
@@ -193,14 +188,15 @@ struct AppSettingsTests {
         #expect(settings.meetingsCalendarReminderMinutes == 1)
     }
 
-    /// Captylo AI is the default AI model in Pro, so turning Pro on uses it even with an own key.
-    @Test func captyloAIIsOnByDefaultAndResets() throws {
+    /// "Bielik w chmurze" is off until the user turns it on (PRD 7.5).
+    @Test func cloudAIIsOffByDefaultAndResets() throws {
         let settings = try makeSettings()
-        #expect(settings.aiCaptylo)
-        settings.aiCaptylo = false
-        #expect(!settings.aiCaptylo)
+        #expect(!settings.cloudAIEnabled)
+        #expect(settings.cloudAIModel == CloudAIRouteProvider.defaultModel)
+        settings.cloudAIEnabled = true
+        #expect(settings.cloudAIEnabled)
         settings.reset()
-        #expect(settings.aiCaptylo)
+        #expect(!settings.cloudAIEnabled)
     }
 
     @Test func voiceNoteShortcutIsOnByDefaultAndResets() throws {

@@ -33,14 +33,16 @@ enum HTTP {
     }()
 
     /// Meeting AI notes: one non-streaming request over a whole transcript (up to about 4000
-    /// tokens of answer), so nothing arrives for a long while; 150 s idle, 180 s in total.
+    /// tokens of answer), so nothing arrives for a long while. A local model reads a 1 h
+    /// transcript and writes the notes in minutes, not seconds: 10 min idle, 30 min in total.
+    /// Meeting AI has no other deadline (it runs in the background with progress).
     static let meetingLLMSession: URLSession = {
         let configuration = URLSessionConfiguration.default
         configuration.urlCache = nil
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.waitsForConnectivity = false
-        configuration.timeoutIntervalForRequest = 150
-        configuration.timeoutIntervalForResource = 180
+        configuration.timeoutIntervalForRequest = 600
+        configuration.timeoutIntervalForResource = 1800
         configuration.httpMaximumConnectionsPerHost = 2
         return URLSession(configuration: configuration)
     }()

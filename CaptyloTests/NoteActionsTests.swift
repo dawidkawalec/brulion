@@ -33,7 +33,7 @@ private final class NotesFakeEnhancer: TextEnhancing, Sendable {
         return outcome
     }
 
-    func prewarm() async {}
+    func prewarm(_ role: AIRole) async {}
 }
 
 /// Enhancer fake that runs `during` while the "model" thinks (the user edits the note meanwhile).
@@ -49,7 +49,7 @@ private final class NotesSlowEnhancer: TextEnhancing, Sendable {
         return .enhanced(text: "- wynik AI", ms: 1, model: "m")
     }
 
-    func prewarm() async {}
+    func prewarm(_ role: AIRole) async {}
 }
 
 @MainActor

@@ -491,7 +491,8 @@ final class DebugRunner: DebugCommandRunner {
                 "sttEngine": settings.sttEngine.rawValue,
                 "livePreview": settings.livePreview,
                 "aiEnabled": settings.aiEnabled,
-                "aiModel": settings.aiModel,
+                "cloudAIEnabled": settings.cloudAIEnabled,
+                "cloudAIModel": settings.cloudAIModel,
                 "aiActiveMode": settings.activeMode.name,
                 "aiModes": settings.aiModes.count,
                 "sounds": settings.sounds,
@@ -507,7 +508,7 @@ final class DebugRunner: DebugCommandRunner {
                 "launchAtLogin": loginStatus,
             ],
             "keys": [
-                "openRouter": appState.keyStore.get(KeyStore.Account.openRouter) != nil,
+                "cloudFerroSherlock": appState.keyStore.get(KeyStore.Account.cloudFerroSherlock) != nil,
             ],
             "dictionary": [
                 "vocabulary": appState.dictionary.data.vocabulary.count,

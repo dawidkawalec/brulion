@@ -26,13 +26,13 @@ enum HistoryAIStatus: Equatable, Sendable {
         }
     }
 
-    /// "AI: E-mail · openai/gpt-4.1-mini · 812 ms", "AI pominięte: Brak klucza OpenRouter", "Bez AI".
+    /// "AI: E-mail · Bielik-11B-v3.0-Instruct · 812 ms", "AI pominięte: Brak modelu AI", "Bez AI".
     var line: String {
         switch self {
         case .enhanced(let mode, let model, let ms, let unchanged):
             var parts: [String] = []
             if let mode { parts.append(mode) }
-            if let model { parts.append(Enhancer.displayName(forModel: model)) }
+            if let model { parts.append(model) }
             if let ms { parts.append(String(localized: "\(ms) ms")) }
             if unchanged { parts.append(String(localized: "bez zmian")) }
             guard !parts.isEmpty else { return String(localized: "Tekst poprawiony przez AI") }

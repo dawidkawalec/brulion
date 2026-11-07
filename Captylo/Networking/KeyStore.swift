@@ -12,7 +12,8 @@ import os
 /// dedicated queue and never on the cooperative pool, and `preload(_:)` warms the cache at launch.
 final class KeyStore: Sendable {
     enum Account {
-        static let openRouter = "openrouter"
+        /// The user's CloudFerro Sherlock key for "Bielik w chmurze" (`CloudAIRouteProvider`).
+        static let cloudFerroSherlock = "cloudferro-sherlock"
         /// The Captylo account session token (`AccountStore`).
         static let captyloAccount = "captylo-account"
     }
@@ -28,7 +29,7 @@ final class KeyStore: Sendable {
     }
 
     /// Outcome of a lookup bounded by a timeout: `load(_:timeout:)` (`KeyLookup`) and the cloud
-    /// routes built on it (`CloudRouter`). `.value(nil)` is a definite "nothing there".
+    /// route built on it (`CloudAIRouteProvider`). `.value(nil)` is a definite "nothing there".
     enum Lookup<Value: Sendable>: Sendable {
         case value(Value?)
         case timedOut

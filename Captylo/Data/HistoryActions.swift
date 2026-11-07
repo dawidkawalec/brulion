@@ -37,7 +37,7 @@ final class HistoryActions {
     /// result in the AI fields of the same row (`enhancedText`, `enhancementMode`,
     /// `enhancementModel`, `enhancementMs`, `enhancementNote`). The word count and the
     /// dashboard stats stay as they are (no new `UsageStat`). Works with AI dictation switched
-    /// off; it only needs the OpenRouter key. On failure the row keeps its previous AI version
+    /// off; it only needs an AI route. On failure the row keeps its previous AI version
     /// and the Polish message is returned; nil on success.
     func reprocessWithAI(id: UUID, mode: AIMode) async -> String? {
         guard var record = await database.record(id: id) else {
@@ -52,6 +52,8 @@ final class HistoryActions {
         // on purpose, and a long history row takes longer than a fresh dictation.
         var job = mode.job(vocabulary: vocabulary())
         job.deadline = nil
+        // Always the stronger model (PRD 7.3), whatever the mode.
+        job.role = .features
         let outcome = await enhancer.enhance(record.text, job: job)
         guard case .enhanced = outcome else {
             let message = outcome.errorMessage ?? String(localized: "AI nie zwróciło tekstu.")

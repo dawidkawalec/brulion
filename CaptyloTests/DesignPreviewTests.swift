@@ -266,12 +266,6 @@ struct DesignPreviewTests {
         #expect(first == second)
     }
 
-    @Test func openRouterFixtureHoldsTheQuickPicks() {
-        let ids = Set(DesignPreviewData.openRouterModels.map(\.id))
-        #expect(OpenRouterModel.quickPickIDs.allSatisfy { ids.contains($0) })
-        #expect(ids.contains("openai/gpt-4.1-mini"))
-    }
-
     @Test func pinnedModelStatusSurvivesRefresh() {
         let store = LocalModelStore(engine: WhisperEngine(), pinnedStatus: .ready)
         store.refresh()

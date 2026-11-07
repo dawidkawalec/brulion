@@ -3,9 +3,10 @@ import os
 import Testing
 @testable import Captylo
 
-/// `MeetingSummarizer` over the stubbed network, and `MeetingNotesProcessor` storing its result.
+/// `MeetingSummarizer` and `MeetingChat` over the stubbed network, and `MeetingNotesProcessor`
+/// storing the result.
 struct MeetingSummarizerTests {
-    private static let model = Enhancer.relayModelPlaceholder
+    private static let model = "bielik-minitron-test"
     private static let notes = "## Podsumowanie\n- Wdrożenie w piątek [0:01]"
 
     private static func segments(_ id: UUID) -> [MeetingSegmentRecord] {
@@ -20,101 +21,89 @@ struct MeetingSummarizerTests {
         return #"{"choices":[{"message":{"content":"\#(escaped)"},"finish_reason":"\#(finish)"}]}"#
     }
 
-    /// The Pro relay: the session as the key, no model (the server picks it); nil = no Pro session.
-    private static func summarizer(_ handler: @escaping StubURLProtocol.Handler, key: String? = "session-token") -> (MeetingSummarizer, URL) {
-        let baseURL = StubURLProtocol.register(handler)
-        let client = OpenRouterClient(baseURL: baseURL)
+    /// A summarizer on a stub server; `hasRoute: false` = no AI route at all.
+    private static func summarizer(
+        _ handler: @escaping StubURLProtocol.Handler,
+        hasRoute: Bool = true,
+        instructions: @escaping @Sendable (MeetingAITask) -> String? = { _ in nil }
+    ) -> (MeetingSummarizer, URL) {
+        let (route, baseURL) = AIRouteFixtures.stubRoute(model: model, handler)
         let summarizer = MeetingSummarizer(
             session: StubURLProtocol.makeSession(),
-            route: { key.map { AIRoute(client: client, key: $0, model: nil) } }
+            routes: FakeAIRoutes(hasRoute ? route : nil),
+            instructions: instructions
         )
         return (summarizer, baseURL)
     }
 
-    @Test func proRelayWritesNotesAsCaptyloAI() async throws {
+    // MARK: MeetingChat
+
+    @Test func messagesPutTheInstructionsFirstOnlyWhenThereAreAny() {
+        #expect(MeetingChat.messages(system: nil, user: "dane") == [.user("dane")])
+        #expect(MeetingChat.messages(system: "", user: "dane") == [.user("dane")])
+        #expect(MeetingChat.messages(system: "Instrukcje.", user: "dane") == [.system("Instrukcje."), .user("dane")])
+    }
+
+    @Test func eachTaskAsksForItsRole() {
+        #expect(MeetingAITask.transcriptCorrection.role == .correction)
+        #expect(MeetingAITask.notes(templateID: "general").role == .features)
+        #expect(MeetingAITask.ask.role == .features)
+        #expect(MeetingAITask.libraryAsk.role == .features)
+        // No instructions ship until the Bielik prompts arrive: only the data is sent.
+        #expect(MeetingAIInstructions.system(for: .ask) == nil)
+    }
+
+    @Test func chatSendsTheSystemInstructionAndTheDataWithTheRoutesModel() async throws {
         let seen = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
-        let (summarizer, baseURL) = Self.summarizer { request in
+        let (route, baseURL) = AIRouteFixtures.stubRoute(model: Self.model) { request in
             seen.withLock { $0 = request }
-            // Whatever the answer names, history keeps "captylo-ai".
-            return .json(###"{"model":"vendor/some-model","choices":[{"message":{"content":"## Podsumowanie\n- ok"},"finish_reason":"stop"}]}"###)
+            return .json(Self.chat("Odpowiedź [0:01]"))
         }
         defer { StubURLProtocol.unregister(baseURL) }
-        let meeting = MeetingRecord(title: "Standup")
-        let out = try await summarizer.summarize(meeting: meeting, segments: Self.segments(meeting.id), template: BuiltInMeetingTemplates.standup)
-        #expect(out.markdown == "## Podsumowanie\n- ok")
-        #expect(out.model == Enhancer.relayModelPlaceholder)
+        let routes = FakeAIRoutes(route)
+        let chat = MeetingChat(session: StubURLProtocol.makeSession(), routes: routes, instructions: { task in
+            task == .ask ? "Odpowiadaj tylko na podstawie spotkania." : nil
+        })
+
+        let resolved = try await chat.route(for: .ask)
+        let reply = try await chat.complete(route: resolved, task: .ask, user: "dane spotkania", maxTokens: 100)
+        #expect(reply.text == "Odpowiedź [0:01]")
+        #expect(reply.model == Self.model)
+        #expect(routes.asked == [.features])
+
         let request = try #require(seen.withLock { $0 })
-        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
-        let body = Self.json(Self.rawBody(of: request))
-        #expect(body["model"] as? String == Enhancer.relayModelPlaceholder)
-        #expect((body["reasoning"] as? [String: Any])?["enabled"] as? Bool == false)
-        let task = try #require(body["captylo_task"] as? [String: Any])
-        #expect(task["kind"] as? String == "meeting_notes")
-        #expect(task["template"] as? String == "standup")
-        let roles = (body["messages"] as? [[String: Any]] ?? []).compactMap { $0["role"] as? String }
-        #expect(roles == ["user"])
+        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer local-token")
+        let messages = StubURLProtocol.messages(of: request)
+        #expect(messages.map(\.role) == ["system", "user"])
+        #expect(messages.map(\.content) == ["Odpowiadaj tylko na podstawie spotkania.", "dane spotkania"])
+        let body = StubURLProtocol.body(of: request)
+        #expect(body["model"] as? String == Self.model)
+        #expect(body["max_tokens"] as? Int == 100)
+        #expect(body["captylo_task"] == nil)
     }
 
-    @Test func anOwnKeyRouteIsRefused() async throws {
-        let meeting = MeetingRecord(title: "x")
-        let ownKey = MeetingSummarizer(session: .shared, route: { AIRoute(client: OpenRouterClient(), key: "sk-or-test", model: "m") })
-        await #expect(throws: MeetingSummaryError.noKey) {
-            try await ownKey.summarize(meeting: meeting, segments: Self.segments(meeting.id), template: BuiltInMeetingTemplates.general)
+    @Test func chatWithoutInstructionsSendsOnlyTheData() async throws {
+        let seen = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
+        let (route, baseURL) = AIRouteFixtures.stubRoute { request in
+            seen.withLock { $0 = request }
+            return .json(Self.chat("ok"))
         }
-    }
-
-    @Test func proRelayQuotaAndRefusalAreTyped() async throws {
-        let meeting = MeetingRecord(title: "x")
-        let replies: [(StubURLProtocol.Reply, MeetingSummaryError)] = [
-            (.json(#"{"error":"quota_exceeded","resetsAt":"2026-11-01T00:00:00.000Z"}"#, status: 402), .quotaExceeded),
-            (.json(#"{"error":"pro_required"}"#, status: 403), .noKey),
-            (.json(#"{"error":"unauthorized"}"#, status: 401), .noKey),
-            (.json(#"{"error":"upstream_failed"}"#, status: 502), .server(502)),
-        ]
-        for (reply, expected) in replies {
-            let (summarizer, baseURL) = Self.summarizer { _ in reply }
-            defer { StubURLProtocol.unregister(baseURL) }
-            await #expect(throws: expected) {
-                try await summarizer.summarize(meeting: meeting, segments: Self.segments(meeting.id), template: BuiltInMeetingTemplates.general)
-            }
-        }
-    }
-
-    private static func rawBody(of request: URLRequest) -> Data {
-        var data = request.httpBody ?? Data()
-        if data.isEmpty, let stream = request.httpBodyStream {
-            stream.open()
-            defer { stream.close() }
-            var buffer = [UInt8](repeating: 0, count: 4096)
-            while stream.hasBytesAvailable {
-                let read = stream.read(&buffer, maxLength: buffer.count)
-                guard read > 0 else { break }
-                data.append(buffer, count: read)
-            }
-        }
-        return data
-    }
-
-    private static func json(_ data: Data) -> [String: Any] {
-        (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
-    }
-
-    private static func messages(_ body: [String: Any]) -> [String] {
-        (body["messages"] as? [[String: Any]] ?? []).compactMap { $0["content"] as? String }
-    }
-
-    /// `captylo_task.template` of the request body.
-    private static func template(of request: URLRequest) -> String? {
-        (json(rawBody(of: request))["captylo_task"] as? [String: Any])?["template"] as? String
+        defer { StubURLProtocol.unregister(baseURL) }
+        let routes = FakeAIRoutes(route)
+        let chat = MeetingChat(session: StubURLProtocol.makeSession(), routes: routes)
+        _ = try await chat.complete(route: try await chat.route(for: .transcriptCorrection), task: .transcriptCorrection, user: "1|tekst", maxTokens: 10)
+        #expect(routes.asked == [.correction])
+        let messages = StubURLProtocol.messages(of: try #require(seen.withLock { $0 }))
+        #expect(messages.map(\.role) == ["user"])
+        #expect(messages.first?.content == "1|tekst")
     }
 
     // MARK: Summarizer
 
     @Test func returnsTheMarkdownAndModel() async throws {
-        let seen = OSAllocatedUnfairLock(initialState: Data())
+        let seen = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
         let (summarizer, baseURL) = Self.summarizer { request in
-            let data = Self.rawBody(of: request)
-            seen.withLock { $0 = data }
+            seen.withLock { $0 = request }
             return .json(Self.chat(Self.notes))
         }
         defer { StubURLProtocol.unregister(baseURL) }
@@ -123,33 +112,48 @@ struct MeetingSummarizerTests {
         #expect(out.markdown == Self.notes)
         #expect(out.model == Self.model)
 
-        let body = Self.json(seen.withLock { $0 })
+        let request = try #require(seen.withLock { $0 })
+        let body = StubURLProtocol.body(of: request)
         #expect(body["model"] as? String == Self.model)
         #expect(body["max_tokens"] as? Int == MeetingSummarizer.maxTokens)
-        let messages = Self.messages(body)
+        let messages = StubURLProtocol.messages(of: request)
         #expect(messages.count == 1)
-        #expect(messages.last?.contains("[0:01] Rozmówcy: Wdrożenie przesuwamy na piątek") == true)
+        #expect(messages.last?.content.contains("[0:01] Rozmówcy: Wdrożenie przesuwamy na piątek") == true)
     }
 
-    @Test func missingKeyAndEmptyTranscriptFailClearly() async throws {
+    @Test func theTemplatePicksTheInstructions() async throws {
+        let systems = OSAllocatedUnfairLock<[String]>(initialState: [])
+        let (summarizer, baseURL) = Self.summarizer({ request in
+            let system = StubURLProtocol.messages(of: request).first { $0.role == "system" }?.content ?? ""
+            systems.withLock { $0.append(system) }
+            return .json(Self.chat(Self.notes))
+        }, instructions: { task in
+            if case .notes(let templateID) = task { return "Notatki: \(templateID)" }
+            return nil
+        })
+        defer { StubURLProtocol.unregister(baseURL) }
         let meeting = MeetingRecord(title: "x")
-        let noKey = MeetingSummarizer(session: .shared, route: { nil })
+        _ = try await summarizer.summarize(meeting: meeting, segments: Self.segments(meeting.id), template: BuiltInMeetingTemplates.standup)
+        #expect(systems.withLock { $0 } == ["Notatki: standup"])
+    }
+
+    @Test func noRouteAndEmptyTranscriptFailClearly() async throws {
+        let meeting = MeetingRecord(title: "x")
+        let (noRoute, url1) = Self.summarizer({ _ in .json(Self.chat(Self.notes)) }, hasRoute: false)
+        defer { StubURLProtocol.unregister(url1) }
         await #expect(throws: MeetingSummaryError.noKey) {
-            try await noKey.summarize(meeting: meeting, segments: Self.segments(meeting.id), template: BuiltInMeetingTemplates.general)
+            try await noRoute.summarize(meeting: meeting, segments: Self.segments(meeting.id), template: BuiltInMeetingTemplates.general)
         }
-        let blankKey = MeetingSummarizer(session: .shared, route: { AIRoute(client: OpenRouterClient(), key: "", model: nil) })
-        await #expect(throws: MeetingSummaryError.noKey) {
-            try await blankKey.summarize(meeting: meeting, segments: Self.segments(meeting.id), template: BuiltInMeetingTemplates.general)
-        }
-        let withKey = MeetingSummarizer(session: .shared, route: { AIRoute(client: OpenRouterClient(), key: "k", model: nil) })
+        let (withRoute, url2) = Self.summarizer { _ in .json(Self.chat(Self.notes)) }
+        defer { StubURLProtocol.unregister(url2) }
         await #expect(throws: MeetingSummaryError.noTranscript) {
-            try await withKey.summarize(meeting: meeting, segments: [], template: BuiltInMeetingTemplates.general)
+            try await withRoute.summarize(meeting: meeting, segments: [], template: BuiltInMeetingTemplates.general)
         }
         // Echo is never sent, so a transcript of echo alone is as good as none.
         var echo = Self.segments(meeting.id)[0]
         echo.isEcho = true
         await #expect(throws: MeetingSummaryError.noTranscript) {
-            try await withKey.summarize(meeting: meeting, segments: [echo], template: BuiltInMeetingTemplates.general)
+            try await withRoute.summarize(meeting: meeting, segments: [echo], template: BuiltInMeetingTemplates.general)
         }
     }
 
@@ -157,6 +161,7 @@ struct MeetingSummarizerTests {
         let meeting = MeetingRecord(title: "x")
         let replies: [(StubURLProtocol.Reply, MeetingSummaryError)] = [
             (.json(#"{"error":{"message":"boom","code":502}}"#, status: 502), .server(502)),
+            (.json("{}", status: 401), .server(401)),
             (.json("{}", status: 429), .server(429)),
             (.failure(.timedOut), .timedOut),
             (.json(Self.chat("   ")), .empty),
@@ -171,11 +176,10 @@ struct MeetingSummarizerTests {
         }
     }
 
-    @Test func errorMessagesReuseTheAppsKeyAndStatusTexts() {
-        #expect(MeetingSummaryError.noKey.errorDescription == "Brak dostępu do AI spotkań. Włącz Captylo Pro.")
-        #expect(MeetingSummaryError.quotaExceeded.errorDescription == "Limit AI w tym miesiącu jest wyczerpany.")
-        #expect(MeetingSummaryError.server(401).errorDescription == OpenRouterError.unauthorized.errorDescription)
-        #expect(MeetingSummaryError.server(429).errorDescription == OpenRouterError.rateLimited.errorDescription)
+    @Test func errorMessagesReuseTheAppsTexts() {
+        #expect(MeetingSummaryError.noKey.errorDescription == ChatCompletionsError.missingKeyMessage)
+        #expect(MeetingSummaryError.server(401).errorDescription == ChatCompletionsError.unauthorized.errorDescription)
+        #expect(MeetingSummaryError.server(429).errorDescription == ChatCompletionsError.rateLimited.errorDescription)
         #expect(MeetingSummaryError.server(500).errorDescription?.contains("500") == true)
     }
 
@@ -187,10 +191,12 @@ struct MeetingSummarizerTests {
         #expect(out.markdown == Self.notes)
     }
 
-    @Test func meetingSessionOutlastsALongAnswer() {
+    /// A local model writes the notes of a long meeting in minutes: the session waits that long.
+    @Test func meetingSessionOutlastsALocalModel() {
         let configuration = HTTP.meetingLLMSession.configuration
-        #expect(configuration.timeoutIntervalForRequest == 150)
-        #expect(configuration.timeoutIntervalForResource == 180)
+        #expect(configuration.timeoutIntervalForRequest >= 600)
+        #expect(configuration.timeoutIntervalForResource >= 1800)
+        #expect(MeetingChat.routeTimeout >= .seconds(60))
     }
 
     // MARK: Processor
@@ -234,7 +240,7 @@ struct MeetingSummarizerTests {
         var meeting = try #require(try await fixture.database.meeting(id: fixture.meetingID))
         meeting.summary = "## Podsumowanie\n- wcześniejsze"
         try await fixture.database.updateMeeting(meeting)
-        let (summarizer, baseURL) = Self.summarizer({ _ in .json(Self.chat(Self.notes)) }, key: nil)
+        let (summarizer, baseURL) = Self.summarizer({ _ in .json(Self.chat(Self.notes)) }, hasRoute: false)
         defer { StubURLProtocol.unregister(baseURL) }
         await Self.processor(fixture, summarizer: summarizer).process(meetingID: fixture.meetingID)
         meeting = try #require(try await fixture.database.meeting(id: fixture.meetingID))
@@ -242,7 +248,7 @@ struct MeetingSummarizerTests {
         #expect(meeting.summary == "## Podsumowanie\n- wcześniejsze")
     }
 
-    @Test func freePlanMakesNoCall() async throws {
+    @Test func aProcessorThatIsNotAllowedMakesNoCall() async throws {
         let fixture = try await Self.fixture()
         let calls = OSAllocatedUnfairLock(initialState: 0)
         let (summarizer, baseURL) = Self.summarizer { _ in
@@ -259,17 +265,20 @@ struct MeetingSummarizerTests {
 
     @Test func regenerateUsesThePickedTemplate() async throws {
         let fixture = try await Self.fixture()
-        let templates = OSAllocatedUnfairLock<[String?]>(initialState: [])
-        let (summarizer, baseURL) = Self.summarizer { request in
-            let template = Self.template(of: request)
-            templates.withLock { $0.append(template) }
+        let systems = OSAllocatedUnfairLock<[String]>(initialState: [])
+        let (summarizer, baseURL) = Self.summarizer({ request in
+            let system = StubURLProtocol.messages(of: request).first { $0.role == "system" }?.content ?? ""
+            systems.withLock { $0.append(system) }
             return .json(Self.chat(Self.notes))
-        }
+        }, instructions: { task in
+            if case .notes(let templateID) = task { return templateID }
+            return nil
+        })
         defer { StubURLProtocol.unregister(baseURL) }
         await Self.processor(fixture, summarizer: summarizer).regenerate(meetingID: fixture.meetingID, templateID: "client")
         let meeting = try #require(try await fixture.database.meeting(id: fixture.meetingID))
         #expect(meeting.summaryTemplateID == "client")
-        #expect(templates.withLock { $0 } == ["client"])
+        #expect(systems.withLock { $0 } == ["client"])
     }
 
     /// The call can take minutes: notes and a title typed meanwhile must survive the save.

@@ -2,8 +2,8 @@ import Foundation
 
 extension FileTranscriptionQueue.Services {
     /// Production wiring: the same router, dictionary and database the dictation path uses,
-    /// plus a dedicated `Enhancer` with the 15 s file deadline when AI cleanup is on, on the
-    /// dictation's AI route (own key with the model from Modele, or the Pro relay).
+    /// plus a dedicated `Enhancer` with the 15 s file deadline when AI cleanup is on, on the same
+    /// AI routes as dictation (the active mode's role picks the model, PRD 7.3).
     /// Takes the services one by one so `AppState.init` can build the queue it owns.
     @MainActor
     static func make(
@@ -11,8 +11,7 @@ extension FileTranscriptionQueue.Services {
         router: any TranscriptionRouting,
         dictionary: DictionaryStore,
         database: Database,
-        client: OpenRouterClient,
-        route: @escaping @Sendable (Duration) async -> KeyStore.Lookup<AIRoute>,
+        routes: any AIRouteProviding,
         stats: StatsTicker,
         persistsHistory: Bool
     ) -> FileTranscriptionQueue.Services {
@@ -24,11 +23,10 @@ extension FileTranscriptionQueue.Services {
             processor: { dictionary.processor },
             enhancement: {
                 guard settings.aiEnabled else { return nil }
-                // Own session: the dictation LLM session times out after 4 s / 10 s, well
-                // before the 15 s file deadline a long transcript needs.
+                // Own session: the dictation LLM session is tuned for short takes, and a long
+                // transcript needs the 15 s file deadline.
                 let enhancer = Enhancer(
-                    client: client,
-                    route: route,
+                    routes: routes,
                     session: HTTP.fileLLMSession,
                     deadline: FileTranscriptionQueue.enhancementDeadline,
                     tokenCap: FileTranscriptionQueue.enhancementTokenCap

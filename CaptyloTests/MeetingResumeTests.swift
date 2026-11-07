@@ -175,7 +175,8 @@ struct MeetingResumeTests {
         let db = Database(modelContainer: try Store.makeInMemoryContainer())
         let meeting = Self.processingMeeting("Bez Pro")
         try await db.createMeeting(meeting)
-        let summarizer = MeetingSummarizer(session: .shared, route: { AIRoute(client: OpenRouterClient(), key: "k", model: "m") })
+        let route = AIRoute(client: ChatCompletionsClient(baseURL: URL(string: "http://127.0.0.1:9/v1/")!), key: "k", model: "m", kind: .local)
+        let summarizer = MeetingSummarizer(session: .shared, routes: FakeAIRoutes(route))
         let notes = MeetingNotesProcessor(database: db, summarizer: summarizer, isAllowed: { false })
         var env = Self.environment(db: db)
         env.resumeProcessors = [MeetingResumeStep(database: db, isDone: { $0.summary != nil }, processor: notes)]

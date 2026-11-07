@@ -6,7 +6,7 @@ import Testing
 /// "Zapytaj" about one meeting: the prompt, `MeetingAsker` over the stubbed network storing the
 /// exchange on the row, and `MeetingAskRuns`.
 struct MeetingAskTests {
-    private static let model = Enhancer.relayModelPlaceholder
+    private static let model = "bielik-minitron-test"
     private static let answer = "- Dwutygodniowy test LinkedIn, do 5 tys. zł [1:45]"
 
     private static func chat(_ content: String) -> String {
@@ -42,8 +42,8 @@ struct MeetingAskTests {
 
     // MARK: Prompt
 
-    /// The relay asks the model for exactly these answers: they must match the server's.
-    @Test func notFoundAnswersMatchTheRelay() {
+    /// The instructions ask the model for exactly these answers: keep both sides in step.
+    @Test func notFoundAnswersStayFixed() {
         #expect(MeetingAskPrompt.notFound == "Nie znalazłem tego w tym spotkaniu.")
         #expect(MeetingAskPrompt.notFoundEnglish == "I couldn't find that in this meeting.")
     }
@@ -120,17 +120,17 @@ struct MeetingAskTests {
         return Fixture(database: database, meetingID: meeting.id)
     }
 
+    /// An asker on a stub server; `key: nil` = no AI route at all.
     private static func asker(
         _ fixture: Fixture,
-        key: String? = "sk-or-test",
+        key: String? = "local-token",
         _ handler: @escaping StubURLProtocol.Handler
     ) -> (MeetingAsker, URL) {
-        let baseURL = StubURLProtocol.register(handler)
-        let client = OpenRouterClient(baseURL: baseURL)
+        let (route, baseURL) = AIRouteFixtures.stubRoute(model: model, key: key ?? "", handler)
         let asker = MeetingAsker(
             database: fixture.database,
             session: StubURLProtocol.makeSession(),
-            route: { key.map { AIRoute(client: client, key: $0, model: nil) } }
+            routes: FakeAIRoutes(key == nil ? nil : route)
         )
         return (asker, baseURL)
     }
@@ -162,7 +162,7 @@ struct MeetingAskTests {
         #expect(MeetingAsker.maxTokens == 1_500)
         let messages = Self.messages(body)
         #expect(messages.count == 1)
-        #expect((body["captylo_task"] as? [String: Any])?["kind"] as? String == "meeting_ask")
+        #expect(body["captylo_task"] == nil)
         #expect(messages.last?.contains("[1:45] Rozmówcy: Proponuję test") == true)
         #expect(messages.last?.contains("Pytanie: Co ustaliliśmy?") == true)
         #expect(messages.last?.hasSuffix("<question>\nJaki budżet na test?\n</question>") == true)
@@ -185,13 +185,13 @@ struct MeetingAskTests {
         #expect(meeting.questions == [asked])
     }
 
-    @Test func aRejectedSessionIsStoredAsThePolishError() async throws {
+    @Test func aRejectedKeyIsStoredAsThePolishError() async throws {
         let fixture = try await Self.fixture()
         let (asker, baseURL) = Self.asker(fixture) { _ in .json("{}", status: 401) }
         defer { StubURLProtocol.unregister(baseURL) }
         let asked = try #require(await asker.ask(meetingID: fixture.meetingID, question: "Co ustaliliśmy?"))
         #expect(asked.answer == nil)
-        #expect(asked.error == MeetingSummaryError.noKey.errorDescription)
+        #expect(asked.error == ChatCompletionsError.unauthorized.errorDescription)
         #expect(try await fixture.database.meeting(id: fixture.meetingID)?.questions.first?.error == asked.error)
     }
 

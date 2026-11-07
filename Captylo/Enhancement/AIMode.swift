@@ -53,9 +53,15 @@ struct AIMode: Codable, Identifiable, Hashable, Sendable {
         CleanupPrompt.system(template: prompt, vocabulary: vocabulary, learned: learned)
     }
 
+    /// Which model serves this mode (PRD 7.2-7.3): the built-in "Czyszczenie" runs on the small
+    /// correction model, every other mode (built-in or the user's own) on the stronger one.
+    var role: AIRole {
+        builtInKey == BuiltInAIModes.Key.cleanup ? .correction : .features
+    }
+
     /// What one call of this mode sends and how its answer is judged.
     func job(vocabulary: [String], learned: LearningPromptContext = .none) -> EnhancementJob {
-        EnhancementJob(systemPrompt: systemPrompt(vocabulary: vocabulary, learned: learned), kind: kind, deadline: deadline)
+        EnhancementJob(systemPrompt: systemPrompt(vocabulary: vocabulary, learned: learned), kind: kind, role: role, deadline: deadline)
     }
 
     /// Starting point for "Dodaj tryb": a rewrite mode with the house rules already in place.

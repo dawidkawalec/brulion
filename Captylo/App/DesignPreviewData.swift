@@ -3,8 +3,8 @@ import Security
 import SwiftData
 
 /// Fake world for `--design-preview`: a wiped defaults suite, an in-memory store with 42
-/// dictations over the last 14 days, a temp `dictionary.json`, a seeded key store, the local model
-/// status "ready" and a small OpenRouter model list. Nothing here touches the user's data.
+/// dictations over the last 14 days, a temp `dictionary.json`, a seeded key store and the local
+/// model status "ready". Nothing here touches the user's data.
 @MainActor
 enum DesignPreviewData {
     /// Throwaway defaults domain, wiped at every preview start.
@@ -12,6 +12,8 @@ enum DesignPreviewData {
     /// Keychain service name used only if someone saves a key inside the preview.
     static let keyService = AppIdentity.bundleID + ".design-preview"
     static let dictationCount = 42
+    /// The model name on sample AI rows (history, meeting notes, answers).
+    static let sampleModel = CloudAIRouteProvider.defaultModel
     static let dayRange = 14
 
     // MARK: AppState
@@ -31,7 +33,7 @@ enum DesignPreviewData {
 
         let keyStore = KeyStore(
             service: keyService,
-            seed: [KeyStore.Account.openRouter: "sk-or-v1-design-preview-0000000000"],
+            seed: [KeyStore.Account.cloudFerroSherlock: "design-preview-0000000000"],
             reader: { _, _ in KeyStore.ReadResult(value: nil, status: errSecItemNotFound) }
         )
 
@@ -161,7 +163,7 @@ enum DesignPreviewData {
             LibraryAnswer(
                 question: "Jakie oferty mamy wysłać?",
                 answer: answer,
-                model: "openai/gpt-4.1-mini",
+                model: sampleModel,
                 sources: [
                     LibraryAnswer.Source(meetingID: budget.id, title: budget.title, createdAt: budget.createdAt),
                     LibraryAnswer.Source(meetingID: client.id, title: client.title, createdAt: client.createdAt),
@@ -272,13 +274,10 @@ enum DesignPreviewData {
         settings.onboardingDone = true
         settings.meetingsCalendar = showsCalendar()
         settings.aiEnabled = true
-        settings.aiModel = "openai/gpt-4.1-mini"
         // Built-ins plus one custom mode; "Czyszczenie" stays active.
         settings.aiModes = BuiltInAIModes.all + [sampleCustomMode]
         settings.aiActiveModeID = BuiltInAIModes.cleanupID
         settings.dashboardRange = dayRange
-        settings.openRouterModelsCache = try? JSONEncoder().encode(openRouterModels)
-        settings.openRouterModelsCachedAt = Date()
     }
 
     // MARK: Dictionary
@@ -340,17 +339,6 @@ enum DesignPreviewData {
         }
         return url
     }
-
-    // MARK: OpenRouter fixture
-
-    static let openRouterModels: [OpenRouterModel] = [
-        OpenRouterModel(id: "openai/gpt-4.1-mini", name: "OpenAI: GPT-4.1 Mini", promptPrice: 0.0000004, completionPrice: 0.0000016, contextLength: 1_047_576),
-        OpenRouterModel(id: "openai/gpt-oss-120b", name: "OpenAI: gpt-oss-120b", promptPrice: 0.00000009, completionPrice: 0.00000045, contextLength: 131_072, supportsReasoning: true),
-        OpenRouterModel(id: "google/gemini-2.5-flash-lite", name: "Google: Gemini 2.5 Flash Lite", promptPrice: 0.0000001, completionPrice: 0.0000004, contextLength: 1_048_576),
-        OpenRouterModel(id: "anthropic/claude-haiku-4.5", name: "Anthropic: Claude Haiku 4.5", promptPrice: 0.000001, completionPrice: 0.000005, contextLength: 200_000),
-        OpenRouterModel(id: "mistralai/mistral-small-3.2-24b-instruct", name: "Mistral: Mistral Small 3.2 24B", promptPrice: 0.00000005, completionPrice: 0.0000001, contextLength: 131_072),
-        OpenRouterModel(id: "meta-llama/llama-3.3-70b-instruct", name: "Meta: Llama 3.3 70B Instruct", promptPrice: 0.00000013, completionPrice: 0.0000004, contextLength: 131_072),
-    ]
 
     // MARK: History
 
@@ -451,7 +439,7 @@ enum DesignPreviewData {
                 language: "pl",
                 modelName: STTEngine.local.modelName,
                 transcriptionMs: 180 + Int(generator.next() % 220),
-                enhancementModel: enhanced == nil ? nil : "openai/gpt-4.1-mini",
+                enhancementModel: enhanced == nil ? nil : sampleModel,
                 enhancementMs: enhanced == nil ? nil : 620 + Int(generator.next() % 500),
                 enhancementMode: ai?.mode.name,
                 enhancementNote: ai?.note,
@@ -500,9 +488,9 @@ enum DesignPreviewData {
         ]
         meeting.notes = meeting.noteLines.map(\.text).joined(separator: "\n")
         meeting.speakerNames = ["1": "Anna"]
-        meeting.transcriptAIModel = Enhancer.relayModelPlaceholder
+        meeting.transcriptAIModel = sampleModel
         meeting.summaryTemplateID = BuiltInMeetingTemplates.general.id
-        meeting.summaryModel = "openai/gpt-4.1-mini"
+        meeting.summaryModel = sampleModel
         meeting.summary = """
         ## Podsumowanie
         - We wrześniu wydaliśmy 32 tys. zł, ponad połowę na reklamy w wyszukiwarce [0:12]
@@ -528,7 +516,7 @@ enum DesignPreviewData {
             MeetingQuestion(
                 question: "Ile możemy wydać na test LinkedIn?",
                 answer: "Maksymalnie **5 tys. zł** na dwutygodniowy test na dwóch grupach odbiorców [1:45]. Wyniki porównacie 15 października [1:58].",
-                model: "openai/gpt-4.1-mini",
+                model: sampleModel,
                 askedAt: createdAt.addingTimeInterval(3_000)
             ),
             MeetingQuestion(
@@ -538,7 +526,7 @@ enum DesignPreviewData {
                 - Ja: zapytać agencję o ofertę na wideo, jutro [22:13]
                 - Mówca 2: podsumowanie liczb po spotkaniu [45:00]
                 """,
-                model: "openai/gpt-4.1-mini",
+                model: sampleModel,
                 askedAt: createdAt.addingTimeInterval(3_060)
             ),
         ]

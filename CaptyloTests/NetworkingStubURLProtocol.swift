@@ -44,6 +44,28 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
         return URLSession(configuration: configuration)
     }
 
+    /// The JSON body of a stubbed request (`URLProtocol` sees a stream instead of `httpBody`).
+    static func body(of request: URLRequest) -> [String: Any] {
+        var data = request.httpBody ?? Data()
+        if data.isEmpty, let stream = request.httpBodyStream {
+            stream.open()
+            defer { stream.close() }
+            var buffer = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable {
+                let read = stream.read(&buffer, maxLength: buffer.count)
+                guard read > 0 else { break }
+                data.append(buffer, count: read)
+            }
+        }
+        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
+    }
+
+    /// The `messages` of a stubbed chat request as (role, content) pairs.
+    static func messages(of request: URLRequest) -> [(role: String, content: String)] {
+        let messages = body(of: request)["messages"] as? [[String: Any]] ?? []
+        return messages.map { ($0["role"] as? String ?? "", $0["content"] as? String ?? "") }
+    }
+
     private static func handler(for request: URLRequest) -> Handler? {
         guard let host = request.url?.host() else { return nil }
         return handlers.withLock { $0[host] }

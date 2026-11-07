@@ -28,7 +28,7 @@ final class Dictation {
     /// Name of the AI mode used ("Czyszczenie", "Po angielsku"...). Added with "Tryby AI":
     /// optional with a nil default, so older stores migrate lightweight.
     var enhancementMode: String? = nil
-    /// Why AI produced no text ("Brak klucza OpenRouter", "Przekroczono limit 3 s"...).
+    /// Why AI produced no text ("Brak modelu AI", "Przekroczono limit 3 s"...).
     var enhancementNote: String? = nil
     /// Of the delivered text (`enhancedText ?? text`).
     var wordCount: Int = 0

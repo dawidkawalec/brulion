@@ -162,7 +162,8 @@ final class DictationController: RecorderCoordinator {
 
         if env.settings.aiEnabled {
             let enhancer = env.enhancer
-            Task { await enhancer.prewarm() }
+            let role = env.settings.activeMode.role
+            Task { await enhancer.prewarm(role) }
         }
         if env.settings.livePreview, env.isLocalModelReady() {
             startPreview(for: id, buffer: buffer)
@@ -257,7 +258,8 @@ final class DictationController: RecorderCoordinator {
         let recordedFor = Self.now() - take.startedAt - take.pausedTotal
         if env.settings.aiEnabled, recordedFor > Self.longRecording {
             let enhancer = env.enhancer
-            Task { await enhancer.prewarm() }
+            let role = env.settings.activeMode.role
+            Task { await enhancer.prewarm(role) }
         }
 
         var record = DictationRecord(

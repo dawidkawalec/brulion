@@ -116,8 +116,8 @@ struct DictationRecord: Sendable, Equatable, Identifiable {
     var enhancementMs: Int?
     /// Name of the AI mode that produced `enhancedText` or was tried; nil when AI was off.
     var enhancementMode: String?
-    /// Short Polish reason why AI produced no text ("Brak klucza OpenRouter", "Przekroczono
-    /// limit 3 s"...); nil on success and when AI was off.
+    /// Short Polish reason why AI produced no text ("Brak modelu AI", "Przekroczono limit 3 s"...);
+    /// nil on success and when AI was off.
     var enhancementNote: String?
     /// Word count of the delivered text (`enhancedText ?? text`), computed once at save.
     var wordCount: Int
@@ -235,19 +235,20 @@ protocol TranscriptionRouting: Sendable {
     ) async throws -> TranscriptionResult
 }
 
-/// OpenRouter AI call with a hard deadline (module Enhancement). Never throws: raw text wins on failure.
+/// AI call with a hard deadline on the route of its role (module Enhancement, `AIRouteProviding`).
+/// Never throws: raw text wins on failure.
 protocol TextEnhancing: Sendable {
-    /// One call: the job carries the system prompt, the mode kind (guard, token cap, skip rule)
-    /// and the deadline.
+    /// One call: the job carries the system prompt, the mode kind (guard, token cap, skip rule),
+    /// the role (which model) and the deadline.
     func enhance(_ raw: String, job: EnhancementJob) async -> EnhancementOutcome
-    /// Warm the connection at hotkey-down (debounced by the implementation).
-    func prewarm() async
+    /// Start or warm whatever serves `role` at hotkey-down (debounced by the implementation).
+    func prewarm(_ role: AIRole) async
 }
 
 extension TextEnhancing {
-    /// Strict cleanup with the implementation's own deadline.
+    /// Strict cleanup on the correction model with the implementation's own deadline.
     func enhance(_ raw: String, systemPrompt: String) async -> EnhancementOutcome {
-        await enhance(raw, job: EnhancementJob(systemPrompt: systemPrompt))
+        await enhance(raw, job: EnhancementJob(systemPrompt: systemPrompt, role: .correction))
     }
 
     /// One call in the given mode: its prompt with the vocabulary and what self-learning knows

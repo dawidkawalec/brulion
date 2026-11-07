@@ -6,149 +6,285 @@ struct EnhancementEnhancerTests {
     private static let raw = "no więc to jest dłuższy testowy transkrypt który ma zdecydowanie więcej niż trzy słowa"
     private static let systemPrompt = CleanupPrompt.system(template: "", vocabulary: [])
 
+    /// An enhancer whose every role goes to a stub server answering with `handler`, or no route
+    /// at all when `hasRoute` is false. Returns the fake provider too, to see the roles asked for.
     private func makeEnhancer(
         _ handler: @escaping StubURLProtocol.Handler,
-        key: String? = "sk-or-test",
-        model: String = "openai/gpt-4.1-mini",
-        deadline: Duration = .seconds(3),
-        relay: Bool = false
-    ) -> (Enhancer, URL) {
-        let baseURL = StubURLProtocol.register(handler)
-        let client = OpenRouterClient(baseURL: baseURL)
-        // The relay route has no model: the server picks it.
-        let route = key.map { AIRoute(client: client, key: $0, model: relay ? nil : model) }
-        let enhancer = Enhancer(
-            client: client,
-            route: { _ in .value(route) },
-            session: StubURLProtocol.makeSession(),
-            deadline: deadline
-        )
-        return (enhancer, baseURL)
+        hasRoute: Bool = true,
+        model: String = "bielik-test",
+        deadline: Duration = .seconds(3)
+    ) -> (Enhancer, FakeAIRoutes, URL) {
+        let (route, baseURL) = AIRouteFixtures.stubRoute(model: model, handler)
+        let routes = FakeAIRoutes(hasRoute ? route : nil)
+        let enhancer = Enhancer(routes: routes, session: StubURLProtocol.makeSession(), deadline: deadline)
+        return (enhancer, routes, baseURL)
     }
 
-    private static func json(of request: URLRequest) -> [String: Any] {
-        AccountFixtures.body(of: request)
+    // MARK: Roles
+
+    @Test func eachModeAsksForItsRole() async {
+        let (enhancer, routes, baseURL) = makeEnhancer { _ in
+            .json(Fixtures.chat(content: "\"\(Self.raw)\"", finish: "stop"))
+        }
+        defer { StubURLProtocol.unregister(baseURL) }
+
+        // "Czyszczenie" runs on the correction model, every other built-in and custom mode on
+        // the features model (PRD 7.2-7.3).
+        _ = await enhancer.enhance(Self.raw, mode: BuiltInAIModes.cleanup, vocabulary: [])
+        for mode in [BuiltInAIModes.english, BuiltInAIModes.organize, BuiltInAIModes.email, BuiltInAIModes.tasks, AIMode.newCustom()] {
+            _ = await enhancer.enhance(Self.raw, mode: mode, vocabulary: [])
+        }
+        #expect(routes.asked == [.correction, .features, .features, .features, .features, .features])
     }
 
-    // MARK: The Pro relay
+    @Test func aModesRoleFollowsTheCleanupKeyNotItsKind() {
+        #expect(BuiltInAIModes.cleanup.role == .correction)
+        #expect(BuiltInAIModes.cleanup.job(vocabulary: []).role == .correction)
+        // A custom mode is a feature even when it is a cleanup kind.
+        let custom = AIMode(name: "Moje czyszczenie", prompt: "p", kind: .cleanup, deadlineSeconds: 3)
+        #expect(custom.role == .features)
+        #expect(BuiltInAIModes.english.job(vocabulary: []).role == .features)
+        // Note titles use the small model; a plain job defaults to the features model.
+        #expect(NoteTitles.job.role == .correction)
+        #expect(EnhancementJob(systemPrompt: "p").role == .features)
+    }
 
-    @Test func relayRouteSendsThePlaceholderModelAndTheSessionAndKeepsCaptyloAI() async throws {
+    @Test func prewarmPassesTheRoleOn() async {
+        let routes = FakeAIRoutes(nil)
+        let enhancer = Enhancer(routes: routes, session: StubURLProtocol.makeSession())
+        await enhancer.prewarm(.correction)
+        await enhancer.prewarm(.features)
+        #expect(routes.prewarmed == [.correction, .features])
+    }
+
+    // MARK: No route
+
+    @Test func noRouteIsSkippedWithoutNetwork() async {
+        let counter = Counter()
+        let (enhancer, _, baseURL) = makeEnhancer({ _ in
+            counter.increment()
+            return .json(Fixtures.chat(content: "\"x\"", finish: "stop"))
+        }, hasRoute: false)
+        defer { StubURLProtocol.unregister(baseURL) }
+        let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
+        #expect(outcome == .skipped(.noKey))
+        #expect(outcome.text == nil, "the raw text is pasted")
+        #expect(outcome.note == "Brak modelu AI")
+        #expect(counter.value == 0)
+    }
+
+    @Test func theUnavailableProviderNeverRoutes() async {
+        let provider = UnavailableAIRouteProvider()
+        #expect(await provider.route(for: .correction, timeout: .seconds(1)) == nil)
+        #expect(await provider.route(for: .features, timeout: .seconds(1)) == nil)
+        await provider.prewarm(.features)
+        let enhancer = Enhancer(routes: provider, session: StubURLProtocol.makeSession())
+        #expect(await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt) == .skipped(.noKey))
+    }
+
+    // MARK: enhance
+
+    @Test func returnsEnhancedTextWithTheRoutesModelAndTiming() async throws {
         let cleaned = "Więc to jest dłuższy testowy transkrypt, który ma zdecydowanie więcej niż trzy słowa."
-        let (enhancer, baseURL) = makeEnhancer({ request in
-            let body = Self.json(of: request)
+        let (enhancer, _, baseURL) = makeEnhancer({ request in
             #expect(request.url?.path().hasSuffix("/chat/completions") == true)
-            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
-            #expect(body["model"] as? String == Enhancer.relayModelPlaceholder)
-            #expect((body["reasoning"] as? [String: Any])?["enabled"] as? Bool == false)
-            return .json(Fixtures.chat(content: "\"\(cleaned)\"", finish: "stop"))
-        }, key: "session-token", relay: true)
+            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer local-token")
+            let body = StubURLProtocol.body(of: request)
+            #expect(body["model"] as? String == "bielik-1.5b")
+            #expect(body["temperature"] as? Double == 0)
+            let messages = StubURLProtocol.messages(of: request)
+            #expect(messages.map(\.role) == ["system", "user"])
+            #expect(messages.last?.content == Self.raw)
+            return .json(Fixtures.chat(content: "\"<think>hm</think>\\n\(cleaned)\"", finish: "stop"))
+        }, model: "bielik-1.5b")
         defer { StubURLProtocol.unregister(baseURL) }
 
         let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
-        guard case .enhanced(let text, _, let model) = outcome else {
+        guard case .enhanced(let text, let ms, let model) = outcome else {
             Issue.record("Expected .enhanced, got \(outcome)")
             return
         }
         #expect(text == cleaned)
-        // Never the model the answer names: history keeps "captylo-ai", the UI says "Captylo AI".
-        #expect(model == Enhancer.relayModelPlaceholder)
-        #expect(Enhancer.relayModelPlaceholder == "captylo-ai")
-        #expect(Enhancer.displayName(forModel: model) == "Captylo AI")
-        #expect(Enhancer.displayName(forModel: "captylo-pro") == "Captylo AI")
-        #expect(Enhancer.displayName(forModel: "openai/gpt-4.1-mini") == "openai/gpt-4.1-mini")
+        // History keeps the route's model as the model name.
+        #expect(model == "bielik-1.5b")
+        #expect(ms >= 0 && ms < 3000)
     }
 
-    @Test func relayAnswerWithoutAModelNamesThePlaceholder() async {
-        let cleaned = "Więc to jest dłuższy testowy transkrypt, który ma zdecydowanie więcej niż trzy słowa."
-        let (enhancer, baseURL) = makeEnhancer({ _ in
-            .json(#"{"choices":[{"message":{"content":"\#(cleaned)"},"finish_reason":"stop"}]}"#)
-        }, key: "session-token", relay: true)
+    @Test func skipsShortTranscriptsWithoutAskingForARoute() async {
+        let counter = Counter()
+        let (enhancer, routes, baseURL) = makeEnhancer { _ in
+            counter.increment()
+            return .json(Fixtures.chat(content: "\"x\"", finish: "stop"))
+        }
         defer { StubURLProtocol.unregister(baseURL) }
-        guard case .enhanced(_, _, let model) = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt) else {
-            Issue.record("Expected .enhanced")
+        #expect(await enhancer.enhance("tylko trzy słowa", systemPrompt: Self.systemPrompt) == .skipped(.tooShort))
+        #expect(await enhancer.enhance("", systemPrompt: Self.systemPrompt) == .skipped(.tooShort))
+        // A rewrite mode still skips empty text.
+        #expect(await enhancer.enhance("  ", job: EnhancementJob(systemPrompt: "p", kind: .rewrite)) == .skipped(.tooShort))
+        #expect(counter.value == 0)
+        #expect(routes.asked.isEmpty)
+    }
+
+    @Test func failsOnTruncatedOrEmptyOutput() async {
+        let (truncated, _, url1) = makeEnhancer { _ in .json(Fixtures.chat(content: "\"\(Self.raw)\"", finish: "length")) }
+        defer { StubURLProtocol.unregister(url1) }
+        guard case .failed(.rejected(.truncated), _) = await truncated.enhance(Self.raw, systemPrompt: Self.systemPrompt) else {
+            Issue.record("Expected .failed on finish_reason length")
             return
         }
-        #expect(model == Enhancer.relayModelPlaceholder)
+
+        let (empty, _, url2) = makeEnhancer { _ in .json(Fixtures.chat(content: "null", finish: "stop")) }
+        defer { StubURLProtocol.unregister(url2) }
+        guard case .failed(.rejected(.empty), _) = await empty.enhance(Self.raw, systemPrompt: Self.systemPrompt) else {
+            Issue.record("Expected .failed on null content")
+            return
+        }
     }
 
-    @Test func relayQuotaFailsWithQuotaExceeded() async {
-        let (enhancer, baseURL) = makeEnhancer({ _ in
-            .json(#"{"error":"quota_exceeded","resetsAt":"2026-11-01T00:00:00.000Z"}"#, status: 402)
-        }, key: "session-token", relay: true)
+    @Test func failsOnHTTPErrorsWithPolishReason() async {
+        let (enhancer, _, baseURL) = makeEnhancer { _ in .json(#"{"error":{"message":"bad key","code":401}}"#, status: 401) }
         defer { StubURLProtocol.unregister(baseURL) }
         let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
-        guard case .failed(.quotaExceeded, _) = outcome else {
-            Issue.record("Expected .failed(.quotaExceeded), got \(outcome)")
+        guard case .failed(let failure, _) = outcome else {
+            Issue.record("Expected .failed, got \(outcome)")
             return
         }
+        #expect(failure == .http(status: 401))
+        #expect(failure.errorDescription == ChatCompletionsError.unauthorized.errorDescription)
+        #expect(outcome.note == String(localized: "Błąd AI \(String(401))"))
+    }
+
+    @Test func deadlineFailsWithinBudgetAndKeepsTheRawText() async {
+        let (enhancer, _, baseURL) = makeEnhancer { _ in
+            .json(Fixtures.chat(content: "\"late\"", finish: "stop"), delay: .seconds(5))
+        }
+        defer { StubURLProtocol.unregister(baseURL) }
+
+        let clock = ContinuousClock()
+        let start = clock.now
+        let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
+        let elapsed = clock.now - start
+
+        guard case .failed(let failure, let ms) = outcome else {
+            Issue.record("Expected .failed on deadline, got \(outcome)")
+            return
+        }
+        #expect(failure == .deadline(seconds: 3))
+        #expect(failure.errorDescription == EnhancerError.deadline.errorDescription)
         #expect(outcome.text == nil, "the raw text is pasted")
-        #expect(outcome.errorMessage == "Limit AI w tym miesiącu jest wyczerpany.")
-        #expect(outcome.note == "Limit AI wyczerpany")
+        #expect(elapsed >= .seconds(2.9), "finished too early: \(elapsed)")
+        #expect(elapsed < .seconds(3.3), "deadline overshoot: \(elapsed)")
+        #expect(ms >= 2900 && ms < 3300)
     }
 
-    @Test func relayRefusingTheSessionReadsAsNoKey() async {
-        let (enhancer, baseURL) = makeEnhancer({ _ in
-            .json(#"{"error":"pro_required"}"#, status: 403)
-        }, key: "session-token", relay: true)
+    @Test func aRouteThatTakesTheWholeDeadlineFails() async {
+        let counter = Counter()
+        let (route, baseURL) = AIRouteFixtures.stubRoute { _ in
+            counter.increment()
+            return .json(Fixtures.chat(content: "\"x\"", finish: "stop"))
+        }
         defer { StubURLProtocol.unregister(baseURL) }
-        #expect(await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt) == .skipped(.noKey))
-    }
-
-    @Test func routeTimeoutIsAKeychainTimeout() async {
-        let enhancer = Enhancer(client: OpenRouterClient(), route: { _ in .timedOut }, session: StubURLProtocol.makeSession())
-        guard case .failed(.keychainTimeout, _) = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt) else {
-            Issue.record("Expected .failed(.keychainTimeout)")
+        // The provider ignores its timeout (a model server still starting): the job's deadline wins.
+        let routes = FakeAIRoutes(route, delay: .milliseconds(400))
+        let enhancer = Enhancer(routes: routes, session: StubURLProtocol.makeSession(), deadline: .milliseconds(300))
+        let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
+        guard case .failed(.deadline, _) = outcome else {
+            Issue.record("Expected .failed(.deadline), got \(outcome)")
             return
         }
+        #expect(counter.value == 0)
     }
 
-    @Test func prewarmOnTheRelayHitsItsHealthEndpoint() async throws {
+    @Test func retriesOnceOnConnectionLost() async {
         let counter = Counter()
-        let (enhancer, baseURL) = makeEnhancer({ request in
-            #expect(request.url?.path().hasSuffix("/health") == true)
-            #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
+        let (enhancer, _, baseURL) = makeEnhancer { _ in
             counter.increment()
-            return .json(#"{"ok":true}"#)
-        }, key: "session-token", relay: true)
+            if counter.value == 1 {
+                return .failure(.networkConnectionLost)
+            }
+            return .json(Fixtures.chat(content: "\"\(Self.raw)\"", finish: "stop"))
+        }
         defer { StubURLProtocol.unregister(baseURL) }
-        await enhancer.prewarm()
-        try await waitUntil { counter.value >= 1 }
+        let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
+        #expect(outcome.text == Self.raw)
+        #expect(counter.value == 2)
+    }
+
+    @Test func doesNotRetryOtherNetworkErrors() async {
+        let counter = Counter()
+        let (enhancer, _, baseURL) = makeEnhancer { _ in
+            counter.increment()
+            return .failure(.notConnectedToInternet)
+        }
+        defer { StubURLProtocol.unregister(baseURL) }
+        guard case .failed = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt) else {
+            Issue.record("Expected .failed")
+            return
+        }
         #expect(counter.value == 1)
     }
 
-    @Test func modelTestOnTheRelayUsesThePlaceholder() async throws {
-        let (enhancer, baseURL) = makeEnhancer({ request in
-            #expect(Self.json(of: request)["model"] as? String == Enhancer.relayModelPlaceholder)
-            return .json(Fixtures.chat(content: "\"ok\"", finish: "stop"))
-        }, key: "session-token", relay: true)
+    @Test func doesNotRetryWhenBudgetIsTooSmall() async {
+        let counter = Counter()
+        let (enhancer, _, baseURL) = makeEnhancer({ _ in
+            counter.increment()
+            return .failure(.networkConnectionLost)
+        }, deadline: .milliseconds(500))
         defer { StubURLProtocol.unregister(baseURL) }
-        _ = try await enhancer.test(model: "openai/gpt-4.1-mini").get()
+        guard case .failed = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt) else {
+            Issue.record("Expected .failed")
+            return
+        }
+        #expect(counter.value == 1)
+    }
+
+    // MARK: test
+
+    @Test func testSendsATinyCallOnTheRoleAndReportsTheModel() async throws {
+        let (enhancer, routes, baseURL) = makeEnhancer({ request in
+            #expect(StubURLProtocol.body(of: request)["max_tokens"] as? Int == 1)
+            return .json(Fixtures.chat(content: "\"ok\"", finish: "length"), delay: .milliseconds(50))
+        }, model: "bielik-1.5b")
+        defer { StubURLProtocol.unregister(baseURL) }
+        let answer = try await enhancer.test(role: .correction).get()
+        #expect(answer.ms >= 40 && answer.ms < 5000)
+        #expect(answer.model == "bielik-1.5b")
+        #expect(routes.asked == [.correction])
+    }
+
+    @Test func testReportsNoRouteAndBadKey() async {
+        let (noRoute, _, url1) = makeEnhancer({ _ in .json("{}") }, hasRoute: false)
+        defer { StubURLProtocol.unregister(url1) }
+        guard case .failure(let missing) = await noRoute.test(role: .features) else {
+            Issue.record("Expected failure without a route")
+            return
+        }
+        #expect(missing as? ChatCompletionsError == .missingKey)
+
+        let (badKey, _, url2) = makeEnhancer { _ in .json(#"{"error":{"message":"no","code":401}}"#, status: 401) }
+        defer { StubURLProtocol.unregister(url2) }
+        guard case .failure(let error) = await badKey.test(role: .features) else {
+            Issue.record("Expected failure on 401")
+            return
+        }
+        #expect(error as? ChatCompletionsError == .unauthorized)
     }
 
     // MARK: Pure rules
 
     @Test func maxTokensRule() {
         // est = max(16, bytes / 3); cap = min(2048, est * 2 + 64)
-        let model = "openai/gpt-4.1-mini"
-        #expect(Enhancer.maxTokens(forUTF8Count: 0, model: model) == 96)
-        #expect(Enhancer.maxTokens(forUTF8Count: 30, model: model) == 96)
-        #expect(Enhancer.maxTokens(forUTF8Count: 300, model: model) == 264)
-        #expect(Enhancer.maxTokens(forUTF8Count: 2900, model: model) == 1996)
-        #expect(Enhancer.maxTokens(forUTF8Count: 3000, model: model) == 2048)
-        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, model: model) == 2048)
-    }
-
-    @Test func maxTokensAddsTheGptOssReasoningAllowance() {
-        // gpt-oss counts its reasoning in max_tokens: + 512 on top of the capped rule.
-        // 60 bytes: est 20, base 104.
-        #expect(Enhancer.maxTokens(forUTF8Count: 60, model: "openai/gpt-oss-120b") == 104 + 512)
-        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, model: "openai/gpt-oss-120b") == 2048 + 512)
-        #expect(Enhancer.maxTokens(forUTF8Count: 60, model: "google/gemini-2.5-flash-lite") == 104)
+        #expect(Enhancer.maxTokens(forUTF8Count: 0) == 96)
+        #expect(Enhancer.maxTokens(forUTF8Count: 30) == 96)
+        #expect(Enhancer.maxTokens(forUTF8Count: 300) == 264)
+        #expect(Enhancer.maxTokens(forUTF8Count: 2900) == 1996)
+        #expect(Enhancer.maxTokens(forUTF8Count: 3000) == 2048)
+        #expect(Enhancer.maxTokens(forUTF8Count: 100_000) == 2048)
     }
 
     @Test func maxTokensHonorsALargerFileCap() {
-        #expect(Enhancer.maxTokens(forUTF8Count: 9000, model: "openai/gpt-4.1-mini", cap: 8192) == 6064)
-        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, model: "openai/gpt-4.1-mini", cap: 8192) == 8192)
+        #expect(Enhancer.maxTokens(forUTF8Count: 9000, cap: 8192) == 6064)
+        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, cap: 8192) == 8192)
     }
 
     @Test func fileLLMSessionOutlastsTheFileDeadline() {
@@ -176,224 +312,5 @@ struct EnhancementEnhancerTests {
         #expect(Enhancer.rejectionReason(raw: long, output: String(long.prefix(60)), finishReason: nil) == nil)
         // Short transcripts (<= 40 chars) skip the length ratio check.
         #expect(Enhancer.rejectionReason(raw: "krótki tekst do sprawdzenia", output: "Ok", finishReason: "stop") == nil)
-    }
-
-    // MARK: enhance
-
-    @Test func skipsShortTranscriptsWithoutNetwork() async {
-        let counter = Counter()
-        let (enhancer, baseURL) = makeEnhancer { _ in
-            counter.increment()
-            return .json(Fixtures.chat(content: "\"x\"", finish: "stop"))
-        }
-        defer { StubURLProtocol.unregister(baseURL) }
-        #expect(await enhancer.enhance("tylko trzy słowa", systemPrompt: Self.systemPrompt) == .skipped(.tooShort))
-        #expect(await enhancer.enhance("", systemPrompt: Self.systemPrompt) == .skipped(.tooShort))
-        // A rewrite mode still skips empty text.
-        #expect(await enhancer.enhance("  ", job: EnhancementJob(systemPrompt: "p", kind: .rewrite)) == .skipped(.tooShort))
-        #expect(counter.value == 0)
-    }
-
-    @Test func skipsWithoutKey() async {
-        let counter = Counter()
-        let (enhancer, baseURL) = makeEnhancer({ _ in
-            counter.increment()
-            return .json(Fixtures.chat(content: "\"x\"", finish: "stop"))
-        }, key: nil)
-        defer { StubURLProtocol.unregister(baseURL) }
-        #expect(await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt) == .skipped(.noKey))
-        #expect(counter.value == 0)
-    }
-
-    @Test func returnsEnhancedTextWithModelAndTiming() async throws {
-        let cleaned = "Więc to jest dłuższy testowy transkrypt, który ma zdecydowanie więcej niż trzy słowa."
-        let (enhancer, baseURL) = makeEnhancer({ request in
-            #expect(request.url?.path().hasSuffix("/chat/completions") == true)
-            #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer sk-or-test")
-            return .json(Fixtures.chat(content: "\"<think>hm</think>\\n\(cleaned)\"", finish: "stop"))
-        }, model: "google/gemini-2.5-flash-lite")
-        defer { StubURLProtocol.unregister(baseURL) }
-
-        let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
-        guard case .enhanced(let text, let ms, let model) = outcome else {
-            Issue.record("Expected .enhanced, got \(outcome)")
-            return
-        }
-        #expect(text == cleaned)
-        #expect(model == "google/gemini-2.5-flash-lite")
-        #expect(ms >= 0 && ms < 3000)
-        #expect(outcome.text == cleaned)
-    }
-
-    @Test func failsOnTruncatedOrEmptyOutput() async {
-        let (truncated, url1) = makeEnhancer { _ in .json(Fixtures.chat(content: "\"\(Self.raw)\"", finish: "length")) }
-        defer { StubURLProtocol.unregister(url1) }
-        guard case .failed = await truncated.enhance(Self.raw, systemPrompt: Self.systemPrompt) else {
-            Issue.record("Expected .failed on finish_reason length")
-            return
-        }
-
-        let (empty, url2) = makeEnhancer { _ in .json(Fixtures.chat(content: "null", finish: "stop")) }
-        defer { StubURLProtocol.unregister(url2) }
-        guard case .failed = await empty.enhance(Self.raw, systemPrompt: Self.systemPrompt) else {
-            Issue.record("Expected .failed on null content")
-            return
-        }
-    }
-
-    @Test func failsOnHTTPErrorsWithPolishReason() async {
-        let (enhancer, baseURL) = makeEnhancer { _ in .json(#"{"error":{"message":"bad key","code":401}}"#, status: 401) }
-        defer { StubURLProtocol.unregister(baseURL) }
-        let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
-        guard case .failed(let failure, _) = outcome else {
-            Issue.record("Expected .failed, got \(outcome)")
-            return
-        }
-        #expect(failure == .http(status: 401))
-        #expect(failure.errorDescription == OpenRouterError.unauthorized.errorDescription)
-        #expect(outcome.note == String(localized: "Błąd AI \(String(401))"))
-    }
-
-    @Test func deadlineYieldsFailedWithinBudget() async {
-        let (enhancer, baseURL) = makeEnhancer { _ in
-            .json(Fixtures.chat(content: "\"late\"", finish: "stop"), delay: .seconds(5))
-        }
-        defer { StubURLProtocol.unregister(baseURL) }
-
-        let clock = ContinuousClock()
-        let start = clock.now
-        let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
-        let elapsed = clock.now - start
-
-        guard case .failed(let failure, let ms) = outcome else {
-            Issue.record("Expected .failed on deadline, got \(outcome)")
-            return
-        }
-        #expect(failure == .deadline(seconds: 3))
-        #expect(failure.errorDescription == EnhancerError.deadline.errorDescription)
-        #expect(elapsed >= .seconds(2.9), "finished too early: \(elapsed)")
-        #expect(elapsed < .seconds(3.3), "deadline overshoot: \(elapsed)")
-        #expect(ms >= 2900 && ms < 3300)
-    }
-
-    @Test func retriesOnceOnConnectionLost() async {
-        let counter = Counter()
-        let (enhancer, baseURL) = makeEnhancer { _ in
-            counter.increment()
-            if counter.value == 1 {
-                return .failure(.networkConnectionLost)
-            }
-            return .json(Fixtures.chat(content: "\"\(Self.raw)\"", finish: "stop"))
-        }
-        defer { StubURLProtocol.unregister(baseURL) }
-        let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
-        #expect(outcome.text == Self.raw)
-        #expect(counter.value == 2)
-    }
-
-    @Test func doesNotRetryOtherNetworkErrors() async {
-        let counter = Counter()
-        let (enhancer, baseURL) = makeEnhancer { _ in
-            counter.increment()
-            return .failure(.notConnectedToInternet)
-        }
-        defer { StubURLProtocol.unregister(baseURL) }
-        let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
-        guard case .failed = outcome else {
-            Issue.record("Expected .failed, got \(outcome)")
-            return
-        }
-        #expect(counter.value == 1)
-    }
-
-    @Test func doesNotRetryWhenBudgetIsTooSmall() async {
-        let counter = Counter()
-        let (enhancer, baseURL) = makeEnhancer({ _ in
-            counter.increment()
-            return .failure(.networkConnectionLost)
-        }, deadline: .milliseconds(500))
-        defer { StubURLProtocol.unregister(baseURL) }
-        let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
-        guard case .failed = outcome else {
-            Issue.record("Expected .failed, got \(outcome)")
-            return
-        }
-        #expect(counter.value == 1)
-    }
-
-    // MARK: test / verifyKey / prewarm
-
-    @Test func testSendsOneTokenCallAndReportsMilliseconds() async throws {
-        let (enhancer, baseURL) = makeEnhancer { request in
-            #expect(request.url?.path().hasSuffix("/chat/completions") == true)
-            return .json(Fixtures.chat(content: "\"ok\"", finish: "length"), delay: .milliseconds(50))
-        }
-        defer { StubURLProtocol.unregister(baseURL) }
-        let ms = try await enhancer.test(model: "openai/gpt-4.1-mini").get()
-        #expect(ms >= 40 && ms < 5000)
-    }
-
-    @Test func testReportsMissingKeyAndBadKey() async {
-        let (noKey, url1) = makeEnhancer({ _ in .json("{}") }, key: nil)
-        defer { StubURLProtocol.unregister(url1) }
-        if case .success = await noKey.test(model: "x") {
-            Issue.record("Expected failure without a key")
-        }
-
-        let (badKey, url2) = makeEnhancer { _ in .json(#"{"error":{"message":"no","code":401}}"#, status: 401) }
-        defer { StubURLProtocol.unregister(url2) }
-        guard case .failure(let error) = await badKey.test(model: "x") else {
-            Issue.record("Expected failure on 401")
-            return
-        }
-        #expect(error as? OpenRouterError == .unauthorized)
-    }
-
-    @Test func verifyKeyUsesTheAuthEndpoint() async {
-        let (enhancer, baseURL) = makeEnhancer { request in
-            let authorized = request.value(forHTTPHeaderField: "Authorization") == "Bearer good"
-            #expect(request.url?.path().hasSuffix("/auth/key") == true)
-            return authorized ? .json(#"{"data":{"label":"ok"}}"#) : .json(#"{"error":{"code":401}}"#, status: 401)
-        }
-        defer { StubURLProtocol.unregister(baseURL) }
-
-        if case .failure(let error) = await enhancer.verifyKey("good") {
-            Issue.record("Expected success, got \(error)")
-        }
-        guard case .failure(let error) = await enhancer.verifyKey("bad") else {
-            Issue.record("Expected failure for the bad key")
-            return
-        }
-        #expect(error as? OpenRouterError == .unauthorized)
-        guard case .failure(let missing) = await enhancer.verifyKey("  ") else {
-            Issue.record("Expected failure for a blank key")
-            return
-        }
-        #expect(missing as? OpenRouterError == .missingKey)
-    }
-
-    @Test func prewarmHitsTheKeyEndpointOnceAndSkipsWithoutKey() async throws {
-        let counter = Counter()
-        let (enhancer, baseURL) = makeEnhancer { request in
-            #expect(request.url?.path().hasSuffix("/auth/key") == true)
-            counter.increment()
-            return .json("{}")
-        }
-        defer { StubURLProtocol.unregister(baseURL) }
-        await enhancer.prewarm()
-        await enhancer.prewarm()
-        try await waitUntil { counter.value >= 1 }
-        try await Task.sleep(for: .milliseconds(150))
-        #expect(counter.value == 1)
-
-        let noKeyCounter = Counter()
-        let (noKey, url2) = makeEnhancer({ _ in
-            noKeyCounter.increment()
-            return .json("{}")
-        }, key: nil)
-        defer { StubURLProtocol.unregister(url2) }
-        await noKey.prewarm()
-        try await Task.sleep(for: .milliseconds(100))
-        #expect(noKeyCounter.value == 0)
     }
 }

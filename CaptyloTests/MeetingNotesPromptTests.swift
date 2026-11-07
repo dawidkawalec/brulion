@@ -23,7 +23,7 @@ struct MeetingNotesPromptTests {
         #expect(BuiltInMeetingTemplates.pick(forTitle: "Spotkanie 1:1, 30 września 11:15").id == "oneOnOne")
     }
 
-    /// The ids are the relay's template ids: a new one needs its instructions on the server.
+    /// The notes instructions key on these ids: a new one needs its instructions too.
     @Test func everyTemplateHasAUniqueIDAndName() {
         let ids = BuiltInMeetingTemplates.all.map(\.id)
         #expect(ids == ["general", "oneOnOne", "standup", "client", "interview", "lecture"])

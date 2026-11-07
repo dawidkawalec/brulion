@@ -2,7 +2,7 @@ import SwiftUI
 
 /// "Testuj tryb" in the mode editor: a sample dictation (prefilled with a messy Polish sentence),
 /// one call of the mode as it is being edited (`ModeTester`) and the model output with its time.
-/// Without an OpenRouter key it says where to add one.
+/// Without an AI route (no local model, cloud off) it says where to get one.
 @MainActor
 struct AIModeTestPanel: View {
     let mode: AIMode
@@ -141,8 +141,8 @@ struct AIModeTestPanel: View {
 
     static func message(for error: any Error) -> String {
         if let skip = error as? EnhancementSkip, skip == .noKey {
-            // Shared with OpenRouterError, so the editor and Historia never say different things.
-            return OpenRouterError.missingKeyMessage
+            // Shared with ChatCompletionsError, so the editor and Historia never say different things.
+            return ChatCompletionsError.missingKeyMessage
         }
         return (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
     }

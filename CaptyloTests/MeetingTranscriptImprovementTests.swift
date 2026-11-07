@@ -128,13 +128,26 @@ struct MeetingTranscriptImprovementTests {
         return (database, meeting.id)
     }
 
-    /// The Pro relay with `key` as the session; nil = no Pro session.
-    private static func corrector(_ handler: @escaping StubURLProtocol.Handler, key: String? = "session-token") -> MeetingTranscriptCorrector {
-        let client = OpenRouterClient(baseURL: StubURLProtocol.register(handler))
+    private static let model = "bielik-korekta-test"
+
+    /// A corrector on a stub server, on the correction model; `hasRoute: false` = no AI route.
+    private static func corrector(_ handler: @escaping StubURLProtocol.Handler, hasRoute: Bool = true, routes: FakeAIRoutes? = nil) -> MeetingTranscriptCorrector {
+        let (route, _) = AIRouteFixtures.stubRoute(model: model, handler)
         return MeetingTranscriptCorrector(
             session: StubURLProtocol.makeSession(),
-            route: { key.map { AIRoute(client: client, key: $0, model: nil) } }
+            routes: routes ?? FakeAIRoutes(hasRoute ? route : nil)
         )
+    }
+
+    @Test func transcriptFixesAskForTheCorrectionModel() async throws {
+        let (database, id) = try await Self.correctionFixture()
+        let (route, baseURL) = AIRouteFixtures.stubRoute(model: Self.model) { _ in .json(Self.chat("1|Dam znać Annie.")) }
+        defer { StubURLProtocol.unregister(baseURL) }
+        let routes = FakeAIRoutes([.correction: route])
+        let corrector = MeetingTranscriptCorrector(session: StubURLProtocol.makeSession(), routes: routes)
+        let processor = MeetingCorrectionProcessor(database: database, corrector: corrector, isEnabled: { true }, vocabulary: { [] })
+        #expect(await processor.run(meetingID: id))
+        #expect(Set(routes.asked) == [.correction])
     }
 
     @Test func theAIFixIsStoredAndCanBeRestored() async throws {
@@ -156,7 +169,7 @@ struct MeetingTranscriptImprovementTests {
         #expect(segments.filter { !$0.isEcho }.map(\.text) == ["Dam znać Annie.", "Wyślę ofertę jutro."])
         #expect(segments.filter { !$0.isEcho }.map(\.originalText) == ["dam znaciannie", "wyśle oferte jutro"])
         #expect(segments.first { $0.isEcho }?.text == "wyśle oferte jutro")
-        #expect(try await database.meeting(id: id)?.transcriptAIModel == Enhancer.relayModelPlaceholder)
+        #expect(try await database.meeting(id: id)?.transcriptAIModel == Self.model)
         #expect(try await database.meetings(query: "ofertę", limit: 5).map(\.id) == [id])
 
         #expect(try await database.restoreOriginalTranscript(meetingID: id) == 2)
@@ -181,7 +194,7 @@ struct MeetingTranscriptImprovementTests {
 
         let noKey = MeetingCorrectionProcessor(
             database: database,
-            corrector: Self.corrector({ _ in .json(Self.chat("1|x")) }, key: nil),
+            corrector: Self.corrector({ _ in .json(Self.chat("1|x")) }, hasRoute: false),
             isEnabled: { true },
             vocabulary: { [] }
         )

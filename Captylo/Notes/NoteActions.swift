@@ -7,8 +7,7 @@ import Foundation
 final class NoteActions {
     private let database: Database
     private let router: any TranscriptionRouting
-    /// The long-deadline enhancer of "Przetwórz przez AI" (`utilityEnhancer`, dictation route:
-    /// the own key in Free, Captylo AI in Pro).
+    /// The long-deadline enhancer of "Przetwórz przez AI" (`utilityEnhancer`, on the AI routes).
     private let enhancer: any TextEnhancing
     private let vocabulary: @MainActor () -> [String]
     private let processor: @MainActor () -> TextProcessor
@@ -64,8 +63,10 @@ final class NoteActions {
             return String(localized: "Ta notatka nie ma tekstu do przetworzenia.")
         }
         // The enhancer's own long deadline instead of the mode's: the user waits on purpose.
+        // "Przetwórz przez AI" always runs on the stronger model (PRD 7.3), "Czyszczenie" too.
         var job = mode.job(vocabulary: vocabulary())
         job.deadline = nil
+        job.role = .features
         let outcome = await enhancer.enhance(text, job: job)
         guard let enhanced = outcome.text else {
             return outcome.errorMessage ?? String(localized: "AI nie zwróciło tekstu.")

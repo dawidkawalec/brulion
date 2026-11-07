@@ -30,18 +30,18 @@ struct HistoryAIStatusTests {
         #expect(status.line == String(localized: "Tekst poprawiony przez AI"))
     }
 
-    /// The AI gave back the transcript as it was: the line says so, with Captylo AI by its name.
+    /// The AI gave back the transcript as it was: the line says so, with the model by its name.
     @Test func aiTextEqualToTheTranscriptSaysBezZmian() {
         let record = DictationRecord(
             text: "Jutro o dziesiątej mamy spotkanie.",
             enhancedText: "Jutro o dziesiątej mamy spotkanie.\n",
-            enhancementModel: Enhancer.relayModelPlaceholder,
+            enhancementModel: "Bielik-1.5B-v3.0-Instruct",
             enhancementMs: 540,
             enhancementMode: "Czyszczenie"
         )
         let status = HistoryAIStatus(record: record)
-        #expect(status == .enhanced(mode: "Czyszczenie", model: Enhancer.relayModelPlaceholder, ms: 540, unchanged: true))
-        #expect(status.line.contains("Captylo AI"))
+        #expect(status == .enhanced(mode: "Czyszczenie", model: "Bielik-1.5B-v3.0-Instruct", ms: 540, unchanged: true))
+        #expect(status.line.contains("Bielik-1.5B-v3.0-Instruct"))
         #expect(status.line.contains(String(localized: "bez zmian")))
     }
 

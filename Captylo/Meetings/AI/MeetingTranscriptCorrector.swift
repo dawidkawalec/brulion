@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-/// "Poprawiaj transkrypt przez AI" (Pro): the meeting's lines go to the AI in batches
+/// "Poprawiaj transkrypt przez AI": the meeting's lines go to the AI in batches
 /// (`MeetingCorrectionPrompt`), a few at a time, and the lines it fixed come back as changed
 /// segments. A batch that fails keeps its lines; only when every batch fails does the call throw.
 actor MeetingTranscriptCorrector {
@@ -9,18 +9,16 @@ actor MeetingTranscriptCorrector {
     static let parallelBatches = 3
 
     private let chat: MeetingChat
-    private let routeProvider: @Sendable () async -> AIRoute?
 
-    /// - Parameter route: the Pro relay, or nil (`noKey`).
-    init(session: URLSession = HTTP.meetingLLMSession, route: @escaping @Sendable () async -> AIRoute?) {
-        chat = MeetingChat(session: session)
-        routeProvider = route
+    init(session: URLSession = HTTP.meetingLLMSession, routes: any AIRouteProviding) {
+        chat = MeetingChat(session: session, routes: routes)
     }
 
-    /// The fixed segments (only those that changed) and the model that fixed them.
+    /// The fixed segments (only those that changed) and the model that fixed them. Runs on the
+    /// small correction model (`MeetingAITask.transcriptCorrection`).
     func correct(meeting: MeetingRecord, segments: [MeetingSegmentRecord], glossary: [String]) async throws -> (changes: [MeetingSegmentRecord], model: String) {
-        let route = try await MeetingChat.resolve(routeProvider)
-        var model = route.model ?? Enhancer.relayModelPlaceholder
+        let route = try await chat.route(for: .transcriptCorrection)
+        var model = route.model
         let batches = MeetingCorrectionPrompt.batches(segments)
         guard !batches.isEmpty else { return ([], model) }
         let started = ContinuousClock.now
@@ -40,7 +38,7 @@ actor MeetingTranscriptCorrector {
                     do {
                         let reply = try await chat.complete(
                             route: route,
-                            task: CaptyloAITask(kind: .transcriptCorrection),
+                            task: .transcriptCorrection,
                             user: MeetingCorrectionPrompt.user(title: title, glossary: glossary, batch: batch),
                             maxTokens: MeetingCorrectionPrompt.maxTokens(for: batch)
                         )
@@ -71,7 +69,6 @@ actor MeetingTranscriptCorrector {
         if !failures.isEmpty {
             Log.enhancement.error("Meeting transcript fix: \(failures.count, privacy: .public) of \(batches.count, privacy: .public) batches failed")
         }
-        // The relay names its model in each answer.
         model = servedModel ?? model
         let ms = Int((ContinuousClock.now - started) / .milliseconds(1))
         Log.enhancement.info("Meeting transcript fix: \(changes.count, privacy: .public) line(s) in \(ms, privacy: .public) ms with \(model, privacy: .public)")

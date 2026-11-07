@@ -88,7 +88,16 @@ struct DatabaseReprocessTests {
         let job = try #require(harness.enhancer.lastJob)
         #expect(job.kind == .rewrite)
         #expect(job.deadline == nil)
+        #expect(job.role == .features)
         #expect(job.systemPrompt == BuiltInAIModes.english.systemPrompt(vocabulary: ["Captylo"]))
+    }
+
+    /// "Przetwórz przez AI" runs on the stronger model even in "Czyszczenie" (PRD 7.3).
+    @Test func reprocessUsesTheFeaturesModelEvenForCleanup() async throws {
+        let harness = try Self.makeHarness(outcome: .enhanced(text: "Raz, dwa, trzy, cztery.", ms: 10, model: "m"))
+        let record = try await Self.savedRecord(in: harness.database)
+        _ = await harness.actions.reprocessWithAI(id: record.id, mode: BuiltInAIModes.cleanup)
+        #expect(harness.enhancer.lastJob?.role == .features)
     }
 
     @Test func failureKeepsTheRowAndReturnsTheMessage() async throws {
@@ -96,7 +105,7 @@ struct DatabaseReprocessTests {
         let record = try await Self.savedRecord(in: harness.database)
 
         let error = await harness.actions.reprocessWithAI(id: record.id, mode: BuiltInAIModes.cleanup)
-        #expect(error == OpenRouterError.missingKey.errorDescription)
+        #expect(error == ChatCompletionsError.missingKey.errorDescription)
         #expect(await harness.database.record(id: record.id) == record)
         #expect(harness.bumps() == 0)
     }
@@ -105,7 +114,7 @@ struct DatabaseReprocessTests {
         let harness = try Self.makeHarness(outcome: .failed(.http(status: 401), ms: 200))
         let record = try await Self.savedRecord(in: harness.database)
         let error = await harness.actions.reprocessWithAI(id: record.id, mode: BuiltInAIModes.email)
-        #expect(error == OpenRouterError.unauthorized.errorDescription)
+        #expect(error == ChatCompletionsError.unauthorized.errorDescription)
     }
 
     @Test func missingOrFailedRowsAreRefused() async throws {

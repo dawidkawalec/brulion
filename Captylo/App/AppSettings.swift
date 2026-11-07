@@ -12,8 +12,8 @@ final class AppSettings {
         case sttEngine
         case livePreview
         case aiEnabled = "ai.enabled"
-        case aiModel = "ai.model"
-        case aiCaptylo = "ai.captylo"
+        case cloudAIEnabled = "ai.cloud.enabled"
+        case cloudAIModel = "ai.cloud.model"
         case aiPrompt = "ai.prompt"
         case aiModes = "ai.modes"
         case aiActiveModeID = "ai.activeModeID"
@@ -40,8 +40,6 @@ final class AppSettings {
         case dashboardMetric = "dashboard.metric"
         case supportCardHiddenUntil = "supportCard.hiddenUntil"
         case meetingsProBannerHiddenUntil = "meetings.proBannerHiddenUntil"
-        case openRouterModelsCache = "openRouter.modelsCache"
-        case openRouterModelsCachedAt = "openRouter.modelsCachedAt"
         case devPro = "dev.pro"
         case meetingsAutoDetect = "meetings.autoDetect"
         case meetingsConsentReminder = "meetings.consentReminder"
@@ -112,18 +110,23 @@ final class AppSettings {
         set { withMutation(keyPath: \.aiEnabled) { defaults.set(newValue, forKey: Key.aiEnabled.rawValue) } }
     }
 
-    /// The own key's model (`ai.model`); in Pro it runs only while `aiCaptylo` is off.
-    var aiModel: String {
-        get { track(\.aiModel); return string(.aiModel, default: OpenRouterModel.defaultID) }
-        set { withMutation(keyPath: \.aiModel) { defaults.set(newValue, forKey: Key.aiModel.rawValue) } }
+    /// "Bielik w chmurze" (Modele > Zaawansowane, off by default): with a CloudFerro Sherlock key
+    /// saved, the AI runs on Bielik 11B in the cloud (`CloudAIRouteProvider`). The text then goes
+    /// to CloudFerro and nowhere else.
+    var cloudAIEnabled: Bool {
+        get { track(\.cloudAIEnabled); return bool(.cloudAIEnabled, default: false) }
+        set { withMutation(keyPath: \.cloudAIEnabled) { defaults.set(newValue, forKey: Key.cloudAIEnabled.rawValue) } }
     }
 
-    /// In Pro, dictation AI runs on Captylo AI (the relay), even with an own key saved: the first
-    /// row of the model list in Modele, on by default, so turning Pro on switches to Captylo AI.
-    /// Off = the own key's `aiModel`. Without Pro it changes nothing.
-    var aiCaptylo: Bool {
-        get { track(\.aiCaptylo); return bool(.aiCaptylo, default: true) }
-        set { withMutation(keyPath: \.aiCaptylo) { defaults.set(newValue, forKey: Key.aiCaptylo.rawValue) } }
+    /// The Sherlock model id for "Bielik w chmurze" (`CloudAIRouteProvider.defaultModel` unless changed).
+    var cloudAIModel: String {
+        get { track(\.cloudAIModel); return string(.cloudAIModel, default: CloudAIRouteProvider.defaultModel) }
+        set { withMutation(keyPath: \.cloudAIModel) { defaults.set(newValue, forKey: Key.cloudAIModel.rawValue) } }
+    }
+
+    /// What `CloudAIRouteProvider` reads, as a value it can keep off the main actor.
+    var cloudAIConfiguration: CloudAIRouteProvider.Configuration {
+        CloudAIRouteProvider.Configuration(isEnabled: cloudAIEnabled, model: cloudAIModel)
     }
 
     /// Legacy single prompt from before "Tryby AI". Empty string = the default template. Only
@@ -551,26 +554,6 @@ final class AppSettings {
     var meetingsProBannerHiddenUntil: Date? {
         get { track(\.meetingsProBannerHiddenUntil); return defaults.object(forKey: Key.meetingsProBannerHiddenUntil.rawValue) as? Date }
         set { withMutation(keyPath: \.meetingsProBannerHiddenUntil) { defaults.set(newValue, forKey: Key.meetingsProBannerHiddenUntil.rawValue) } }
-    }
-
-    // MARK: OpenRouter model cache
-
-    /// JSON-encoded `[OpenRouterModel]`, refreshed after `OpenRouterModel.cacheMaxAge`.
-    var openRouterModelsCache: Data? {
-        get { track(\.openRouterModelsCache); return defaults.data(forKey: Key.openRouterModelsCache.rawValue) }
-        set { withMutation(keyPath: \.openRouterModelsCache) { defaults.set(newValue, forKey: Key.openRouterModelsCache.rawValue) } }
-    }
-
-    /// Thread-safe reader of the cached model list for actors (UserDefaults is thread-safe).
-    var openRouterModelsCacheReader: @Sendable () -> Data? {
-        nonisolated(unsafe) let defaults = self.defaults
-        let key = Key.openRouterModelsCache.rawValue
-        return { defaults.data(forKey: key) }
-    }
-
-    var openRouterModelsCachedAt: Date? {
-        get { track(\.openRouterModelsCachedAt); return defaults.object(forKey: Key.openRouterModelsCachedAt.rawValue) as? Date }
-        set { withMutation(keyPath: \.openRouterModelsCachedAt) { defaults.set(newValue, forKey: Key.openRouterModelsCachedAt.rawValue) } }
     }
 
     // MARK: Captylo account

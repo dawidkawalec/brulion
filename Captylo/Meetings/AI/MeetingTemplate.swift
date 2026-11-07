@@ -1,7 +1,7 @@
 import Foundation
 
 /// A kind of meeting for the AI notes. The app knows its id, name and title keywords; what the
-/// notes focus on for each id lives on the relay (`CaptyloAITask.template`).
+/// notes focus on for each id is in the notes instructions (`MeetingAITask.notes(templateID:)`).
 struct MeetingTemplate: Sendable, Equatable, Identifiable {
     let id: String
     /// Name shown in the template picker (localized).

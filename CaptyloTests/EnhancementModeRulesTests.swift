@@ -7,19 +7,9 @@ import Testing
 struct EnhancementModeRulesTests {
     private static let raw = "no więc to jest dłuższy testowy transkrypt który ma zdecydowanie więcej niż trzy słowa"
 
-    private func makeEnhancer(
-        _ handler: @escaping StubURLProtocol.Handler,
-        key: String? = "sk-or-test",
-        model: String = "openai/gpt-4.1-mini"
-    ) -> (Enhancer, URL) {
-        let baseURL = StubURLProtocol.register(handler)
-        let client = OpenRouterClient(baseURL: baseURL)
-        let route = key.map { AIRoute(client: client, key: $0, model: model) }
-        let enhancer = Enhancer(
-            client: client,
-            route: { _ in .value(route) },
-            session: StubURLProtocol.makeSession()
-        )
+    private func makeEnhancer(_ handler: @escaping StubURLProtocol.Handler) -> (Enhancer, URL) {
+        let (route, baseURL) = AIRouteFixtures.stubRoute(handler)
+        let enhancer = Enhancer(routes: FakeAIRoutes(route), session: StubURLProtocol.makeSession())
         return (enhancer, baseURL)
     }
 
@@ -60,19 +50,17 @@ struct EnhancementModeRulesTests {
     // MARK: Token caps
 
     @Test func rewriteTokenCap() {
-        let model = "openai/gpt-4.1-mini"
         // est = max(16, bytes / 3); rewrite = min(4096, est * 3 + 256)
-        #expect(Enhancer.maxTokens(forUTF8Count: 0, model: model, kind: .rewrite) == 16 * 3 + 256)
-        #expect(Enhancer.maxTokens(forUTF8Count: 3000, model: model, kind: .rewrite) == 1000 * 3 + 256)
-        #expect(Enhancer.maxTokens(forUTF8Count: 3900, model: model, kind: .rewrite) == 4096)
-        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, model: model, kind: .rewrite) == 4096)
-        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, model: "openai/gpt-oss-120b", kind: .rewrite) == 4096 + 512)
+        #expect(Enhancer.maxTokens(forUTF8Count: 0, kind: .rewrite) == 16 * 3 + 256)
+        #expect(Enhancer.maxTokens(forUTF8Count: 3000, kind: .rewrite) == 1000 * 3 + 256)
+        #expect(Enhancer.maxTokens(forUTF8Count: 3900, kind: .rewrite) == 4096)
+        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, kind: .rewrite) == 4096)
         // The file cap (8192) lifts the rewrite ceiling too.
-        #expect(Enhancer.maxTokens(forUTF8Count: 6000, model: model, kind: .rewrite, cap: 8192) == 2000 * 3 + 256)
-        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, model: model, kind: .rewrite, cap: 8192) == 8192)
+        #expect(Enhancer.maxTokens(forUTF8Count: 6000, kind: .rewrite, cap: 8192) == 2000 * 3 + 256)
+        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, kind: .rewrite, cap: 8192) == 8192)
         // Cleanup keeps the old rule.
-        #expect(Enhancer.maxTokens(forUTF8Count: 3000, model: model, kind: .cleanup) == 2048)
-        #expect(Enhancer.maxTokens(forUTF8Count: 300, model: model, kind: .cleanup) == 264)
+        #expect(Enhancer.maxTokens(forUTF8Count: 3000, kind: .cleanup) == 2048)
+        #expect(Enhancer.maxTokens(forUTF8Count: 300, kind: .cleanup) == 264)
     }
 
     // MARK: Skip rule
@@ -91,7 +79,7 @@ struct EnhancementModeRulesTests {
     @Test func everyOutcomeMapsToAPolishNote() {
         #expect(EnhancementOutcome.enhanced(text: "A", ms: 1, model: "m").note == nil)
         #expect(EnhancementOutcome.enhanced(text: "A", ms: 1, model: "m").errorMessage == nil)
-        #expect(EnhancementOutcome.skipped(.noKey).note == String(localized: "Brak klucza AI"))
+        #expect(EnhancementOutcome.skipped(.noKey).note == String(localized: "Brak modelu AI"))
         #expect(EnhancementOutcome.skipped(.tooShort).note == String(localized: "Za krótkie (3 słowa lub mniej)"))
         #expect(EnhancementOutcome.failed(.deadline(seconds: 3), ms: 3000).note == String(localized: "Przekroczono limit \("3") s"))
         #expect(EnhancementOutcome.failed(.http(status: 401), ms: 1).note == String(localized: "Błąd AI \("401")"))
@@ -102,16 +90,15 @@ struct EnhancementModeRulesTests {
         #expect(EnhancementOutcome.failed(.rejected(.truncated), ms: 1).note == String(localized: "Odrzucono: odpowiedź ucięta"))
         #expect(EnhancementOutcome.failed(.network("offline"), ms: 1).note == String(localized: "Błąd sieci"))
         #expect(EnhancementOutcome.failed(.invalidResponse, ms: 1).note == String(localized: "Nieoczekiwana odpowiedź AI"))
-        #expect(EnhancementOutcome.failed(.keychainTimeout, ms: 1).note == String(localized: "Pęk kluczy nie odpowiedział na czas"))
 
         // Fractional limits keep one decimal in the UI locale ("2,5" in Polish, "2.5" in English).
         let note = EnhancementFailure.deadline(seconds: 2.5).note
         #expect(note.contains("2,5") || note.contains("2.5"))
 
         // Full messages for toasts and the reprocess banner.
-        #expect(EnhancementOutcome.skipped(.noKey).errorMessage == OpenRouterError.missingKey.errorDescription)
-        #expect(EnhancementFailure.http(status: 429).errorDescription == OpenRouterError.rateLimited.errorDescription)
-        #expect(EnhancementFailure.http(status: 403).errorDescription == OpenRouterError.unauthorized.errorDescription)
+        #expect(EnhancementOutcome.skipped(.noKey).errorMessage == ChatCompletionsError.missingKey.errorDescription)
+        #expect(EnhancementFailure.http(status: 429).errorDescription == ChatCompletionsError.rateLimited.errorDescription)
+        #expect(EnhancementFailure.http(status: 403).errorDescription == ChatCompletionsError.unauthorized.errorDescription)
     }
 
     @Test func applyEnhancementFillsModeAndNote() {
@@ -123,10 +110,10 @@ struct EnhancementModeRulesTests {
         #expect(record.enhancedText == nil)
         #expect(record.enhancementModel == nil)
 
-        record.applyEnhancement(.enhanced(text: "Raz, dwa.", ms: 640, model: "openai/gpt-4.1-mini"), mode: "Czyszczenie")
+        record.applyEnhancement(.enhanced(text: "Raz, dwa.", ms: 640, model: "bielik-1.5b"), mode: "Czyszczenie")
         #expect(record.enhancedText == "Raz, dwa.")
         #expect(record.enhancementMode == "Czyszczenie")
-        #expect(record.enhancementModel == "openai/gpt-4.1-mini")
+        #expect(record.enhancementModel == "bielik-1.5b")
         #expect(record.enhancementMs == 640)
         #expect(record.enhancementNote == nil)
         #expect(record.text == "raz dwa trzy cztery")
@@ -140,10 +127,10 @@ struct EnhancementModeRulesTests {
 
     @Test func thrownErrorsMapToFailures() {
         #expect(Enhancer.failure(for: EnhancerError.deadline, deadline: .seconds(6)) == .deadline(seconds: 6))
-        #expect(Enhancer.failure(for: OpenRouterError.unauthorized, deadline: .seconds(3)) == .http(status: 401))
-        #expect(Enhancer.failure(for: OpenRouterError.rateLimited, deadline: .seconds(3)) == .http(status: 429))
-        #expect(Enhancer.failure(for: OpenRouterError.server(502), deadline: .seconds(3)) == .http(status: 502))
-        #expect(Enhancer.failure(for: OpenRouterError.decoding, deadline: .seconds(3)) == .invalidResponse)
+        #expect(Enhancer.failure(for: ChatCompletionsError.unauthorized, deadline: .seconds(3)) == .http(status: 401))
+        #expect(Enhancer.failure(for: ChatCompletionsError.rateLimited, deadline: .seconds(3)) == .http(status: 429))
+        #expect(Enhancer.failure(for: ChatCompletionsError.server(502), deadline: .seconds(3)) == .http(status: 502))
+        #expect(Enhancer.failure(for: ChatCompletionsError.decoding, deadline: .seconds(3)) == .invalidResponse)
         if case .network = Enhancer.failure(for: URLError(.notConnectedToInternet), deadline: .seconds(3)) {} else {
             Issue.record("URLError should map to .network")
         }
@@ -168,7 +155,7 @@ struct EnhancementModeRulesTests {
 
         let data = seen.withLock { $0 }
         let body = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
-        #expect(body["max_tokens"] as? Int == Enhancer.maxTokens(forUTF8Count: raw.utf8.count, model: "openai/gpt-4.1-mini", kind: .rewrite))
+        #expect(body["max_tokens"] as? Int == Enhancer.maxTokens(forUTF8Count: raw.utf8.count, kind: .rewrite))
         let messages = body["messages"] as? [[String: Any]] ?? []
         #expect(messages.first?["content"] as? String == BuiltInAIModes.email.systemPrompt(vocabulary: ["Marta"]))
         #expect(messages.last?["content"] as? String == raw)
@@ -227,7 +214,7 @@ struct EnhancementModeRulesTests {
             Issue.record("Expected a failure without a key")
             return
         }
-        #expect((error as? LocalizedError)?.errorDescription == OpenRouterError.missingKey.errorDescription)
+        #expect((error as? LocalizedError)?.errorDescription == ChatCompletionsError.missingKey.errorDescription)
 
         let failing = ModeTester(enhancer: ModeTesterFakeEnhancer(outcome: .failed(.http(status: 401), ms: 90)), vocabulary: { [] })
         guard case .failure(let failure) = await failing.run(BuiltInAIModes.english, sample: "cześć") else {
@@ -255,5 +242,5 @@ final class ModeTesterFakeEnhancer: TextEnhancing, Sendable {
         return outcome
     }
 
-    func prewarm() async {}
+    func prewarm(_ role: AIRole) async {}
 }

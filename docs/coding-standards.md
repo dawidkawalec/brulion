@@ -23,7 +23,7 @@
 ## Localization
 
 - Source strings are Polish, written as SwiftUI literals or `String(localized: "...")`. English lives in `Captylo/Resources/Localizable.xcstrings`.
-- The product name in every string is "Captylo" (no version suffix); the version shows as "Wersja 1.0.0".
+- The product name in every string is "Szpak" (no version suffix), declined in Polish: "Szpak potrzebuje...", "Otwórz Szpaka", "w Szpaku"; English keeps "Szpak". The version shows as "Wersja 0.9.0". "Captylo" never appears in a UI text (`AppIdentityTests.noUserFacingTextSaysCaptylo`).
 - Use plural variants in the catalog for counts ("1 słowo", "2 słowa", "5 słów").
 - `make build` does not sync new keys into the catalog (only the Xcode IDE does): add every new Polish key with its English value to `Localizable.xcstrings` by hand. The keys the compiler extracted are in `.local-build/**/Captylo.build/Objects-normal/arm64/*.stringsdata`.
 - Info.plist strings (`NSMicrophoneUsageDescription`) are translated in `Captylo/Resources/InfoPlist.xcstrings`.

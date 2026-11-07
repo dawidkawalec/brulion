@@ -4,7 +4,8 @@ import Foundation
 /// Captylo on the same Mac: its own bundle id, data folder, Keychain items, log subsystem and
 /// URL scheme. The product is Szpak. These values never change after a public release (macOS
 /// ties the permissions to the bundle id); the same values live in the `APP_*` build settings in
-/// project.yml and at the top of the Makefile. The word "Captylo" in UI strings is a separate pass.
+/// project.yml and at the top of the Makefile. Every UI string names the product "Szpak"
+/// (`AppIdentityTests` checks the string catalogs and the Info.plist texts).
 enum AppIdentity {
     /// Bundle id, also the Keychain service (`KeyStore`) and the log subsystem (`Log`).
     /// Must match `APP_BUNDLE_ID` in project.yml.

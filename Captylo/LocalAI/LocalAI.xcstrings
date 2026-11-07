@@ -1,0 +1,131 @@
+{
+  "sourceLanguage": "pl",
+  "strings": {
+    "Pełna lokalna AI": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Full local AI" } }
+      }
+    },
+    "Tryb eksperymentalny": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Experimental mode" } }
+      }
+    },
+    "Korekta dyktowania na Bieliku 1.5B, funkcje AI na Bieliku Minitron 7B. Potrzeba 16 GB pamięci RAM i ok. %@ wolnego miejsca na dysku.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Dictation cleanup on Bielik 1.5B, AI features on Bielik Minitron 7B. Needs 16 GB of RAM and about %@ of free disk space." } }
+      }
+    },
+    "Ten Mac ma mniej niż 16 GB pamięci RAM: korekta dyktowania działa na Bieliku 1.5B, a funkcje AI na Bieliku w chmurze. Potrzeba ok. %@ wolnego miejsca na dysku.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This Mac has less than 16 GB of RAM: dictation cleanup runs on Bielik 1.5B and AI features on Bielik in the cloud. Needs about %@ of free disk space." } }
+      }
+    },
+    "Ten Mac ma mniej niż 16 GB pamięci RAM: korekta dyktowania i funkcje AI działają na Bieliku 1.5B, więc funkcje AI są słabsze niż na większym modelu. Potrzeba ok. %@ wolnego miejsca na dysku.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This Mac has less than 16 GB of RAM: dictation cleanup and AI features run on Bielik 1.5B, so AI features are weaker than on the larger model. Needs about %@ of free disk space." } }
+      }
+    },
+    "Nieznany model.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unknown model." } }
+      }
+    },
+    "Ten model już się pobiera.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This model is already downloading." } }
+      }
+    },
+    "Za mało miejsca na dysku: potrzeba %@, wolne %@.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Not enough disk space: %1$@ needed, %2$@ free." } }
+      }
+    },
+    "Serwer pobierania odpowiedział błędem %lld.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The download server answered with error %lld." } }
+      }
+    },
+    "Pobieranie przekierowało do nieznanego serwera, więc zostało przerwane.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The download was redirected to an unknown server, so it was stopped." } }
+      }
+    },
+    "Serwer pobierania odpowiedział w nieoczekiwany sposób. Spróbuj ponownie.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The download server gave an unexpected answer. Try again." } }
+      }
+    },
+    "Pobieranie zostało przerwane. Spróbuj ponownie, aby je wznowić.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The download was interrupted. Try again to resume it." } }
+      }
+    },
+    "Pobrany plik modelu ma zły rozmiar. Spróbuj ponownie.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The downloaded model file has the wrong size. Try again." } }
+      }
+    },
+    "Pobrany plik modelu jest uszkodzony (suma kontrolna się nie zgadza). Spróbuj ponownie.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The downloaded model file is damaged (the checksum does not match). Try again." } }
+      }
+    },
+    "Błąd sieci: %@": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Network error: %@" } }
+      }
+    },
+    "Nie udało się zapisać modelu na dysku: %@": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Could not save the model to disk: %@" } }
+      }
+    },
+    "Brakuje programu llama-server w aplikacji. Zainstaluj aplikację ponownie.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The app is missing its llama-server helper. Reinstall the app." } }
+      }
+    },
+    "Model nie jest pobrany.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The model is not downloaded." } }
+      }
+    },
+    "Nie udało się uruchomić lokalnego modelu: %@": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Could not start the local model: %@" } }
+      }
+    },
+    "Lokalny model nie znalazł wolnego portu. Spróbuj ponownie.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The local model could not find a free port. Try again." } }
+      }
+    },
+    "Za mało pamięci, aby wczytać model. Zamknij inne aplikacje albo wybierz mniejszy model.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Not enough memory to load the model. Quit other apps or pick a smaller model." } }
+      }
+    },
+    "Nie udało się wczytać modelu. Plik może być uszkodzony: usuń go i pobierz ponownie.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Could not load the model. The file may be damaged: delete it and download it again." } }
+      }
+    },
+    "Lokalny model zakończył działanie nieoczekiwanie (kod %lld).": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The local model quit unexpectedly (code %lld)." } }
+      }
+    },
+    "Lokalny model nie uruchomił się na czas. Spróbuj ponownie.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The local model did not start in time. Try again." } }
+      }
+    },
+    "Lokalny model kilka razy nie wystartował. Spróbuję ponownie za chwilę.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The local model failed to start several times. It will try again in a moment." } }
+      }
+    }
+  },
+  "version": "1.0"
+}

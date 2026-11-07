@@ -32,6 +32,26 @@ protocol AIRouteProviding: Sendable {
     func route(for role: AIRole, timeout: Duration) async -> AIRoute?
     /// Starts or warms whatever serves `role` without blocking (called on the hotkey press).
     func prewarm(_ role: AIRole) async
+    /// Runs `body` with the route for `role` and keeps whatever serves it alive while `body`
+    /// runs: a local model server is never stopped for idleness in the middle of a long meeting
+    /// request (`LocalAIService.withEndpoint`). nil = no route within `timeout`.
+    func withRoute<T: Sendable>(
+        for role: AIRole,
+        timeout: Duration,
+        _ body: @Sendable (AIRoute) async throws -> T
+    ) async throws -> T?
+}
+
+extension AIRouteProviding {
+    /// A route with nothing to keep alive (the cloud, fakes): look it up and run `body`.
+    func withRoute<T: Sendable>(
+        for role: AIRole,
+        timeout: Duration,
+        _ body: @Sendable (AIRoute) async throws -> T
+    ) async throws -> T? {
+        guard let route = await route(for: role, timeout: timeout) else { return nil }
+        return try await body(route)
+    }
 }
 
 /// No AI at all: the design preview's default and the state before any provider is wired.

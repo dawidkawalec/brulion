@@ -119,8 +119,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 window.orderOut(nil)
             }
         }
-        Task { @MainActor in
+        Task { @MainActor [appState] in
             let code = await runner.run(command)
+            // `--transcribe --ai` may have started a local model server: it ends with the run.
+            appState.localAI.terminateAllNow()
             exit(code)
         }
     }

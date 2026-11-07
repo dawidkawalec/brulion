@@ -334,6 +334,13 @@ final class DebugRunner: DebugCommandRunner {
         let languageCode: String? = language.map { TranscriptionLanguages.engineCode(for: $0) } ?? settings.transcriptionLanguage
         let engine = engineOverride ?? settings.sttEngine
         let started = ContinuousClock.now
+        if ai {
+            // Like the hotkey going down: the local model server starts while the speech is
+            // transcribed, so the cleanup sees the warm server a real dictation sees.
+            let enhancer = appState.enhancer
+            let role = settings.activeMode.role
+            Task { await enhancer.prewarm(role) }
+        }
         do {
             let (samples, duration) = try await AudioDecoder.decode16kMono(url)
             // A take carries its finalized 16 kHz WAV like a dictation; write one next to the temp files.

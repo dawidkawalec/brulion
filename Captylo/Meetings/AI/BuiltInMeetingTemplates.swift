@@ -1,8 +1,9 @@
 import Foundation
 
 /// The six templates of M1. One is picked from the meeting title; the user can pick another and
-/// write the notes again. The ids go to `MeetingAITask.notes(templateID:)`: the notes
-/// instructions key on them, so keep them in step.
+/// write the notes again. The ids go to `MeetingAITask.notes(templateID:)`: the open notes
+/// instructions (`MeetingPrompts.notesSystem`, sections from `MeetingNotesSkeleton.forTemplate`)
+/// key on them, so keep them in step.
 enum BuiltInMeetingTemplates {
     static let general = MeetingTemplate(id: "general", name: String(localized: "Ogólne"), keywords: [])
     static let oneOnOne = MeetingTemplate(

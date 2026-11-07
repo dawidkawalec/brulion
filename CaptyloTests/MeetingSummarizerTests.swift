@@ -24,14 +24,12 @@ struct MeetingSummarizerTests {
     /// A summarizer on a stub server; `hasRoute: false` = no AI route at all.
     private static func summarizer(
         _ handler: @escaping StubURLProtocol.Handler,
-        hasRoute: Bool = true,
-        instructions: @escaping @Sendable (MeetingAITask) -> String? = { _ in nil }
+        hasRoute: Bool = true
     ) -> (MeetingSummarizer, URL) {
         let (route, baseURL) = AIRouteFixtures.stubRoute(model: model, handler)
         let summarizer = MeetingSummarizer(
             session: StubURLProtocol.makeSession(),
-            routes: FakeAIRoutes(hasRoute ? route : nil),
-            instructions: instructions
+            routes: FakeAIRoutes(hasRoute ? route : nil)
         )
         return (summarizer, baseURL)
     }
@@ -44,13 +42,16 @@ struct MeetingSummarizerTests {
         #expect(MeetingChat.messages(system: "Instrukcje.", user: "dane") == [.system("Instrukcje."), .user("dane")])
     }
 
-    @Test func eachTaskAsksForItsRole() {
+    @Test func eachTaskAsksForItsRoleAndItsOpenInstructions() {
         #expect(MeetingAITask.transcriptCorrection.role == .correction)
         #expect(MeetingAITask.notes(templateID: "general").role == .features)
         #expect(MeetingAITask.ask.role == .features)
         #expect(MeetingAITask.libraryAsk.role == .features)
-        // No instructions ship until the Bielik prompts arrive: only the data is sent.
-        #expect(MeetingAIInstructions.system(for: .ask) == nil)
+        // The open Polish prompts written for Bielik (`MeetingPrompts`).
+        #expect(MeetingAIInstructions.system(for: .ask) == MeetingPrompts.askSystem())
+        #expect(MeetingAIInstructions.system(for: .libraryAsk) == MeetingPrompts.libraryAskSystem())
+        #expect(MeetingAIInstructions.system(for: .transcriptCorrection) == MeetingPrompts.correctionSystem())
+        #expect(MeetingAIInstructions.system(for: .notes(templateID: "client")) == MeetingPrompts.notesSystem(templateID: "client", customInstructions: nil))
     }
 
     @Test func chatSendsTheSystemInstructionAndTheDataWithTheRoutesModel() async throws {
@@ -61,12 +62,9 @@ struct MeetingSummarizerTests {
         }
         defer { StubURLProtocol.unregister(baseURL) }
         let routes = FakeAIRoutes(route)
-        let chat = MeetingChat(session: StubURLProtocol.makeSession(), routes: routes, instructions: { task in
-            task == .ask ? "Odpowiadaj tylko na podstawie spotkania." : nil
-        })
+        let chat = MeetingChat(session: StubURLProtocol.makeSession(), routes: routes)
 
-        let resolved = try await chat.route(for: .ask)
-        let reply = try await chat.complete(route: resolved, task: .ask, user: "dane spotkania", maxTokens: 100)
+        let reply = try await chat.complete(task: .ask, system: "Odpowiadaj tylko na podstawie spotkania.", user: "dane spotkania", maxTokens: 100)
         #expect(reply.text == "Odpowiedź [0:01]")
         #expect(reply.model == Self.model)
         #expect(routes.asked == [.features])
@@ -79,10 +77,18 @@ struct MeetingSummarizerTests {
         let body = StubURLProtocol.body(of: request)
         #expect(body["model"] as? String == Self.model)
         #expect(body["max_tokens"] as? Int == 100)
+        #expect(body["temperature"] as? Double == 0.2)
         #expect(body["captylo_task"] == nil)
     }
 
-    @Test func chatWithoutInstructionsSendsOnlyTheData() async throws {
+    @Test func chatWithoutARouteFailsWithNoKey() async throws {
+        let chat = MeetingChat(session: StubURLProtocol.makeSession(), routes: FakeAIRoutes(nil))
+        await #expect(throws: MeetingSummaryError.noKey) {
+            try await chat.complete(task: .transcriptCorrection, system: nil, user: "1|tekst", maxTokens: 10)
+        }
+    }
+
+    @Test func chatOnAHeldRouteSendsOnlyTheDataWithoutInstructions() async throws {
         let seen = OSAllocatedUnfairLock<URLRequest?>(initialState: nil)
         let (route, baseURL) = AIRouteFixtures.stubRoute { request in
             seen.withLock { $0 = request }
@@ -91,7 +97,7 @@ struct MeetingSummarizerTests {
         defer { StubURLProtocol.unregister(baseURL) }
         let routes = FakeAIRoutes(route)
         let chat = MeetingChat(session: StubURLProtocol.makeSession(), routes: routes)
-        _ = try await chat.complete(route: try await chat.route(for: .transcriptCorrection), task: .transcriptCorrection, user: "1|tekst", maxTokens: 10)
+        _ = try await chat.complete(route: try await chat.route(for: .transcriptCorrection), system: nil, user: "1|tekst", maxTokens: 10)
         #expect(routes.asked == [.correction])
         let messages = StubURLProtocol.messages(of: try #require(seen.withLock { $0 }))
         #expect(messages.map(\.role) == ["user"])
@@ -117,24 +123,34 @@ struct MeetingSummarizerTests {
         #expect(body["model"] as? String == Self.model)
         #expect(body["max_tokens"] as? Int == MeetingSummarizer.maxTokens)
         let messages = StubURLProtocol.messages(of: request)
-        #expect(messages.count == 1)
+        #expect(messages.map(\.role) == ["system", "user"])
         #expect(messages.last?.content.contains("[0:01] Rozmówcy: Wdrożenie przesuwamy na piątek") == true)
+        // The template's reminder closes the data (`MeetingPrompts.notesReminder`).
+        #expect(messages.last?.content.hasSuffix(MeetingPrompts.notesReminder(templateID: "standup")) == true)
     }
 
     @Test func theTemplatePicksTheInstructions() async throws {
         let systems = OSAllocatedUnfairLock<[String]>(initialState: [])
-        let (summarizer, baseURL) = Self.summarizer({ request in
+        let (summarizer, baseURL) = Self.summarizer { request in
             let system = StubURLProtocol.messages(of: request).first { $0.role == "system" }?.content ?? ""
             systems.withLock { $0.append(system) }
             return .json(Self.chat(Self.notes))
-        }, instructions: { task in
-            if case .notes(let templateID) = task { return "Notatki: \(templateID)" }
-            return nil
-        })
+        }
         defer { StubURLProtocol.unregister(baseURL) }
         let meeting = MeetingRecord(title: "x")
         _ = try await summarizer.summarize(meeting: meeting, segments: Self.segments(meeting.id), template: BuiltInMeetingTemplates.standup)
-        #expect(systems.withLock { $0 } == ["Notatki: standup"])
+        #expect(systems.withLock { $0 } == [MeetingPrompts.notesSystem(templateID: "standup", customInstructions: nil)])
+    }
+
+    @Test func progressIsReportedForTheCalls() async throws {
+        let (summarizer, baseURL) = Self.summarizer { _ in .json(Self.chat(Self.notes)) }
+        defer { StubURLProtocol.unregister(baseURL) }
+        let steps = OSAllocatedUnfairLock<[[Int]]>(initialState: [])
+        let meeting = MeetingRecord(title: "x")
+        _ = try await summarizer.summarize(meeting: meeting, segments: Self.segments(meeting.id), template: BuiltInMeetingTemplates.general) { done, total in
+            steps.withLock { $0.append([done, total]) }
+        }
+        #expect(steps.withLock { $0 } == [[0, 1], [1, 1]])
     }
 
     @Test func noRouteAndEmptyTranscriptFailClearly() async throws {
@@ -266,19 +282,29 @@ struct MeetingSummarizerTests {
     @Test func regenerateUsesThePickedTemplate() async throws {
         let fixture = try await Self.fixture()
         let systems = OSAllocatedUnfairLock<[String]>(initialState: [])
-        let (summarizer, baseURL) = Self.summarizer({ request in
+        let (summarizer, baseURL) = Self.summarizer { request in
             let system = StubURLProtocol.messages(of: request).first { $0.role == "system" }?.content ?? ""
             systems.withLock { $0.append(system) }
             return .json(Self.chat(Self.notes))
-        }, instructions: { task in
-            if case .notes(let templateID) = task { return templateID }
-            return nil
-        })
+        }
         defer { StubURLProtocol.unregister(baseURL) }
         await Self.processor(fixture, summarizer: summarizer).regenerate(meetingID: fixture.meetingID, templateID: "client")
         let meeting = try #require(try await fixture.database.meeting(id: fixture.meetingID))
         #expect(meeting.summaryTemplateID == "client")
-        #expect(systems.withLock { $0 } == ["client"])
+        #expect(systems.withLock { $0 } == [MeetingPrompts.notesSystem(templateID: "client", customInstructions: nil)])
+    }
+
+    @Test func aFinishedMeetingWithNotesIsCounted() async throws {
+        let fixture = try await Self.fixture()
+        let (summarizer, baseURL) = Self.summarizer { _ in .json(Self.chat(Self.notes)) }
+        defer { StubURLProtocol.unregister(baseURL) }
+        let counted = OSAllocatedUnfairLock(initialState: 0)
+        var processor = Self.processor(fixture, summarizer: summarizer)
+        processor.onProcessed = { counted.withLock { $0 += 1 } }
+        await processor.process(meetingID: fixture.meetingID)
+        // "Wygeneruj ponownie" is not a newly processed meeting.
+        await processor.regenerate(meetingID: fixture.meetingID, templateID: "client")
+        #expect(counted.withLock { $0 } == 1)
     }
 
     /// The call can take minutes: notes and a title typed meanwhile must survive the save.

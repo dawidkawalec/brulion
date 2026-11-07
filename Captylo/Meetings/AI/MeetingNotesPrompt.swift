@@ -1,7 +1,9 @@
 import Foundation
 
 /// The data of the AI notes (`MeetingAITask.notes`, the user message): the instructions come
-/// from `MeetingAIInstructions`; the answer is Markdown with the sections `MeetingNotesDocument` reads.
+/// from `MeetingAIInstructions` (`MeetingPrompts`); a meeting over the input budget is split by
+/// `TranscriptChunker` and written by `MeetingNotesWriter`. The answer is Markdown with the
+/// sections `MeetingNotesDocument` reads.
 /// Speaker labels come from `MeetingRecord.promptLabel(for:)`.
 enum MeetingNotesPrompt {
     /// Title, the participants from the calendar when there are any (so the names are spelled

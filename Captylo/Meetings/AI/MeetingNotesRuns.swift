@@ -8,10 +8,34 @@ import Observation
 @MainActor
 @Observable
 final class MeetingNotesRuns {
+    /// Calls done of a notes run that takes several (a long meeting: parts, then merges).
+    struct Progress: Equatable, Sendable {
+        let done: Int
+        let total: Int
+    }
+
+    /// Reaches the runs from the notes processor, which is built before them (`AppState`).
+    @MainActor
+    final class Sink {
+        weak var runs: MeetingNotesRuns?
+
+        init() {}
+
+        /// A `MeetingNotesProcessor.onProgress` that reports here from any thread.
+        nonisolated func reporter() -> @Sendable (UUID, Int, Int) -> Void {
+            { [weak self] id, done, total in
+                Task { @MainActor in self?.runs?.report(meetingID: id, done: done, total: total) }
+            }
+        }
+    }
+
     /// Meetings whose notes are being written now.
     private(set) var running: Set<UUID> = []
     /// Bumped after every run, whatever its outcome (the notes or the error are on the row).
     private(set) var finishedCount = 0
+    /// Progress of the notes being written in several calls, per meeting (after a meeting too,
+    /// not only for "Wygeneruj ponownie"); gone when the last call is done.
+    private(set) var progress: [UUID: Progress] = [:]
 
     @ObservationIgnored private let write: @Sendable (_ meetingID: UUID, _ templateID: String?) async -> Void
 
@@ -32,7 +56,17 @@ final class MeetingNotesRuns {
         return Task {
             await write(meetingID, templateID)
             running.remove(meetingID)
+            progress[meetingID] = nil
             finishedCount += 1
+        }
+    }
+
+    /// `done` of `total` calls finished; a run of one call shows no progress.
+    func report(meetingID: UUID, done: Int, total: Int) {
+        if total > 1, done < total {
+            progress[meetingID] = Progress(done: done, total: total)
+        } else {
+            progress[meetingID] = nil
         }
     }
 }

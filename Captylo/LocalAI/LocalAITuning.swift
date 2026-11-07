@@ -7,12 +7,13 @@ import Foundation
 enum LocalAITuning {
     // MARK: Context windows (llama-server `-c`)
 
-    /// Context for the correction role (a dictation plus the cleanup prompt).
+    /// Context for the correction role (a dictation plus the cleanup prompt). Bielik 1.5B was
+    /// trained on 8192 tokens: never more.
     static let correctionContext = 8192
-    /// Context for the features role (a 1 h meeting is about 20-25k tokens; longer transcripts
-    /// are split by the meeting code, PRD 7.4). The models' trained context is being read
-    /// from their GGUF metadata; this stays the server's `-c` value.
-    static let featuresContext = 16384
+    /// Context for the features role: the meeting code's 20k-token input budget plus a 4k
+    /// answer (`TranscriptChunker.defaultInputBudget`; longer transcripts are split, PRD 7.4).
+    /// Minitron 7B was trained on 32768 tokens; the 4.5B serving this role gets the same.
+    static let featuresContext = 24576
 
     static func contextLength(for role: LocalRole) -> Int {
         switch role {
@@ -24,12 +25,15 @@ enum LocalAITuning {
     // MARK: Memory
 
     /// Planned memory of llama-server per model id: the mapped model file plus the working
-    /// memory measured in F0 at -c 8192 (1.5B: 1.70 GB + 0.45-0.6 GB; Minitron: 4.50 GB +
-    /// 1.7-2.1 GB). The 4.5B is an ESTIMATE (5.06 GB + 1.5 GB), not measured yet.
+    /// memory. 1.5B measured in F0 at -c 8192 (1.70 GB + 0.45-0.6 GB). Minitron measured at
+    /// -c 8192 (4.50 GB + 1.7-2.1 GB); at the features context (-c 24576) the KV cache grows, so
+    /// it is an ESTIMATE of 7.5 GB until measured. The 4.5B is an ESTIMATE (5.06 GB + 2.4 GB at
+    /// -c 24576), not measured. A model used for correction only runs at -c 8192 and needs
+    /// less, so these are the upper bounds.
     static let measuredPeakRAM: [String: Int64] = [
         "bielik-1.5b-v3-q8": 2_300_000_000,
-        "bielik-minitron-7b-v3-q4km": 6_600_000_000,
-        "bielik-4.5b-v3-q8": 6_561_215_424,
+        "bielik-minitron-7b-v3-q4km": 7_500_000_000,
+        "bielik-4.5b-v3-q8": 7_500_000_000,
     ]
     /// Peak memory as a multiple of the file size for a model without a measurement (tests,
     /// models added later).

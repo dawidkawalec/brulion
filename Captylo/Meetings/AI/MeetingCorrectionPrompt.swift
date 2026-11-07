@@ -2,7 +2,8 @@ import Foundation
 
 /// The pure half of "Poprawiaj transkrypt przez AI" (`MeetingAITask.transcriptCorrection`, the
 /// instructions come from `MeetingAIInstructions`): batches of numbered lines, the data sent, the parser of the
-/// answer (`numer|tekst` lines) and the guard that keeps a line the AI changed too much. A line is only
+/// answer (`numer|tekst` lines) and the guard that keeps a line the AI changed too much (the
+/// corrector then also asks `TranscriptFixGuard`, word by word). A line is only
 /// ever swapped for its fixed version: lines are never merged, split, dropped or added, so every
 /// segment keeps its time, track and speaker.
 enum MeetingCorrectionPrompt {

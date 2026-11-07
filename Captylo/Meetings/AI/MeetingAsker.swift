@@ -24,6 +24,10 @@ actor MeetingAsker {
         String(localized: "W tym spotkaniu jest za mało rozmowy, żeby odpowiedzieć.")
     }
 
+    static var tooLongMessage: String {
+        String(localized: "To spotkanie jest za długie, żeby zapytać o nie naraz. Zajrzyj do notatek AI albo zapytaj wszystkie spotkania.")
+    }
+
     private let database: Database
     private let chat: MeetingChat
 
@@ -81,20 +85,26 @@ actor MeetingAsker {
 
     private func answer(_ question: String, meeting: MeetingRecord, segments: [MeetingSegmentRecord]) async throws -> (String, String) {
         guard meeting.status != .recording else { throw AskError(message: Self.recordingMessage) }
-        let route = try await chat.route(for: .ask)
+        _ = try await chat.route(for: .ask)
         let spoken = segments.filter { !$0.isEcho }
         let words = spoken.reduce(WordCounter.count(meeting.notes)) { $0 + WordCounter.count($1.text) }
         guard words >= Self.minimumWords else { throw AskError(message: Self.nothingToAskMessage) }
 
-        let user = MeetingAskPrompt.user(meeting: meeting, segments: spoken, question: question, history: meeting.questions)
+        let system = MeetingAIInstructions.system(for: .ask)
+        let user = TranscriptChunker.appending(
+            MeetingPrompts.askReminder(),
+            to: MeetingAskPrompt.user(meeting: meeting, segments: spoken, question: question, history: meeting.questions)
+        )
+        // One call reads the whole meeting: over the input budget it would not fit the model.
+        guard TranscriptChunker.fits(system: system, user: user) else { throw AskError(message: Self.tooLongMessage) }
         let started = ContinuousClock.now
-        let reply = try await chat.complete(route: route, task: .ask, user: user, maxTokens: Self.maxTokens)
+        let reply = try await chat.complete(task: .ask, system: system, user: user, maxTokens: Self.maxTokens)
         if reply.finishReason == "length" {
             Log.enhancement.notice("Meeting answer reached the \(Self.maxTokens) token cap")
         }
         let ms = Int((ContinuousClock.now - started) / .milliseconds(1))
         Log.enhancement.info("Meeting ask ok in \(ms) ms with \(reply.model, privacy: .public)")
-        return (reply.text, reply.model)
+        return (CitationNormalizer.normalize(reply.text), reply.model)
     }
 
     /// A reason not to call the AI, shown as it is.

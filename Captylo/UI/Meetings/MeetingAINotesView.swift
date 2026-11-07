@@ -17,6 +17,8 @@ struct MeetingAINotesView: View {
     let isPending: Bool
     /// "Wygeneruj ponownie" runs for this meeting (`MeetingNotesRuns`).
     let isRunning: Bool
+    /// Calls done of notes written in several (a long meeting on a local model), nil otherwise.
+    var progress: MeetingNotesRuns.Progress?
     /// Write the notes again with this template id.
     let onRegenerate: (String) -> Void
     let onCopy: (String) -> Void
@@ -92,9 +94,16 @@ struct MeetingAINotesView: View {
             ProgressView()
                 .controlSize(.small)
                 .tint(GlassColor.textPrimary)
-            Text("Piszę notatki...")
-                .font(GlassFont.body)
-                .foregroundStyle(GlassColor.textSecondary)
+            Group {
+                if let progress {
+                    Text("Piszę notatki, krok \(progress.done + 1) z \(progress.total)...")
+                        .monospacedDigit()
+                } else {
+                    Text("Piszę notatki...")
+                }
+            }
+            .font(GlassFont.body)
+            .foregroundStyle(GlassColor.textSecondary)
         }
         .padding(.vertical, 6)
         .accessibilityElement(children: .combine)

@@ -697,6 +697,7 @@ struct MeetingDetailView: View {
             meeting: meeting,
             isPending: isLive || meeting.status == .processing,
             isRunning: notesRuns.isRunning(id),
+            progress: notesRuns.progress[id],
             onRegenerate: { templateID in
                 notesRuns.regenerate(meetingID: id, templateID: templateID)
             },

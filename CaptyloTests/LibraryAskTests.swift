@@ -556,7 +556,9 @@ struct LibraryAskTests {
 
         let body = seen.withLock { $0 }
         let messages = Self.messages(body)
-        #expect(messages.count == 1)
+        #expect(messages.count == 2)
+        #expect(messages.first == MeetingPrompts.libraryAskSystem())
+        #expect(messages.last?.hasSuffix(MeetingPrompts.libraryAskReminder()) == true)
         let json = (try? JSONSerialization.jsonObject(with: body)) as? [String: Any]
         #expect(json?["captylo_task"] == nil)
         #expect(json?["model"] as? String == Self.model)

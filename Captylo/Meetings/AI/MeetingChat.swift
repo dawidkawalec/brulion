@@ -3,28 +3,23 @@ import os
 
 /// One non-streaming AI call over meeting text, shared by the AI notes (`MeetingSummarizer`),
 /// the transcript fixes (`MeetingTranscriptCorrector`) and the asks. The route comes from the
-/// task's role (`AIRouteProviding`); the messages are the task's instructions as the system
-/// message (when there are any, `MeetingAIInstructions`) and the data as the user message.
-/// Meeting AI runs in the background with progress, so there is no deadline beyond the
+/// task's role (`AIRouteProviding`); the messages are the open Polish instructions
+/// (`MeetingPrompts`) as the system message and the data as the user message, at temperature
+/// 0.2. Meeting AI runs in the background with progress, so there is no deadline beyond the
 /// session's generous timeouts (`HTTP.meetingLLMSession`). Errors come back as `MeetingSummaryError`.
 struct MeetingChat: Sendable {
     /// How long a call waits for its route: the local model server may have to start and load
     /// a model first.
     static let routeTimeout: Duration = .seconds(120)
+    /// Meeting answers read better with a little freedom than at 0 (meeting prompt trials).
+    static let temperature = 0.2
 
     let session: URLSession
     let routes: any AIRouteProviding
-    /// The instructions of a task; `MeetingAIInstructions.system(for:)` in the app.
-    let instructions: @Sendable (MeetingAITask) -> String?
 
-    init(
-        session: URLSession,
-        routes: any AIRouteProviding,
-        instructions: @escaping @Sendable (MeetingAITask) -> String? = { MeetingAIInstructions.system(for: $0) }
-    ) {
+    init(session: URLSession, routes: any AIRouteProviding) {
         self.session = session
         self.routes = routes
-        self.instructions = instructions
     }
 
     struct Reply: Sendable, Equatable {
@@ -35,7 +30,7 @@ struct MeetingChat: Sendable {
         let model: String
     }
 
-    /// The route for `task`'s role, or `noKey` when there is none.
+    /// The route for `task`'s role, or `noKey` when there is none (checked before any work).
     func route(for task: MeetingAITask) async throws -> AIRoute {
         guard let route = await routes.route(for: task.role, timeout: Self.routeTimeout) else {
             throw MeetingSummaryError.noKey
@@ -53,13 +48,25 @@ struct MeetingChat: Sendable {
         return messages
     }
 
-    /// `maxTokens` is the answer cap.
-    func complete(route: AIRoute, task: MeetingAITask, user: String, maxTokens: Int) async throws -> Reply {
+    /// One call on the route of `task`'s role. A local model server is kept alive while the
+    /// call runs (a long meeting can take minutes, longer than the idle stop), `noKey` without
+    /// a route. `maxTokens` is the answer cap.
+    func complete(task: MeetingAITask, system: String?, user: String, maxTokens: Int) async throws -> Reply {
+        let reply = try await routes.withRoute(for: task.role, timeout: Self.routeTimeout) { route in
+            try await self.complete(route: route, system: system, user: user, maxTokens: maxTokens)
+        }
+        guard let reply else { throw MeetingSummaryError.noKey }
+        return reply
+    }
+
+    /// One call on `route`. `maxTokens` is the answer cap.
+    func complete(route: AIRoute, system: String?, user: String, maxTokens: Int) async throws -> Reply {
         let request = route.client.chatRequest(
             model: route.model,
-            messages: Self.messages(system: instructions(task), user: user),
+            messages: Self.messages(system: system, user: user),
             maxTokens: maxTokens,
-            key: route.key
+            key: route.key,
+            temperature: Self.temperature
         )
         let (data, status) = try await send(request)
         guard (200..<300).contains(status) else {

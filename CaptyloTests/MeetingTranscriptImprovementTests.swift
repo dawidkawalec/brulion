@@ -166,13 +166,15 @@ struct MeetingTranscriptImprovementTests {
         #expect(prompt.contains("Słownik (pisownia nazw i terminów): Captylo, Anna, Piotr Nowak\n"))
         #expect(!prompt.contains("3|"))
         let segments = try await database.segments(meetingID: id)
-        #expect(segments.filter { !$0.isEcho }.map(\.text) == ["Dam znać Annie.", "Wyślę ofertę jutro."])
-        #expect(segments.filter { !$0.isEcho }.map(\.originalText) == ["dam znaciannie", "wyśle oferte jutro"])
+        // `TranscriptFixGuard` keeps the spelling fix and refuses the one that splits a heard
+        // word in two ("znaciannie" -> "znać Annie"): a line is never rebuilt from guesses.
+        #expect(segments.filter { !$0.isEcho }.map(\.text) == ["dam znaciannie", "Wyślę ofertę jutro."])
+        #expect(segments.filter { !$0.isEcho }.map(\.originalText) == [nil, "wyśle oferte jutro"])
         #expect(segments.first { $0.isEcho }?.text == "wyśle oferte jutro")
         #expect(try await database.meeting(id: id)?.transcriptAIModel == Self.model)
         #expect(try await database.meetings(query: "ofertę", limit: 5).map(\.id) == [id])
 
-        #expect(try await database.restoreOriginalTranscript(meetingID: id) == 2)
+        #expect(try await database.restoreOriginalTranscript(meetingID: id) == 1)
         let restored = try await database.segments(meetingID: id)
         #expect(restored.filter { !$0.isEcho }.map(\.text) == ["dam znaciannie", "wyśle oferte jutro"])
         #expect(restored.allSatisfy { $0.originalText == nil })

@@ -161,11 +161,14 @@ struct MeetingAskTests {
         #expect(body["max_tokens"] as? Int == MeetingAsker.maxTokens)
         #expect(MeetingAsker.maxTokens == 1_500)
         let messages = Self.messages(body)
-        #expect(messages.count == 1)
+        #expect(messages.count == 2)
+        #expect(messages.first == MeetingPrompts.askSystem())
         #expect(body["captylo_task"] == nil)
         #expect(messages.last?.contains("[1:45] Rozmówcy: Proponuję test") == true)
         #expect(messages.last?.contains("Pytanie: Co ustaliliśmy?") == true)
-        #expect(messages.last?.hasSuffix("<question>\nJaki budżet na test?\n</question>") == true)
+        #expect(messages.last?.contains("<question>\nJaki budżet na test?\n</question>") == true)
+        // The reminder closes the data (`MeetingPrompts.askReminder`).
+        #expect(messages.last?.hasSuffix(MeetingPrompts.askReminder()) == true)
     }
 
     @Test func aMissingKeyIsStoredWithoutACall() async throws {

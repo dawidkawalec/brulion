@@ -59,16 +59,24 @@ actor LibraryAsker {
                 result.answer = Self.noHitsAnswer
                 return result
             }
-            let route = try await chat.route(for: .libraryAsk)
-            let user = LibraryAskPrompt.user(context: context, question: trimmed, now: now())
+            _ = try await chat.route(for: .libraryAsk)
+            let user = TranscriptChunker.appending(
+                MeetingPrompts.libraryAskReminder(),
+                to: LibraryAskPrompt.user(context: context, question: trimmed, now: now())
+            )
             let started = ContinuousClock.now
-            let reply = try await chat.complete(route: route, task: .libraryAsk, user: user, maxTokens: Self.maxTokens)
+            let reply = try await chat.complete(
+                task: .libraryAsk,
+                system: MeetingAIInstructions.system(for: .libraryAsk),
+                user: user,
+                maxTokens: Self.maxTokens
+            )
             if reply.finishReason == "length" {
                 Log.enhancement.notice("Library answer reached the \(Self.maxTokens) token cap")
             }
             let ms = Int((ContinuousClock.now - started) / .milliseconds(1))
             Log.enhancement.info("Library ask ok in \(ms) ms with \(reply.model, privacy: .public), \(context.sources.count) meetings")
-            result.answer = reply.text
+            result.answer = CitationNormalizer.normalize(reply.text)
             result.model = reply.model
         } catch {
             Log.enhancement.error("Library ask failed: \(error.localizedDescription, privacy: .public)")

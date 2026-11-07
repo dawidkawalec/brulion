@@ -7,7 +7,7 @@ import Foundation
 /// `LibraryCitation`) and is exactly `notFound` when nothing has the answer.
 enum LibraryAskPrompt {
     /// The exact answer when the meetings do not contain one (asked in Polish); the instructions
-    /// ask the model for exactly this text, so change both sides together.
+    /// (`MeetingPrompts.libraryAskSystem` and `libraryAskReminder`) quote this constant.
     static let notFound = "Nie znalazłem tego w spotkaniach."
     /// The same, asked in English.
     static let notFoundEnglish = "I couldn't find that in your meetings."

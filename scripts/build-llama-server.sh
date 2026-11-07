@@ -8,7 +8,7 @@
 # The pinned commit is LLAMA_CPP_COMMIT in project.yml (one place for the script and the
 # "Embed llama-server" build phase). The build lives outside the repo in a shared cache, so
 # worktrees and clean checkouts reuse it:
-#   CAPTYLO_LLAMA_CACHE   cache root (default ~/Library/Caches/CaptyloBielik/llama.cpp);
+#   SZPAK_LLAMA_CACHE     cache root (default ~/Library/Caches/Szpak/llama.cpp);
 #                         a different root also needs LLAMA_SERVER_PATH for xcodebuild
 #   LLAMA_CPP_SOURCE      an existing llama.cpp checkout at the pinned commit to build from
 #                         (default: a shallow clone of just that commit inside the cache)
@@ -31,7 +31,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 COMMIT="$(sed -n 's/^[[:space:]]*LLAMA_CPP_COMMIT:[[:space:]]*"\{0,1\}\([0-9a-f]\{40\}\)"\{0,1\}.*/\1/p' "$ROOT/project.yml" | head -n 1)"
 [ -n "$COMMIT" ] || { echo "LLAMA_CPP_COMMIT not found in project.yml" >&2; exit 1; }
 REPO_URL="https://github.com/ggml-org/llama.cpp.git"
-CACHE_ROOT="${CAPTYLO_LLAMA_CACHE:-$HOME/Library/Caches/CaptyloBielik/llama.cpp}"
+CACHE_ROOT="${SZPAK_LLAMA_CACHE:-$HOME/Library/Caches/Szpak/llama.cpp}"
 WORK="$CACHE_ROOT/$COMMIT"
 BUILD="$WORK/build"
 BIN="$BUILD/bin/llama-server"
@@ -103,6 +103,8 @@ HEAD="$(git -C "$SRC" rev-parse HEAD)"
 JOBS="${LLAMA_BUILD_JOBS:-$(sysctl -n hw.perflevel0.physicalcpu 2>/dev/null || sysctl -n hw.ncpu)}"
 echo "Building llama-server ($JOBS jobs) in $BUILD" >&2
 rm -f "$STAMP"
+# A clean build directory: a moved cache or other options would trip CMake's cache.
+rm -rf "$BUILD"
 cmake -S "$SRC" -B "$BUILD" "${CMAKE_ARGS[@]}" >&2
 cmake --build "$BUILD" -j "$JOBS" --target llama-server >&2
 

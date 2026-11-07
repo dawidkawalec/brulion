@@ -293,7 +293,7 @@ struct LocalAIServerTests {
         let override = URL(fileURLWithPath: "/tmp/llama-server")
         #expect(LlamaServerLocator.locate(override: override, environment: [:]) == override)
         #if DEBUG
-        #expect(LlamaServerLocator.locate(environment: ["CAPTYLO_LLAMA_SERVER": "/x/llama-server"])?.path == "/x/llama-server")
+        #expect(LlamaServerLocator.locate(environment: ["SZPAK_LLAMA_SERVER": "/x/llama-server"])?.path == "/x/llama-server")
         #endif
     }
 }

@@ -87,7 +87,7 @@ struct LocalAIUsageStatsTests {
         try await stats.export(to: target)
 
         let exported = try LocalUsageStats.decoder().decode(LocalUsageExport.self, from: Data(contentsOf: target))
-        #expect(exported.format == "captylo.localai.usage.v1")
+        #expect(exported.format == "szpak.localai.usage.v1")
         #expect(exported.exportedAt == date)
         #expect(exported.p95CorrectionMilliseconds == 300)
         #expect(exported.counters.correctionsAccepted == 1)

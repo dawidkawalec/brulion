@@ -1,11 +1,11 @@
 import Foundation
 
 /// Finds the llama-server helper: an explicit override (tests, the integration), in Debug
-/// builds the `CAPTYLO_LLAMA_SERVER` environment variable (a dev build without the embedded
+/// builds the `SZPAK_LLAMA_SERVER` environment variable (a dev build without the embedded
 /// helper), otherwise `Contents/MacOS/llama-server` in the app bundle.
 enum LlamaServerLocator {
     static let executableName = "llama-server"
-    static let environmentOverride = "CAPTYLO_LLAMA_SERVER"
+    static let environmentOverride = "SZPAK_LLAMA_SERVER"
 
     static func locate(
         override: URL? = nil,

@@ -3,7 +3,7 @@ import Foundation
 /// What "Eksportuj licznik" writes (PRD 8: counted locally, exported by hand for the contest).
 /// Counts and durations only: no text, no mode prompts, nothing about the user.
 struct LocalUsageExport: Codable, Equatable, Sendable {
-    static let formatID = "captylo.localai.usage.v1"
+    static let formatID = "szpak.localai.usage.v1"
 
     var format = LocalUsageExport.formatID
     var exportedAt: Date

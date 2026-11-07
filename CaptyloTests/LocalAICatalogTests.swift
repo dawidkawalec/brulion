@@ -60,10 +60,14 @@ struct LocalAICatalogTests {
         #expect(!LocalModelCatalog.isDownloadHost("example.com"))
     }
 
-    @Test func approximateRAMUsesTheFactorUntilMeasured() {
-        let spec = LocalModelCatalog.bielik15B
-        let expected = LocalAITuning.measuredPeakRAM[spec.id] ?? Int64((Double(spec.bytes) * LocalAITuning.ramFactor).rounded())
-        #expect(spec.approximateRAMBytes == expected)
-        #expect(spec.approximateRAMBytes > spec.bytes)
+    @Test func approximateRAMUsesTheF0Plan() {
+        #expect(LocalModelCatalog.bielik15B.approximateRAMBytes == 2_300_000_000)
+        #expect(LocalModelCatalog.bielikMinitron7B.approximateRAMBytes == 6_600_000_000)
+        for spec in LocalModelCatalog.all {
+            #expect(LocalAITuning.measuredPeakRAM[spec.id] != nil, "\(spec.id) has a planned memory")
+            #expect(spec.approximateRAMBytes > spec.bytes)
+        }
+        let unmeasured = LocalAIFixtures.spec(id: "unmeasured", bytes: 1000)
+        #expect(unmeasured.approximateRAMBytes == 1300)
     }
 }

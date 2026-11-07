@@ -1,15 +1,17 @@
 import Foundation
 
 /// Every number of the local AI that F0 measures or tunes, in one place (docs/local-ai.md,
-/// "Pending numbers"). Values marked PLACEHOLDER are educated guesses until the measured
-/// ones replace them; nothing else in `Captylo/LocalAI/` hardcodes these.
+/// "Measured numbers"). F0 = 2026-11-07 on an M3 Pro 36 GB, llama-server v0.9.0, -c 8192,
+/// -ngl 99, temperature 0, 60 real dictations (median 32 words). Values marked ESTIMATE or
+/// PLACEHOLDER are not measured yet; nothing else in the module hardcodes these.
 enum LocalAITuning {
     // MARK: Context windows (llama-server `-c`)
 
-    /// PLACEHOLDER: context for the correction role (a dictation plus the cleanup prompt).
+    /// Context for the correction role (a dictation plus the cleanup prompt).
     static let correctionContext = 8192
-    /// PLACEHOLDER: context for the features role (a 1 h meeting is about 20-25k tokens; longer
-    /// transcripts are split by the meeting code, PRD 7.4).
+    /// Context for the features role (a 1 h meeting is about 20-25k tokens; longer transcripts
+    /// are split by the meeting code, PRD 7.4). The models' trained context is being read
+    /// from their GGUF metadata; this stays the server's `-c` value.
     static let featuresContext = 16384
 
     static func contextLength(for role: LocalRole) -> Int {
@@ -21,18 +23,25 @@ enum LocalAITuning {
 
     // MARK: Memory
 
-    /// Measured peak resident memory of llama-server per model id, at its context, in bytes.
-    /// PLACEHOLDER: empty until F0 sends the numbers; `peakRAMBytes` falls back to the factor.
-    static let measuredPeakRAM: [String: Int64] = [:]
-    /// PLACEHOLDER: peak memory as a multiple of the file size when no measurement exists.
+    /// Planned memory of llama-server per model id: the mapped model file plus the working
+    /// memory measured in F0 at -c 8192 (1.5B: 1.70 GB + 0.45-0.6 GB; Minitron: 4.50 GB +
+    /// 1.7-2.1 GB). The 4.5B is an ESTIMATE (5.06 GB + 1.5 GB), not measured yet.
+    static let measuredPeakRAM: [String: Int64] = [
+        "bielik-1.5b-v3-q8": 2_300_000_000,
+        "bielik-minitron-7b-v3-q4km": 6_600_000_000,
+        "bielik-4.5b-v3-q8": 6_561_215_424,
+    ]
+    /// Peak memory as a multiple of the file size for a model without a measurement (tests,
+    /// models added later).
     static let ramFactor = 1.3
 
     static func peakRAMBytes(modelID: String, fileBytes: Int64) -> Int64 {
         measuredPeakRAM[modelID] ?? Int64((Double(fileBytes) * ramFactor).rounded())
     }
 
-    /// PLACEHOLDER: share of the physical memory all llama-server processes may use together,
-    /// per tier. 16 GB x 0.6 fits 1.5B + Minitron next to Whisper; 8 GB x 0.45 fits one model.
+    /// Share of the physical memory all llama-server processes may use together, per tier.
+    /// 16 GB x 0.6 = 10.3 GB fits 1.5B + Minitron (8.9 GB) next to Whisper; 8 GB x 0.45 =
+    /// 3.9 GB fits the 1.5B (2.3 GB) alone, so a bigger model runs one at a time.
     static let standardMemoryBudgetFraction = 0.6
     static let experimentalMemoryBudgetFraction = 0.45
     /// On the experimental tier a model whose peak memory exceeds this share of the physical
@@ -45,13 +54,14 @@ enum LocalAITuning {
 
     // MARK: Deadlines (PRD 5)
 
-    /// PLACEHOLDER: fixed part of the cleanup deadline, seconds.
-    static let cleanupBaseSeconds = 1.5
-    /// PLACEHOLDER: fixed part of an AI mode's deadline, seconds.
-    static let modeBaseSeconds = 4.0
-    /// PLACEHOLDER: generation time per input word, seconds (correction and features models).
-    static let correctionSecondsPerWord = 0.02
-    static let featuresSecondsPerWord = 0.02
+    /// Fixed part of the cleanup deadline, seconds (1.5B: warm first token p50 0.07-0.09 s).
+    static let cleanupBaseSeconds = 1.0
+    /// Fixed part of an AI mode's deadline, seconds (Minitron: warm first token p50 0.4 s).
+    static let modeBaseSeconds = 3.0
+    /// Time per input word, seconds: 1.5B p50 0.032, p95 0.039 (rounded up to 0.04);
+    /// Minitron p50 0.15, p95 0.23.
+    static let correctionSecondsPerWord = 0.04
+    static let featuresSecondsPerWord = 0.23
     /// Safety factor on the per-word time (PRD 5).
     static let deadlineSafetyFactor = 1.5
     /// Caps (PRD 5).
@@ -60,7 +70,7 @@ enum LocalAITuning {
 
     // MARK: Correction guard (PRD 7.2)
 
-    /// PLACEHOLDER: minimum word similarity between the raw text and the correction.
+    /// Minimum word similarity between the raw text and the merged correction (F0).
     static let guardMinimumSimilarity = 0.5
     /// Allowed output length as a share of the input length.
     static let guardMinimumLengthRatio = 0.5
@@ -72,6 +82,7 @@ enum LocalAITuning {
 
     /// Default idle time before a server is stopped to free its memory (PRD 5: 10 min).
     static let defaultIdleTimeout: Duration = .seconds(10 * 60)
-    /// How long a start may take before it counts as failed (big models load in seconds).
+    /// How long a start may take before it counts as failed. F0 cold loads: 1.5B 1.4-1.7 s,
+    /// Minitron 3.9-7.7 s (warm 0.3 s and 0.8 s); slower Macs and disks get a wide margin.
     static let startTimeout: Duration = .seconds(60)
 }

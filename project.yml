@@ -47,7 +47,7 @@ settings:
     # Local AI helper (docs/local-ai.md): llama.cpp v0.9.0, built by scripts/build-llama-server.sh
     # (make llama) into a shared cache outside the repo; the script reads the commit from here.
     LLAMA_CPP_COMMIT: "cd959bae99ff4bed22bef2604f45241c09bbb8c8"
-    LLAMA_SERVER_PATH: "$(HOME)/Library/Caches/CaptyloBielik/llama.cpp/$(LLAMA_CPP_COMMIT)/build/bin/llama-server"
+    LLAMA_SERVER_PATH: "$(HOME)/Library/Caches/Szpak/llama.cpp/$(LLAMA_CPP_COMMIT)/build/bin/llama-server"
   configs:
     Debug:
       SWIFT_OPTIMIZATION_LEVEL: "-Onone"

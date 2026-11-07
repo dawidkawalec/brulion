@@ -43,6 +43,8 @@ final class AppState {
     @ObservationIgnored let transcriptionRouter: TranscriptionRouter
 
     // AI
+    /// Bielik on this Mac: the downloads, the model servers, the usage counter, the memory tier.
+    @ObservationIgnored let localAI: LocalAIServices
     /// Where every AI request goes (dictation, notes, history, meetings): see "AI routes" in `init`.
     @ObservationIgnored let aiRoutes: any AIRouteProviding
     @ObservationIgnored let enhancer: Enhancer
@@ -147,6 +149,8 @@ final class AppState {
     /// The AI routes run off the main actor, so the cloud route reads this snapshot of
     /// `settings.cloudAIEnabled` and `settings.cloudAIModel`.
     @ObservationIgnored private let cloudAISnapshot: OSAllocatedUnfairLock<CloudAIRouteProvider.Configuration>
+    /// And this one of where each role runs (`settings.aiRoleRouting`).
+    @ObservationIgnored private let aiRoutingSnapshot: OSAllocatedUnfairLock<AIRoleRouting>
     @ObservationIgnored private var wakeObserver: (any NSObjectProtocol)?
     /// ⌃⌥⌘M, registered while "Skrót ⌃⌥⌘M" is on (`applyMeetingShortcut`).
     @ObservationIgnored private var meetingShortcut: GlobalShortcut?
@@ -189,24 +193,49 @@ final class AppState {
 
         // MARK: AI routes (the one place)
         // Every AI request asks `aiRoutes` for its role (`AIRole`): dictation, files, notes,
-        // history, the style profile and the meeting AI. Today that is only "Bielik w chmurze"
-        // (CloudFerro Sherlock on the user's key, off by default). The local model server's
-        // provider (Captylo/LocalAI) goes in front of it here at integration, so a request uses
-        // the local model and falls back to the cloud only when the user turned it on.
+        // history, the style profile and the meeting AI. `AIRoleRouteProvider` reads where the
+        // role runs (Modele > Zaawansowane, else the Mac's default plan by its memory) and asks
+        // the local model server (llama-server on 127.0.0.1, `LocalAIRouteProvider`) or "Bielik
+        // w chmurze" (CloudFerro Sherlock on the user's key, off by default). No route = no AI:
+        // the raw text is pasted. The design preview and the test host never start a server.
+        let hardware = HardwareProfile.current
+        let routing = settings.aiRoleRouting(hardware: hardware)
+        let localAI = LocalAIServices(
+            root: overrides.localAIRoot ?? AppPaths.dataDirectory,
+            startsServers: overrides.startsLocalAI,
+            pinnedStates: overrides.pinnedLocalAIStates,
+            routing: routing,
+            idleTimeout: settings.localAIIdleTimeout,
+            hardware: hardware
+        )
+        self.localAI = localAI
+        let routingSnapshot = OSAllocatedUnfairLock(initialState: routing)
+        aiRoutingSnapshot = routingSnapshot
         let cloudSnapshot = OSAllocatedUnfairLock(initialState: settings.cloudAIConfiguration)
         cloudAISnapshot = cloudSnapshot
         let cloudRoutes = CloudAIRouteProvider(keyStore: keyStore, configuration: { cloudSnapshot.withLock { $0 } })
-        let routes: any AIRouteProviding = cloudRoutes
+        let routes: any AIRouteProviding = AIRoleRouteProvider(
+            local: LocalAIRouteProvider(endpoints: localAI.service),
+            cloud: cloudRoutes,
+            routing: { routingSnapshot.withLock { $0 } }
+        )
         aiRoutes = routes
 
-        // AI on the dictation path (the mode's deadline) and off it ("Przetwórz przez AI",
-        // "Testuj tryb", the style profile: the file session, 15 s, the file token cap).
-        enhancer = Enhancer(routes: routes)
+        // AI on the dictation path and off it ("Przetwórz przez AI", "Testuj tryb", the style
+        // profile: the file session, 15 s, the file token cap). Both stretch the limit with the
+        // input (PRD 5, `LocalDeadline`); only the dictation path counts its corrections.
+        let usageStats = localAI.usage
+        enhancer = Enhancer(
+            routes: routes,
+            adaptsDeadline: true,
+            usage: { event in Task { await usageStats.record(event) } }
+        )
         utilityEnhancer = Enhancer(
             routes: routes,
             session: HTTP.fileLLMSession,
             deadline: FileTranscriptionQueue.enhancementDeadline,
-            tokenCap: FileTranscriptionQueue.enhancementTokenCap
+            tokenCap: FileTranscriptionQueue.enhancementTokenCap,
+            adaptsDeadline: true
         )
 
         // Text and data
@@ -252,15 +281,22 @@ final class AppState {
             vocabulary: meetingVocabulary
         )
         let meetingSummarizer = MeetingSummarizer(routes: routes)
+        // A long meeting is written in parts on a local model: its progress reaches the
+        // "Notatki AI" tab through the runs, which are built after the processor.
+        let notesProgress = MeetingNotesRuns.Sink()
         let meetingNotes = MeetingNotesProcessor(
             database: database,
             summarizer: meetingSummarizer,
-            isAllowed: { true }
+            isAllowed: { true },
+            onProcessed: { Task { await usageStats.record(.meetingProcessed) } },
+            onProgress: notesProgress.reporter()
         )
         self.meetingNotes = meetingNotes
-        meetingNotesRuns = MeetingNotesRuns { id, templateID in
+        let notesRuns = MeetingNotesRuns { id, templateID in
             await meetingNotes.regenerate(meetingID: id, templateID: templateID)
         }
+        notesProgress.runs = notesRuns
+        meetingNotesRuns = notesRuns
         let meetingAsker = MeetingAsker(database: database, routes: routes)
         let libraryAsker = LibraryAsker(database: database, index: searchIndex, routes: routes)
         // The design preview never reaches the network: its questions are seeded.
@@ -460,6 +496,7 @@ final class AppState {
                 let days = settings.audioRetentionDays
                 Task { await Retention.run(days: days, database: database) }
             },
+            didDeliver: { localAI.record(.dictation) },
             // Never over the onboarding: its Wypróbuj step shows the missing model itself, and
             // the main window must not jump in front of it (the error toast still appears).
             openModels: {
@@ -668,6 +705,9 @@ final class AppState {
         correctionShortcut?.unregister()
         noteShortcut?.unregister()
         accessibility.stop()
+        // The model servers end with the app (their pid files let the next launch catch any
+        // that outlived a crash).
+        localAI.terminateAllNow()
         if let wakeObserver {
             NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver)
             self.wakeObserver = nil
@@ -797,6 +837,9 @@ final class AppState {
             _ = settings.hotkey
             _ = settings.cloudAIEnabled
             _ = settings.cloudAIModel
+            _ = settings.aiCorrectionModel
+            _ = settings.aiFeaturesModel
+            _ = settings.localAIIdleMinutes
             _ = settings.paragraphs
             _ = settings.menuBarOnly
             _ = settings.meetingsShortcut
@@ -819,6 +862,7 @@ final class AppState {
         }
         let cloud = settings.cloudAIConfiguration
         cloudAISnapshot.withLock { $0 = cloud }
+        applyAIRouting()
         if dictionary.paragraphs != settings.paragraphs {
             dictionary.setParagraphs(settings.paragraphs)
         }
@@ -826,6 +870,36 @@ final class AppState {
         applyMeetingShortcut()
         applyCorrectionShortcut()
         applyNoteShortcut()
+    }
+
+    /// The models per role and the idle time from the settings, live: the routes read the new
+    /// snapshot on the next request and the local servers follow (`LocalAIService.setRoleModels`
+    /// / `setOptions`).
+    func applyAIRouting() {
+        let routing = settings.aiRoleRouting(hardware: localAI.hardware)
+        aiRoutingSnapshot.withLock { $0 = routing }
+        localAI.apply(routing: routing, idleTimeout: settings.localAIIdleTimeout)
+    }
+
+    /// Where each role runs now, for Modele and the onboarding.
+    var aiRoleRouting: AIRoleRouting {
+        settings.aiRoleRouting(hardware: localAI.hardware)
+    }
+
+    /// Bumped when the cloud key was saved or removed, so the views that read `isCloudAIReady`
+    /// update (the Keychain itself is not observable).
+    private(set) var cloudKeyRevision = 0
+
+    func cloudKeyDidChange() {
+        cloudKeyRevision += 1
+    }
+
+    /// "Bielik w chmurze" is on and a key is saved (on 8 GB the AI features then go there).
+    var isCloudAIReady: Bool {
+        _ = cloudKeyRevision
+        guard settings.cloudAIEnabled else { return false }
+        let key = keyStore.get(KeyStore.Account.cloudFerroSherlock)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !(key ?? "").isEmpty
     }
 
     private func showStoreFallbackAlert() {

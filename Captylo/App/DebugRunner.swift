@@ -429,6 +429,7 @@ final class DebugRunner: DebugCommandRunner {
     private func check() async -> Int32 {
         let settings = appState.settings
         let historyCount = await appState.database.count()
+        let localAI = await localAIStatus()
         let modelStatus: String
         switch appState.modelStore.status {
         case .missing: modelStatus = "missing"
@@ -512,9 +513,38 @@ final class DebugRunner: DebugCommandRunner {
             "historyCount": historyCount,
             "dataDirectoryOverride": AppPaths.dataDirectoryOverride != nil,
             "oldAppRunning": appState.oldAppDetector.isOldAppRunning,
+            "localAI": localAI,
         ]
         Self.emit(payload)
         return 0
+    }
+
+    /// The local AI part of `--check`: the helper, the tier, each model on disk, where each role
+    /// runs and its server's state (no server is started).
+    private func localAIStatus() async -> [String: Any] {
+        let localAI = appState.localAI
+        let routing = appState.aiRoleRouting
+        let cloudReady = appState.isCloudAIReady
+        var roles: [String: Any] = [:]
+        for role in AIRole.allCases {
+            var entry: [String: Any] = [
+                "choice": Self.orNull(appState.settings.aiModelChoice(for: role)?.stored),
+                "runsOn": routing.effectiveChoice(for: role, cloudReady: cloudReady).stored,
+            ]
+            if let service = localAI.service {
+                entry["server"] = String(describing: await service.status(for: LocalRole(role)))
+            }
+            roles[role.rawValue] = entry
+        }
+        return [
+            "helper": Self.orNull(LlamaServerLocator.locate()?.path(percentEncoded: false)),
+            "tier": localAI.hardware.tier.rawValue,
+            "memoryBudgetBytes": localAI.hardware.memoryBudgetBytes,
+            "models": Dictionary(uniqueKeysWithValues: localAI.store.models.map { ($0.id, localAI.store.isInstalled($0.id)) }),
+            "modelsDirectory": localAI.store.modelsDirectory.path(percentEncoded: false),
+            "roles": roles,
+            "idleMinutes": appState.settings.localAIIdleMinutes,
+        ]
     }
 
     // MARK: Output

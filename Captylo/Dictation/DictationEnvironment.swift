@@ -35,6 +35,8 @@ struct DictationEnvironment {
     let setEscapeArmed: @MainActor (Bool) -> Void
     /// Called after a row was saved (bump `statsVersion`, run retention).
     let didSave: @MainActor () -> Void
+    /// Called once per dictation delivered to the focused app (the local usage counter).
+    let didDeliver: @MainActor () -> Void
     /// Opens the main window on the Modele tab (model missing).
     let openModels: @MainActor () -> Void
     /// Opens System Settings > Privacy & Security > Accessibility (paste failed).

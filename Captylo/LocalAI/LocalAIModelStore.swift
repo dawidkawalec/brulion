@@ -32,13 +32,26 @@ final class LocalAIModelStore {
     @ObservationIgnored private var tasks: [String: Task<Void, Never>] = [:]
     @ObservationIgnored private var activeGeneration: [String: Int] = [:]
     @ObservationIgnored private var lastGeneration = 0
+    /// Fixed states for a design preview: nothing is read, downloaded or deleted.
+    @ObservationIgnored private let pinnedStates: [String: State]?
 
-    init(modelsDirectory: URL, models: [LocalModelSpec] = LocalModelCatalog.all, downloader: LocalModelDownloader? = nil) {
+    /// - Parameter pinnedStates: states shown regardless of the files (a design preview); the
+    ///   store then never downloads, deletes or reads the disk.
+    init(
+        modelsDirectory: URL,
+        models: [LocalModelSpec] = LocalModelCatalog.all,
+        downloader: LocalModelDownloader? = nil,
+        pinnedStates: [String: State]? = nil
+    ) {
         self.modelsDirectory = modelsDirectory
         self.models = models
         self.downloader = downloader ?? LocalModelDownloader(modelsDirectory: modelsDirectory)
+        self.pinnedStates = pinnedStates
         refresh()
     }
+
+    /// True while the states are pinned (a design preview).
+    var isPinned: Bool { pinnedStates != nil }
 
     func model(id: String) -> LocalModelSpec? {
         models.first { $0.id == id }
@@ -64,6 +77,10 @@ final class LocalAIModelStore {
 
     /// Re-reads the files on disk; running downloads keep their state.
     func refresh() {
+        if let pinnedStates {
+            states = pinnedStates
+            return
+        }
         for spec in models where tasks[spec.id] == nil {
             partialBytes[spec.id] = LocalModelFiles.partialBytes(of: spec, in: modelsDirectory)
             states[spec.id] = LocalModelFiles.isInstalled(spec, in: modelsDirectory) ? .installed : .notInstalled
@@ -72,6 +89,7 @@ final class LocalAIModelStore {
 
     /// Starts or resumes a download; does nothing while one runs or when installed.
     func download(_ id: String) {
+        guard pinnedStates == nil else { return }
         guard let spec = model(id: id), tasks[id] == nil, !LocalModelFiles.isInstalled(spec, in: modelsDirectory) else { return }
         lastGeneration += 1
         let generation = lastGeneration
@@ -108,6 +126,7 @@ final class LocalAIModelStore {
     /// the file and any partial download.
     func delete(_ id: String) async throws {
         guard let spec = model(id: id) else { throw LocalModelDownloadError.unknownModel }
+        guard pinnedStates == nil else { return }
         if let task = tasks[id] {
             task.cancel()
             await task.value

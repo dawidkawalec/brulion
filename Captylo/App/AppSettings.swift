@@ -14,6 +14,9 @@ final class AppSettings {
         case aiEnabled = "ai.enabled"
         case cloudAIEnabled = "ai.cloud.enabled"
         case cloudAIModel = "ai.cloud.model"
+        case aiCorrectionModel = "ai.model.correction"
+        case aiFeaturesModel = "ai.model.features"
+        case localAIIdleMinutes = "ai.local.idleMinutes"
         case aiPrompt = "ai.prompt"
         case aiModes = "ai.modes"
         case aiActiveModeID = "ai.activeModeID"
@@ -61,6 +64,10 @@ final class AppSettings {
     /// "Przypominaj przed spotkaniem": minutes before the event (0 = "W chwili startu").
     nonisolated static let calendarReminderMinuteOptions = [0, 1, 2, 5]
     nonisolated static let defaultCalendarReminderMinutes = 1
+    /// "Zwalniaj model z pamięci po": minutes without a request before a local model server
+    /// stops (0 = "Nigdy"). PRD 5: 10 min by default.
+    nonisolated static let localAIIdleMinuteOptions = [1, 5, 10, 15, 30, 60, 0]
+    nonisolated static let defaultLocalAIIdleMinutes = 10
 
     @ObservationIgnored private let defaults: UserDefaults
     /// Bumped by `reset()` so every observer refreshes at once.
@@ -124,6 +131,55 @@ final class AppSettings {
         CloudAIRouteProvider.Configuration(isEnabled: cloudAIEnabled, model: cloudAIModel)
     }
 
+    // MARK: Models per role (Modele > Zaawansowane)
+
+    /// "Korekta dyktowania": the model of the cleanup, transcript fixes and note titles; nil = the
+    /// Mac's default plan (Bielik 1.5B).
+    var aiCorrectionModel: AIModelChoice? {
+        get { track(\.aiCorrectionModel); return AIModelChoice(stored: defaults.string(forKey: Key.aiCorrectionModel.rawValue)) }
+        set { withMutation(keyPath: \.aiCorrectionModel) { store(newValue, .aiCorrectionModel) } }
+    }
+
+    /// "Funkcje AI": the model of the other modes, notes and meetings; nil = the Mac's default
+    /// plan (Minitron 7B from 16 GB, else the cloud with a key or 1.5B).
+    var aiFeaturesModel: AIModelChoice? {
+        get { track(\.aiFeaturesModel); return AIModelChoice(stored: defaults.string(forKey: Key.aiFeaturesModel.rawValue)) }
+        set { withMutation(keyPath: \.aiFeaturesModel) { store(newValue, .aiFeaturesModel) } }
+    }
+
+    func aiModelChoice(for role: AIRole) -> AIModelChoice? {
+        switch role {
+        case .correction: aiCorrectionModel
+        case .features: aiFeaturesModel
+        }
+    }
+
+    /// nil puts the role back on the Mac's default plan.
+    func setAIModelChoice(_ choice: AIModelChoice?, for role: AIRole) {
+        switch role {
+        case .correction: aiCorrectionModel = choice
+        case .features: aiFeaturesModel = choice
+        }
+    }
+
+    /// Where the roles run on `hardware` with the user's picks.
+    func aiRoleRouting(hardware: HardwareProfile) -> AIRoleRouting {
+        AIRoleRouting(hardware: hardware, correction: aiCorrectionModel, features: aiFeaturesModel)
+    }
+
+    /// "Zwalniaj model z pamięci po N min bezczynności" (0 = never), any whole number of minutes
+    /// from 0; the menu offers `localAIIdleMinuteOptions`.
+    var localAIIdleMinutes: Int {
+        get { track(\.localAIIdleMinutes); return max(0, int(.localAIIdleMinutes, default: Self.defaultLocalAIIdleMinutes)) }
+        set { withMutation(keyPath: \.localAIIdleMinutes) { defaults.set(max(0, newValue), forKey: Key.localAIIdleMinutes.rawValue) } }
+    }
+
+    /// `localAIIdleMinutes` for `LocalAIService.Options.idleTimeout` (nil = never).
+    var localAIIdleTimeout: Duration? {
+        let minutes = localAIIdleMinutes
+        return minutes > 0 ? .seconds(minutes * 60) : nil
+    }
+
     /// Legacy single prompt from before "Tryby AI". Empty string = the default template. Only
     /// read by the one-time migration into `aiModes` ("Mój prompt"); the dictation path uses
     /// `activeMode`.
@@ -144,11 +200,22 @@ final class AppSettings {
         get {
             track(\.aiModes)
             if let stored = decode([AIMode].self, .aiModes), !stored.isEmpty {
-                return stored
+                return Self.upgradingShippedCleanup(stored)
             }
             return Self.initialModes(legacyPrompt: defaults.string(forKey: Key.aiPrompt.rawValue))
         }
         set { withMutation(keyPath: \.aiModes) { encode(newValue, .aiModes) } }
+    }
+
+    /// A stored "Czyszczenie" that still holds a shipped cleanup prompt (the English one of
+    /// Captylo) reads as the current default; a prompt the user edited stays as it is.
+    nonisolated static func upgradingShippedCleanup(_ modes: [AIMode]) -> [AIMode] {
+        modes.map { mode in
+            guard mode.builtInKey == BuiltInAIModes.Key.cleanup, CleanupPrompt.isShippedTemplate(mode.prompt) else { return mode }
+            var upgraded = mode
+            upgraded.prompt = CleanupPrompt.defaultTemplate
+            return upgraded
+        }
     }
 
     /// Id of the mode used for dictation. Defaults to "Czyszczenie", or to "Mój prompt" when
@@ -286,9 +353,7 @@ final class AppSettings {
     nonisolated static func migratedPrompt(_ legacyPrompt: String?) -> AIMode? {
         guard let legacyPrompt else { return nil }
         let trimmed = legacyPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty,
-              trimmed != CleanupPrompt.defaultTemplate.trimmingCharacters(in: .whitespacesAndNewlines)
-        else { return nil }
+        guard !trimmed.isEmpty, !CleanupPrompt.isShippedTemplate(trimmed) else { return nil }
         return BuiltInAIModes.migratedPrompt(legacyPrompt)
     }
 
@@ -572,5 +637,14 @@ final class AppSettings {
     private func encode<T: Encodable>(_ value: T, _ key: Key) {
         guard let data = try? JSONEncoder().encode(value) else { return }
         defaults.set(data, forKey: key.rawValue)
+    }
+
+    /// A model pick as its stored string; nil removes it (back to the default plan).
+    private func store(_ choice: AIModelChoice?, _ key: Key) {
+        if let choice {
+            defaults.set(choice.stored, forKey: key.rawValue)
+        } else {
+            defaults.removeObject(forKey: key.rawValue)
+        }
     }
 }

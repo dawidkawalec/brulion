@@ -365,6 +365,7 @@ final class DictationController: RecorderCoordinator {
             if delivery == .pasted {
                 env.pasteWatcher.didPaste(finalText)
             }
+            env.didDeliver()
             lastDeliveredText = finalText
             if case .copiedOnly(let reason) = delivery {
                 Log.output.notice("Paste failed: \(reason, privacy: .public)")

@@ -37,9 +37,10 @@ enum DesignPreviewData {
             reader: { _, _ in KeyStore.ReadResult(value: nil, status: errSecItemNotFound) }
         )
 
-        let overrides = AppStateOverrides(
+        let dictionaryURL = writeDictionary()
+        var overrides = AppStateOverrides(
             modelContainer: container,
-            dictionaryURL: writeDictionary(),
+            dictionaryURL: dictionaryURL,
             keyStore: keyStore,
             systemMuteDefaults: defaults,
             pinnedModelStatus: .ready,
@@ -48,7 +49,36 @@ enum DesignPreviewData {
             calendarEvents: showsCalendar() ? sampleCalendarEvents(now: Date()) : [],
             isDesignPreview: true
         )
+        // The local AI in a temp folder next to the dictionary, never a llama-server process,
+        // with pinned download states (`CAPTYLO_PREVIEW_BIELIK`).
+        overrides.localAIRoot = dictionaryURL.deletingLastPathComponent()
+        overrides.startsLocalAI = false
+        overrides.pinnedLocalAIStates = localAIStates()
         return AppState(settings: settings, overrides: overrides)
+    }
+
+    /// `CAPTYLO_PREVIEW_LEVEL=advanced`: Modele and Ustawienia open on "Zaawansowane".
+    static func settingsLevel(environment: [String: String] = ProcessInfo.processInfo.environment) -> SettingsLevel? {
+        environment["CAPTYLO_PREVIEW_LEVEL"]?.lowercased() == "advanced" ? .advanced : nil
+    }
+
+    /// `CAPTYLO_PREVIEW_BIELIK=none|downloading|installed`: the Bielik download states shown in
+    /// Modele and the onboarding. `none`: nothing downloaded; `installed`: the 1.5B and Minitron
+    /// ready; default (`downloading`): the 1.5B ready, Minitron at 42 %, the 4.5B not downloaded.
+    static func localAIStates(environment: [String: String] = ProcessInfo.processInfo.environment) -> [String: LocalAIModelStore.State] {
+        let small = LocalModelCatalog.bielik15B
+        let features = LocalModelCatalog.bielikMinitron7B
+        let alternative = LocalModelCatalog.bielik45B
+        switch environment["CAPTYLO_PREVIEW_BIELIK"]?.lowercased() {
+        case "none":
+            return [small.id: .notInstalled, features.id: .notInstalled, alternative.id: .notInstalled]
+        case "installed":
+            return [small.id: .installed, features.id: .installed, alternative.id: .notInstalled]
+        default:
+            let received = features.bytes * 42 / 100
+            let progress = LocalDownloadProgress(receivedBytes: received, totalBytes: features.bytes, bytesPerSecond: 38_000_000)
+            return [small.id: .installed, features.id: .downloading(progress), alternative.id: .notInstalled]
+        }
     }
 
     /// `CAPTYLO_PREVIEW_CALENDAR=1`: "Kalendarz" on with the three invented events of

@@ -29,6 +29,12 @@ struct AppStateOverrides {
     var calendarEvents: [CalendarEvent]?
     /// True for `--design-preview`: code that would touch the system (the hotkey tap) stays off.
     var isDesignPreview = false
+    /// Folder for the local AI (models, pid files, usage counter) instead of the data folder.
+    var localAIRoot: URL?
+    /// False: no llama-server is ever started (the design preview and the test host).
+    var startsLocalAI = true
+    /// Bielik download states shown regardless of the files (the design preview).
+    var pinnedLocalAIStates: [String: LocalAIModelStore.State]?
 
     static var live: AppStateOverrides { AppStateOverrides() }
 
@@ -59,15 +65,17 @@ struct AppStateOverrides {
         } catch {
             fatalError("In-memory store failed: \(error)")
         }
-        let dictionaryURL = FileManager.default.temporaryDirectory
+        let folder = FileManager.default.temporaryDirectory
             .appending(path: "\(folderPrefix)-\(ProcessInfo.processInfo.processIdentifier)", directoryHint: .isDirectory)
-            .appending(path: "dictionary.json")
-        let overrides = AppStateOverrides(
+        var overrides = AppStateOverrides(
             modelContainer: container,
-            dictionaryURL: dictionaryURL,
+            dictionaryURL: folder.appending(path: "dictionary.json"),
             systemMuteDefaults: defaults,
             calendarEvents: []
         )
+        // Never the real models or pid files, and never a llama-server process.
+        overrides.localAIRoot = folder
+        overrides.startsLocalAI = false
         return (AppSettings(defaults: defaults), overrides)
     }
 }

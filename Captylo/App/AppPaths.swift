@@ -62,6 +62,21 @@ enum AppPaths {
         notes.appending(path: fileName)
     }
 
+    /// The local AI (`Captylo/LocalAI`): the Bielik GGUF files, the model servers' pid files and
+    /// the local usage counter, all under `root` (the data folder in the app; a temp folder for
+    /// the design preview and the test host).
+    static func localModels(in root: URL = dataDirectory) -> URL {
+        root.appending(path: "LocalModels", directoryHint: .isDirectory)
+    }
+
+    static func localAIRun(in root: URL = dataDirectory) -> URL {
+        root.appending(path: "LocalAI", directoryHint: .isDirectory)
+    }
+
+    static func localAIUsage(in root: URL = dataDirectory) -> URL {
+        root.appending(path: "local-ai-usage.json")
+    }
+
     /// Creates the data, recordings, meetings and notes directories (call before opening the store).
     static func ensureDirectories() throws {
         for directory in [dataDirectory, recordings, meetings, notes] {

@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>pl</string>
 	<key>CFBundleDisplayName</key>
-	<string>Captylo</string>
+	<string>$(APP_PRODUCT_NAME)</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -38,7 +38,7 @@
 		<string>en</string>
 	</array>
 	<key>CFBundleName</key>
-	<string>Captylo</string>
+	<string>$(APP_PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -47,10 +47,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.captylo.app</string>
+			<string>$(APP_BUNDLE_ID)</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>captylo</string>
+				<string>$(APP_URL_SCHEME)</string>
 			</array>
 		</dict>
 	</array>
@@ -83,7 +83,7 @@
 			<key>NSMessage</key>
 			<string>fixSelection</string>
 			<key>NSPortName</key>
-			<string>Captylo</string>
+			<string>$(APP_PRODUCT_NAME)</string>
 			<key>NSRequiredContext</key>
 			<dict/>
 			<key>NSSendTypes</key>

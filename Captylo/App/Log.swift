@@ -3,7 +3,7 @@ import os
 /// The only singleton: `os.Logger` per module plus the hot-path signposter.
 /// `print` is reserved for the debug CLI output.
 enum Log {
-    static let subsystem = "com.captylo.app"
+    static let subsystem = AppIdentity.bundleID
 
     static let app = Logger(subsystem: subsystem, category: "app")
     static let audio = Logger(subsystem: subsystem, category: "audio")

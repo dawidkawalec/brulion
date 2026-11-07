@@ -126,9 +126,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "A recording or a voice message becomes a note with its transcript" } }
       }
     },
-    "Napisz notatkę albo naciśnij ⌃⌥⌘N w dowolnej aplikacji i powiedz, co chcesz zapamiętać.": {
+    "Napisz notatkę albo naciśnij %@ w dowolnej aplikacji i powiedz, co chcesz zapamiętać.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Write a note, or press ⌃⌥⌘N in any app and say what you want to remember." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Write a note, or press %@ in any app and say what you want to remember." } }
       }
     },
     "Nie udało się przepisać nagrania. %@": {
@@ -2263,12 +2263,12 @@
         }
       }
     },
-    "Jeden skrót, dwa sposoby użycia. Domyślnie prawy Option.": {
+    "Jeden skrót, dwa sposoby użycia. Domyślnie prawy Command.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "One shortcut, two ways to use it. Right Option by default."
+            "value": "One shortcut, two ways to use it. Right Command by default."
           }
         }
       }

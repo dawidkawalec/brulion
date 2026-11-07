@@ -82,7 +82,7 @@ final class AppSettings {
     // MARK: Hotkey and speech
 
     var hotkey: Hotkey {
-        get { track(\.hotkey); return decode(Hotkey.self, .hotkey) ?? .rightOption }
+        get { track(\.hotkey); return decode(Hotkey.self, .hotkey) ?? Hotkey.defaultHotkey }
         set { withMutation(keyPath: \.hotkey) { encode(newValue, .hotkey) } }
     }
 

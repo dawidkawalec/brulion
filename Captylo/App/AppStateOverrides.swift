@@ -38,7 +38,7 @@ struct AppStateOverrides {
     static var live: AppStateOverrides { AppStateOverrides() }
 
     /// Defaults suite of the unit-test host, wiped at every launch.
-    static let testHostSuiteName = "com.captylo.app.test-host"
+    static let testHostSuiteName = AppIdentity.bundleID + ".test-host"
 
     /// True when the app is the unit-test host (`make test`).
     static var isTestHost: Bool {

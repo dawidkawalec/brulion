@@ -69,7 +69,7 @@ struct DataTypesTests {
     }
 
     @Test func appPaths() {
-        #expect(AppPaths.dataDirectory.path(percentEncoded: false).hasSuffix("Application Support/Captylo/"))
+        #expect(AppPaths.dataDirectory.path(percentEncoded: false).hasSuffix("Application Support/CaptyloBielik/"))
         #expect(AppPaths.store.lastPathComponent == "Captylo.store")
         #expect(AppPaths.dictionaryJSON.lastPathComponent == "dictionary.json")
         #expect(AppPaths.recordings.lastPathComponent == "Recordings")

@@ -135,7 +135,7 @@ struct MCPServerTests {
         #expect(reply["id"] == .int(1))
         let result = try #require(reply["result"])
         #expect(result["protocolVersion"] == .string("2025-06-18"))
-        #expect(result["serverInfo"]?["name"] == .string("captylo"))
+        #expect(result["serverInfo"]?["name"] == .string("captylobielik"))
         #expect(result["serverInfo"]?["version"] == .string("1.2.3"))
         #expect(result["capabilities"]?["tools"] != nil)
     }
@@ -534,11 +534,13 @@ struct MCPServerTests {
     // MARK: Settings
 
     @Test func theCopiedConfigurationStartsThisAppInMCPMode() throws {
-        let path = "/Applications/Captylo.app/Contents/MacOS/Captylo"
+        let path = "/Applications/CaptyloBielik.app/Contents/MacOS/CaptyloBielik"
         let text = MCPSettingsRow.configuration(executablePath: path)
         let json = try JSONDecoder().decode(JSONValue.self, from: Data(text.utf8))
-        #expect(json["mcpServers"]?["captylo"]?["command"] == .string(path))
-        #expect(json["mcpServers"]?["captylo"]?["args"] == .array([.string("--mcp")]))
+        // Its own key, so the assistant can keep Captylo's entry next to it.
+        #expect(json["mcpServers"]?["captylo"] == nil)
+        #expect(json["mcpServers"]?["captylobielik"]?["command"] == .string(path))
+        #expect(json["mcpServers"]?["captylobielik"]?["args"] == .array([.string("--mcp")]))
         #expect(text.contains("\n"))
         #expect(!text.contains("\\/"))
     }

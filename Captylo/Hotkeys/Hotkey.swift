@@ -38,7 +38,11 @@ struct Hotkey: Codable, Hashable, Sendable {
     static let rightCommand = Hotkey(
         kind: .modifierOnly, keyCode: KeyCode.rightCommand, modifiers: NSEvent.ModifierFlags.command.rawValue)
 
-    static let presets: [Hotkey] = [.rightOption, .fn, .rightCommand]
+    /// The default dictation hotkey. Captylo itself defaults to Right Option, and two apps on
+    /// one key would both record and paste, so this fork starts on Right Command.
+    static let defaultHotkey: Hotkey = .rightCommand
+
+    static let presets: [Hotkey] = [.rightCommand, .rightOption, .fn]
 
     // MARK: Flags
 

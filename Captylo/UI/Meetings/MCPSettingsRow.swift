@@ -15,7 +15,7 @@ struct MCPSettingsRow: View {
     nonisolated static func configuration(executablePath: String) -> String {
         let entry: [String: Any] = [
             "mcpServers": [
-                "captylo": [
+                AppIdentity.mcpServerName: [
                     "command": executablePath,
                     "args": ["--mcp"],
                 ],

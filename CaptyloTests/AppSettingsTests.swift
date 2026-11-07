@@ -14,7 +14,8 @@ struct AppSettingsTests {
 
     @Test func defaultsMatchTheBrief() throws {
         let settings = try makeSettings()
-        #expect(settings.hotkey == .rightOption)
+        // Not Captylo's Right Option: both apps run side by side.
+        #expect(settings.hotkey == .rightCommand)
         #expect(settings.language == "pl")
         #expect(settings.transcriptionLanguage == "pl")
         #expect(settings.sttEngine == .local)
@@ -81,7 +82,7 @@ struct AppSettingsTests {
         #expect(settings.aiPrompt.isEmpty)
         #expect(settings.dashboardRange == 14)
         #expect(!settings.onboardingDone)
-        #expect(settings.hotkey == .rightOption)
+        #expect(settings.hotkey == .rightCommand)
         let defaults = try #require(UserDefaults(suiteName: Self.suiteName))
         for key in AppSettings.keys {
             #expect(defaults.object(forKey: key.rawValue) == nil, "\(key.rawValue) should be removed")
@@ -220,7 +221,7 @@ struct AppSettingsTests {
         #expect(!settings.notesShortcut)
         settings.reset()
         #expect(settings.notesShortcut)
-        #expect(GlobalShortcut.note.display == "⌃⌥⌘N")
+        #expect(GlobalShortcut.note.display == "⌃⌥⇧N")
     }
 
     @Test func meetingTranscriptSettingsDefaultOff() throws {

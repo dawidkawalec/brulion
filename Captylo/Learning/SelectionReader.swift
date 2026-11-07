@@ -29,7 +29,8 @@ enum SelectionReader {
     /// Cmd+C, then the user's clipboard as it was (`TextOutput.takeOverClipboard`, so a restore
     /// still pending after a dictation is honored). Nil when the app copied nothing in `copyWait`.
     static func copySelection(output: TextOutput, pasteboard: NSPasteboard = .general) async -> String? {
-        // ⌃⌥ of ⌃⌥⌘P may still be held; some apps read the live modifier state, not the event's.
+        // The modifiers of `GlobalShortcut.correction` may still be held; some apps read the live
+        // modifier state, not the event's.
         let clock = ContinuousClock()
         let releaseDeadline = clock.now + modifierWait
         let held: CGEventFlags = [.maskControl, .maskAlternate, .maskCommand, .maskShift]

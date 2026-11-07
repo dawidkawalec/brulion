@@ -2,17 +2,20 @@ import Carbon.HIToolbox
 import os
 
 /// A fixed system-wide key combo through Carbon's `RegisterEventHotKey` ("Nagraj spotkanie",
-/// ⌃⌥⌘M). Unlike the dictation hotkey it needs no event tap and no Accessibility grant, and the
+/// ⌃⌥⇧M). Unlike the dictation hotkey it needs no event tap and no Accessibility grant, and the
 /// press never reaches the focused app. Registration can fail when another app owns the combo;
 /// the menu bar item still works then.
+///
+/// Captylo registers the same letters with ⌃⌥⌘, and a combo belongs to whichever app registered
+/// it first, so this fork uses ⌃⌥⇧ for all three: both apps keep their shortcuts side by side.
 @MainActor
 final class GlobalShortcut {
-    /// ⌃⌥⌘M: no system or common app shortcut uses it.
-    static let meeting = Combo(keyCode: UInt32(kVK_ANSI_M), modifiers: UInt32(cmdKey | optionKey | controlKey), display: "⌃⌥⌘M")
-    /// ⌃⌥⌘P: "Popraw" the selected text (self-learning).
-    static let correction = Combo(keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(cmdKey | optionKey | controlKey), display: "⌃⌥⌘P")
-    /// ⌃⌥⌘N: a voice note from any app (Notatki).
-    static let note = Combo(keyCode: UInt32(kVK_ANSI_N), modifiers: UInt32(cmdKey | optionKey | controlKey), display: "⌃⌥⌘N")
+    /// ⌃⌥⇧M: no system or common app shortcut uses it.
+    static let meeting = Combo(keyCode: UInt32(kVK_ANSI_M), modifiers: UInt32(shiftKey | optionKey | controlKey), display: "⌃⌥⇧M")
+    /// ⌃⌥⇧P: "Popraw" the selected text (self-learning).
+    static let correction = Combo(keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(shiftKey | optionKey | controlKey), display: "⌃⌥⇧P")
+    /// ⌃⌥⇧N: a voice note from any app (Notatki).
+    static let note = Combo(keyCode: UInt32(kVK_ANSI_N), modifiers: UInt32(shiftKey | optionKey | controlKey), display: "⌃⌥⇧N")
 
     struct Combo: Sendable, Equatable {
         let keyCode: UInt32

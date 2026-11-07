@@ -488,7 +488,7 @@ struct ShortcutStep: View {
             OnboardingHeader(
                 symbol: OnboardingStep.shortcut.symbol,
                 title: String(localized: "Skrót do dyktowania"),
-                subtitle: String(localized: "Jeden skrót, dwa sposoby użycia. Domyślnie prawy Option.")
+                subtitle: String(localized: "Jeden skrót, dwa sposoby użycia. Domyślnie prawy Command.")
             )
 
             GlassRowSeparator()

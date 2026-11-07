@@ -1,9 +1,12 @@
 PROJECT := Captylo.xcodeproj
 SCHEME := Captylo
 DERIVED := $(CURDIR)/.local-build
-APP_NAME := Captylo.app
-EXECUTABLE := Captylo
-BUNDLE_ID := com.captylo.app
+# The fork's working identity: keep in step with APP_PRODUCT_NAME / APP_BUNDLE_ID in project.yml
+# and Captylo/App/AppIdentity.swift (docs/PRD.md section 4).
+PRODUCT := CaptyloBielik
+BUNDLE_ID := pl.craftweb.captylobielik
+APP_NAME := $(PRODUCT).app
+EXECUTABLE := $(PRODUCT)
 XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -derivedDataPath "$(DERIVED)" -skipPackagePluginValidation -skipMacroValidation
 XCPRETTY := grep -E 'error:|warning: .*Captylo(Tests)?/|BUILD (SUCCEEDED|FAILED)|TEST (SUCCEEDED|FAILED)|✘|Test run with'
 # Stable local signing identity (see scripts/setup-signing.sh). Without it builds stay ad-hoc.

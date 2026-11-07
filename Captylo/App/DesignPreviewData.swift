@@ -8,9 +8,9 @@ import SwiftData
 @MainActor
 enum DesignPreviewData {
     /// Throwaway defaults domain, wiped at every preview start.
-    static let suiteName = "com.captylo.app.design-preview"
+    static let suiteName = AppIdentity.bundleID + ".design-preview"
     /// Keychain service name used only if someone saves a key inside the preview.
-    static let keyService = "com.captylo.app.design-preview"
+    static let keyService = AppIdentity.bundleID + ".design-preview"
     static let dictationCount = 42
     static let dayRange = 14
 

@@ -3,7 +3,7 @@ import Foundation
 
 /// Every on-disk location the app uses. Audio rows store only `<id>.wav`; resolve it here.
 enum AppPaths {
-    static let folderName = "Captylo"
+    static let folderName = AppIdentity.dataFolderName
     static let storeFileName = "Captylo.store"
 
     /// Environment variable that points the whole data folder somewhere else (support and
@@ -16,7 +16,7 @@ enum AppPaths {
         return URL(filePath: (path as NSString).expandingTildeInPath, directoryHint: .isDirectory)
     }()
 
-    /// `~/Library/Application Support/Captylo/` (or `CAPTYLO_DATA_DIR`).
+    /// `~/Library/Application Support/<AppIdentity.dataFolderName>/` (or `CAPTYLO_DATA_DIR`).
     static let dataDirectory: URL = dataDirectoryOverride ?? URL.applicationSupportDirectory
         .appending(path: folderName, directoryHint: .isDirectory)
 

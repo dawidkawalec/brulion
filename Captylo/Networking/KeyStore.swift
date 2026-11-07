@@ -3,7 +3,7 @@ import Security
 import os
 
 /// API keys in the file-based login Keychain (gotcha 75): generic passwords under the
-/// service `com.captylo.app`. No data-protection keychain (ad-hoc builds have no access
+/// service `AppIdentity.bundleID`. No data-protection keychain (ad-hoc builds have no access
 /// group and fail with -34018) and no iCloud sync. Values are cached in memory after the
 /// first read so the hot path never touches the Keychain twice.
 ///
@@ -60,7 +60,7 @@ final class KeyStore: Sendable {
 
     typealias Reader = @Sendable (_ service: String, _ account: String) -> ReadResult
 
-    static let defaultService = "com.captylo.app"
+    static let defaultService = AppIdentity.bundleID
 
     let service: String
     /// Cached lookups; `nil` values remember a definite miss so an absent key costs nothing.
@@ -87,7 +87,7 @@ final class KeyStore: Sendable {
     /// stay in memory (tests, the design preview's account).
     static func inMemory(seed: [String: String] = [:]) -> KeyStore {
         KeyStore(
-            service: "com.captylo.app.in-memory",
+            service: AppIdentity.bundleID + ".in-memory",
             seed: seed,
             reader: { _, _ in ReadResult(value: nil, status: errSecItemNotFound) },
             writesKeychain: false

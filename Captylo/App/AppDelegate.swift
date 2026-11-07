@@ -85,13 +85,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func application(_ application: NSApplication, open urls: [URL]) {
         // Queued in AppState (never a second window); headless debug runs ignore them.
         guard !isHeadlessRun else { return }
-        // `captylo://` links (back from Checkout or the Portal) refresh the account; the rest
-        // are Finder files.
-        let links = urls.filter { $0.scheme?.lowercased() == "captylo" }
+        // Links of our scheme (`AppIdentity.urlScheme`) refresh the account; the rest are Finder files.
+        let links = urls.filter { $0.scheme?.lowercased() == AppIdentity.urlScheme }
         for link in links {
             appState.handleDeepLink(link)
         }
-        let files = urls.filter { $0.scheme?.lowercased() != "captylo" }
+        let files = urls.filter { $0.scheme?.lowercased() != AppIdentity.urlScheme }
         if !files.isEmpty {
             appState.openFiles(files)
         }

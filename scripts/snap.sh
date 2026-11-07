@@ -62,7 +62,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-BIN="${CAPTYLO_BIN:-$ROOT/.local-build/Build/Products/Debug/Captylo.app/Contents/MacOS/Captylo}"
+# The product name follows APP_PRODUCT_NAME in project.yml (the fork's working identity).
+PRODUCT="${PRODUCT:-CaptyloBielik}"
+BIN="${CAPTYLO_BIN:-$ROOT/.local-build/Build/Products/Debug/$PRODUCT.app/Contents/MacOS/$PRODUCT}"
 SETTLE="${SNAP_SETTLE:-2.5}"
 DUSK="$ROOT/docs/design/backdrops/dusk-wallpaper.jpg"
 TARGETS="widget-compact widget-compact-mode widget-expanded widget-transcribing widget-enhancing onboarding-welcome onboarding-permissions onboarding-model onboarding-shortcut onboarding-tryit main-pulpit main-spotkania main-notatki main-historia main-plik main-slownik main-modele main-ustawienia glass-gallery popraw"

@@ -225,7 +225,7 @@ struct NotesView: View {
                     .font(GlassFont.display(17))
                     .foregroundStyle(GlassColor.textPrimary)
                     .multilineTextAlignment(.center)
-                Text("Napisz notatkę albo naciśnij ⌃⌥⌘N w dowolnej aplikacji i powiedz, co chcesz zapamiętać.")
+                Text("Napisz notatkę albo naciśnij \(GlobalShortcut.note.display) w dowolnej aplikacji i powiedz, co chcesz zapamiętać.")
                     .font(GlassFont.body)
                     .foregroundStyle(GlassColor.textSecondary)
                     .multilineTextAlignment(.center)

@@ -100,7 +100,7 @@ final class MCPServer: Sendable {
             "protocolVersion": .string(agreed),
             "capabilities": .object(["tools": .object(["listChanged": .bool(false)])]),
             "serverInfo": .object([
-                "name": .string("captylo"),
+                "name": .string(AppIdentity.mcpServerName),
                 "title": .string("Captylo"),
                 "version": .string(version),
             ]),

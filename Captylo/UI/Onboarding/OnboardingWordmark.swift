@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The glass orb with the symbol over the white "captylo" wordmark (Brand Direction 01, both
-/// vector assets). The tagline and the rest of the welcome copy live in `WelcomeStep`.
+/// The glass orb with the icon's symbol over the white "szpak" text wordmark (`BrandWordmark`).
+/// The tagline and the rest of the welcome copy live in `WelcomeStep`.
 @MainActor
 struct OnboardingWordmark: View {
     var orbSize: CGFloat = 132

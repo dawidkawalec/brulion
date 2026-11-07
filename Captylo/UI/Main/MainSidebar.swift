@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Sidebar of the main window (docs/design/dusk-glass.md, "Main window"), attached to the left
 /// edge from top to bottom (Brand Direction 01, the owner's pick #38): an Abyss-tinted frosted
-/// column with a hairline on its right, the "captylo" wordmark on top, the seven sections as white
+/// column with a hairline on its right, the "szpak" wordmark on top, the seven sections as white
 /// icon + label rows with a brighter glass pill under the selection that slides between them,
 /// the version at the bottom.
 /// Keyboard: Cmd+1...7 jump to a section; with the sidebar focused, the arrow keys move.
@@ -57,9 +57,7 @@ struct MainSidebar: View {
 
     private var brand: some View {
         BrandWordmark(height: 28)
-            .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: "Captylo"))
-        .accessibilityAddTraits(.isHeader)
+            .accessibilityAddTraits(.isHeader)
     }
 
     // MARK: Items

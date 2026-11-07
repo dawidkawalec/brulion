@@ -103,6 +103,13 @@ publish-check:
 	@test -n "$(VERSION)" || { echo "usage: make publish-check VERSION=1.0.0"; exit 2; }
 	@"$(CURDIR)/scripts/publish-release.sh" "$(VERSION)" --check
 
+# The local AI helper (llama-server from the pinned llama.cpp commit, docs/local-ai.md): built once
+# into a shared cache outside the repo (reused when it is there); the "Embed llama-server" build
+# phase copies it into the app. Prints the binary's path.
+.PHONY: llama
+llama:
+	@"$(CURDIR)/scripts/build-llama-server.sh"
+
 clean:
 	rm -rf "$(DERIVED)" $(PROJECT)
 
@@ -112,3 +119,4 @@ help:
 	@echo "dist-dry VERSION=x.y.z  the same with Captylo Dev, no notarization, nothing leaves the Mac"
 	@echo "publish VERSION=x.y.z   upload the DMG and the site (appcast), GitHub release; asks first"
 	@echo "publish-check VERSION=x.y.z  the same checks, nothing leaves the Mac"
+	@echo "llama                   build (or reuse) the llama-server helper of the local AI"

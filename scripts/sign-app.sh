@@ -84,6 +84,14 @@ for library in "$FRAMEWORKS"/*.framework "$FRAMEWORKS"/*.dylib; do
   sign "$library"
 done
 
+# Helper executables next to the main one (llama-server, the local AI's model server): nested
+# code, so signed before the app, with the same identity and hardened runtime, no entitlements.
+MAIN_EXECUTABLE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Contents/Info.plist")"
+for helper in "$APP/Contents/MacOS"/*; do
+  [ "$(basename "$helper")" = "$MAIN_EXECUTABLE" ] && continue
+  if is_macho "$helper"; then sign "$helper"; fi
+done
+
 if [ -n "$ENTITLEMENTS" ]; then
   sign "$APP" --entitlements "$ENTITLEMENTS"
 else

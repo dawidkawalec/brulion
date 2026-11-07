@@ -3,7 +3,7 @@ import os
 
 /// One step of the launch resume: runs `processor` for a meeting only when its work is still
 /// missing on the row (`isDone` false), so the AI notes written before the quit are kept and
-/// the AI fix never runs twice. The processor's own gate (Pro, setting) still applies.
+/// the AI fix never runs twice. The processor's own gate (its setting) still applies.
 struct MeetingResumeStep: MeetingPostProcessing {
     let database: Database
     let isDone: @Sendable (MeetingRecord) -> Bool

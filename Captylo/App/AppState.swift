@@ -62,24 +62,19 @@ final class AppState {
     /// rebuilt when needed by `startServices()`; until it is ready search uses the store.
     @ObservationIgnored let meetingSearchIndex: MeetingSearchIndex
 
-    // Account and Pro
-    /// The Captylo account (sign-in, plan, billing links). Itself `@Observable`.
-    @ObservationIgnored let account: AccountStore
-
     // Meetings
-    @ObservationIgnored let proAccess: ProAccess
     /// Itself `@Observable`: views read its phase, live transcript and issues directly.
     @ObservationIgnored let meetingRecorder: MeetingRecorder
-    /// AI notes after a meeting (Pro).
+    /// AI notes after a meeting.
     @ObservationIgnored let meetingNotes: MeetingNotesProcessor
     /// "Wygeneruj ponownie" in the "Notatki AI" tab: `meetingNotes.regenerate` with the picked
     /// template. Itself `@Observable` (which meetings are being written, finished runs).
     @ObservationIgnored let meetingNotesRuns: MeetingNotesRuns
-    /// "Zapytaj" about one meeting and "Zapytaj wszystkie spotkania" (Pro): `MeetingAsker` and
-    /// `LibraryAsker` with the meetings model and the AI key. Itself `@Observable` (the question
-    /// being answered per meeting, finished questions, the library session).
+    /// "Zapytaj" about one meeting and "Zapytaj wszystkie spotkania": `MeetingAsker` and
+    /// `LibraryAsker` on `aiRoutes`. Itself `@Observable` (the question being answered per
+    /// meeting, finished questions, the library session).
     @ObservationIgnored let meetingAskRuns: MeetingAskRuns
-    /// The transcript actions in the details (cloud again, AI fix, restore). Itself `@Observable`.
+    /// The transcript actions in the details (AI fix, restore). Itself `@Observable`.
     @ObservationIgnored let meetingTranscriptRuns: MeetingTranscriptRuns
     /// "Zachowuj nagrania spotkań": the last post-processor, and a sweep at launch.
     @ObservationIgnored let meetingRetention: MeetingRetention
@@ -148,7 +143,7 @@ final class AppState {
         dictationController.phase != .idle || meetingRecorder.phase != .idle || meetingRecorder.isStarting
     }
 
-    @ObservationIgnored private let hotkeyRelay: HotkeyRelay
+    @ObservationIgnored private let hotkeyForwarder: HotkeyForwarder
     /// The AI routes run off the main actor, so the cloud route reads this snapshot of
     /// `settings.cloudAIEnabled` and `settings.cloudAIModel`.
     @ObservationIgnored private let cloudAISnapshot: OSAllocatedUnfairLock<CloudAIRouteProvider.Configuration>
@@ -184,18 +179,6 @@ final class AppState {
         livePreview = LivePreview(engine: engine)
         let keyStore = overrides.keyStore ?? KeyStore()
         self.keyStore = keyStore
-
-        // Account and Pro. Pro comes from the Captylo account; the design preview and the test
-        // host pin its state (no Keychain, no network, never a relay token).
-        let account = AccountStore(
-            client: AccountClient(),
-            keyStore: overrides.pinnedAccount == nil ? keyStore : .inMemory(),
-            settings: settings,
-            pinned: overrides.pinnedAccount
-        )
-        self.account = account
-        let access = ProAccess(settings: settings, account: account, pinned: overrides.pinnedPro)
-        proAccess = access
 
         // Transcription is local only (Whisper on this Mac).
         transcriptionRouter = TranscriptionRouter(
@@ -243,9 +226,10 @@ final class AppState {
         // Meetings: nothing records until the user starts a meeting (the design preview and the
         // test host never do), and never without the speech model on disk. The VAD loads once,
         // on the first meeting, and serves both tracks. After a meeting stops, in the background:
-        // speaker labels (Pro, macOS 15+; the diarizer loads on first use), the AI fixes of the
+        // speaker labels (macOS 15+; the diarizer loads on first use), the AI fixes of the
         // transcript (setting, the correction model) and the AI notes (the features model), both
-        // on `aiRoutes`, so the notes see "Mówca N" and the fixed text.
+        // on `aiRoutes`, so the notes see "Mówca N" and the fixed text. Without an AI route the
+        // notes keep the reason ("AI jest niedostępne...") for the "Notatki AI" tab.
         let meetingVAD = SpeechDetectorCache { try await FluidSpeechDetector.load() }
         let detectorStatus = SpeechDetectorStatus(load: { try await meetingVAD.prewarm() }, pinned: overrides.pinnedSpeechDetectorStatus)
         speechDetectorStatus = detectorStatus
@@ -258,24 +242,23 @@ final class AppState {
         let speakerLabels = SpeakerLabelProcessor(
             database: database,
             diarizer: FluidSpeakerDiarizer(),
-            isAllowed: { await access.allows(.speakerLabels) },
+            isAllowed: { true },
             trackURL: { id, track in AppPaths.meetingTrackURL(id, track: track) }
         )
         let meetingCorrection = MeetingCorrectionProcessor(
             database: database,
             corrector: MeetingTranscriptCorrector(routes: routes),
-            isEnabled: { @MainActor in access.allows(.meetingTranscriptCorrection) && settings.meetingsAICorrection },
+            isEnabled: { @MainActor in settings.meetingsAICorrection },
             vocabulary: meetingVocabulary
         )
         let meetingSummarizer = MeetingSummarizer(routes: routes)
         let meetingNotes = MeetingNotesProcessor(
             database: database,
             summarizer: meetingSummarizer,
-            isAllowed: { await access.allows(.meetingAINotes) }
+            isAllowed: { true }
         )
         self.meetingNotes = meetingNotes
         meetingNotesRuns = MeetingNotesRuns { id, templateID in
-            guard await access.allows(.meetingAINotes) else { return }
             await meetingNotes.regenerate(meetingID: id, templateID: templateID)
         }
         let meetingAsker = MeetingAsker(database: database, routes: routes)
@@ -284,11 +267,11 @@ final class AppState {
         let asksOffline = overrides.isDesignPreview
         meetingAskRuns = MeetingAskRuns(
             ask: { id, question in
-                guard !asksOffline, await access.allows(.meetingAsk) else { return }
+                guard !asksOffline else { return }
                 _ = await meetingAsker.ask(meetingID: id, question: question)
             },
             askLibrary: { question in
-                guard !asksOffline, await access.allows(.meetingAsk) else { return nil }
+                guard !asksOffline else { return nil }
                 return await libraryAsker.ask(question: question)
             }
         )
@@ -296,14 +279,12 @@ final class AppState {
         // export), so a transcript that changed rewrites them with the same template. Meetings
         // without notes stay without: that is the user's "Napisz notatki".
         let refreshNotes: @Sendable (UUID) async -> Void = { id in
-            guard await access.allows(.meetingAINotes),
-                  let meeting = try? await database.meeting(id: id), meeting.summary != nil else { return }
+            guard let meeting = try? await database.meeting(id: id), meeting.summary != nil else { return }
             await meetingNotes.regenerate(meetingID: id, templateID: meeting.summaryTemplateID)
         }
         meetingTranscriptRuns = MeetingTranscriptRuns { id, kind in
             switch kind {
             case .aiFix:
-                guard await access.allows(.meetingTranscriptCorrection) else { return }
                 if await meetingCorrection.run(meetingID: id) {
                     await refreshNotes(id)
                 }
@@ -422,12 +403,12 @@ final class AppState {
             openMeetings: { presenter.openMain(section: .spotkania) }
         )
 
-        // Hotkeys: the tap comes first, the controller resolves through the relay.
-        let relay = HotkeyRelay()
-        hotkeyRelay = relay
+        // Hotkeys: the tap comes first, the controller resolves through the forwarder.
+        let forwarder = HotkeyForwarder()
+        hotkeyForwarder = forwarder
         let tap = HotkeyTap { event in
             MainActor.assumeIsolated {
-                relay.handle(event)
+                forwarder.handle(event)
             }
         }
         hotkeyTap = tap
@@ -494,11 +475,11 @@ final class AppState {
             }
         ))
         hotkeyController = HotkeyController(tap: tap, coordinator: dictationController, toasts: toasts)
-        relay.controller = hotkeyController
+        forwarder.controller = hotkeyController
         // "Popraw" waits while a take runs, and a take that starts closes its panel.
         let dictation = dictationController
         correction.isDictating = { [weak dictation] in (dictation?.phase ?? .idle) != .idle }
-        relay.willHandle = { [weak correction] in correction?.cancel() }
+        forwarder.willHandle = { [weak correction] in correction?.cancel() }
         // Expanded widget: microphone and language menus, output switches, "Pauza".
         recorderModel.controls = RecorderAppControls(
             settings: settings,
@@ -576,10 +557,8 @@ final class AppState {
             await searchIndex.prepare(database: indexedDatabase)
         }
 
-        // API keys and the account token: read once on the Keychain queue so the hot path hits the cache.
-        keyStore.preload([KeyStore.Account.cloudFerroSherlock, KeyStore.Account.captyloAccount])
-        // The plan: refreshed now and every 6 hours (the cache already answered at init).
-        account.start()
+        // The cloud key: read once on the Keychain queue so the hot path hits the cache.
+        keyStore.preload([KeyStore.Account.cloudFerroSherlock])
 
         // Hotkey tap: installed now when trusted, otherwise on the Accessibility flip (gotcha 38).
         // Revoking the grant kills the tap but leaves its port behind, so a re-grant always builds
@@ -681,7 +660,6 @@ final class AppState {
         calendarReminder.stop()
         meetingCalendar.stop()
         meetingRecorder.abortForTermination()
-        account.stop()
         systemMute.restore()
         dictationController.abortForTermination()
         textOutput.flushPendingRestore()
@@ -779,16 +757,6 @@ final class AppState {
         pendingOpenURLs.append(contentsOf: urls)
         guard servicesStarted else { return }
         drainPendingOpenURLs()
-    }
-
-    /// `captylo://pro/done` (after Checkout) and `captylo://account/refresh` (after the Portal):
-    /// the account refreshes and the main window opens on its panel in Ustawienia.
-    func handleDeepLink(_ url: URL) {
-        guard account.handleDeepLink(url) else {
-            Log.app.notice("Ignored an unknown captylo:// link")
-            return
-        }
-        windowPresenter.openAccount()
     }
 
     /// "Uruchom ponownie" after a new "Język aplikacji". Never while something records, and never

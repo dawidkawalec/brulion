@@ -28,9 +28,8 @@ import SwiftUI
 /// searching, the number of meetings found sits under the field, and the notes the same search
 /// finds sit under the header ("Także w notatkach", `NoteMatchesStrip`), opening in Notatki.
 ///
-/// "Zapytaj wszystkie" next to the field opens `LibraryAskPanel` (Pro; Free sees a "Pro" badge
-/// and the Pro card): a citation in an answer closes it, selects that meeting and jumps in
-/// "Transkrypt" like a search hit.
+/// "Zapytaj wszystkie" next to the field opens `LibraryAskPanel`: a citation in an answer closes
+/// it, selects that meeting and jumps in "Transkrypt" like a search hit.
 @MainActor
 struct MeetingsView: View {
     /// Below this content width the list sits above the details.
@@ -124,7 +123,6 @@ struct MeetingsView: View {
             .sheet(isPresented: $showsLibraryAsk) {
                 LibraryAskPanel(
                     runs: appState.meetingAskRuns,
-                    isPro: appState.proAccess.allows(.meetingAsk),
                     onOpen: { meetingID, seconds in openCitation(meetingID, seconds: seconds) },
                     onOpenNote: { noteID in
                         showsLibraryAsk = false
@@ -133,10 +131,6 @@ struct MeetingsView: View {
                     onAddKey: {
                         showsLibraryAsk = false
                         openModels()
-                    },
-                    onSeePro: {
-                        showsLibraryAsk = false
-                        appState.windowPresenter.openAccount()
                     }
                 )
             }
@@ -266,8 +260,7 @@ struct MeetingsView: View {
         }
     }
 
-    /// "Zapytaj wszystkie" next to the search field; in Free with a "Pro" badge (the panel then
-    /// shows the Pro card).
+    /// "Zapytaj wszystkie" next to the search field.
     private var askAllButton: some View {
         Button {
             showsLibraryAsk = true
@@ -277,9 +270,6 @@ struct MeetingsView: View {
                     .font(.system(size: 12, weight: .semibold))
                 Text("Zapytaj wszystkie")
                     .lineLimit(1)
-                if !appState.proAccess.allows(.meetingAsk) {
-                    GlassBadge(title: Text(verbatim: "Pro"), tone: .accent)
-                }
             }
         }
         .buttonStyle(.glass(.neutral, size: .small, shape: .capsule))
@@ -462,7 +452,6 @@ struct MeetingsView: View {
                 database: appState.database,
                 recorder: recorder,
                 settings: appState.settings,
-                proAccess: appState.proAccess,
                 notesRuns: appState.meetingNotesRuns,
                 askRuns: appState.meetingAskRuns,
                 transcriptRuns: appState.meetingTranscriptRuns,

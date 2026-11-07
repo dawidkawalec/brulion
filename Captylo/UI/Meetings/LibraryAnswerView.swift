@@ -4,7 +4,7 @@ import SwiftUI
 /// when only the AI notes were searched (the index is being built), the answer line by line with
 /// its `[S1 12:34]` citations as buttons on the right (`LibraryCitationButton`), and "Źródła",
 /// the meetings it was answered from (S1 first), each a button that opens the meeting. A failure
-/// shows as a status line, with "Przejdź na Pro" when there is no AI route.
+/// shows as a status line, with "Otwórz Modele" when there is no AI route.
 @MainActor
 struct LibraryAnswerView: View {
     let answer: LibraryAnswer
@@ -31,7 +31,7 @@ struct LibraryAnswerView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     ToolStatusLine(text: answer.error ?? String(localized: "AI zwróciło pustą odpowiedź."), tone: .error)
                     if answer.error == MeetingSummaryError.noKey.errorDescription {
-                        Button("Przejdź na Pro", action: onAddKey)
+                        Button("Otwórz Modele", action: onAddKey)
                             .buttonStyle(.glass(.neutral, size: .small, shape: .capsule))
                             .fixedSize()
                     }

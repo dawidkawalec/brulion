@@ -74,8 +74,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidBecomeActive(_ notification: Notification) {
         appState.permissions.refresh()
         appState.launchAtLogin.refresh()
-        let account = appState.account
-        Task { await account.appDidBecomeActive() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -85,10 +83,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func application(_ application: NSApplication, open urls: [URL]) {
         // Queued in AppState (never a second window); headless debug runs ignore them.
         guard !isHeadlessRun else { return }
-        // Links of our scheme (`AppIdentity.urlScheme`) refresh the account; the rest are Finder files.
+        // Links of our scheme (`AppIdentity.urlScheme`) have no handler yet: logged and ignored
+        // (never the URL itself). The rest are Finder files.
         let links = urls.filter { $0.scheme?.lowercased() == AppIdentity.urlScheme }
-        for link in links {
-            appState.handleDeepLink(link)
+        if !links.isEmpty {
+            Log.app.notice("Ignored \(links.count) \(AppIdentity.urlScheme, privacy: .public):// link(s)")
         }
         let files = urls.filter { $0.scheme?.lowercased() != AppIdentity.urlScheme }
         if !files.isEmpty {

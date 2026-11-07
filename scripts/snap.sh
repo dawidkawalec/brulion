@@ -43,13 +43,6 @@
 #                             clicked, so the details open "Transkrypt" scrolled to that line
 #   CAPTYLO_PREVIEW_ASK_ALL=1 passed through, main-spotkania: "Zapytaj wszystkie spotkania"
 #                             opens with one seeded answer (citations into two sample meetings)
-#   CAPTYLO_PREVIEW_FREE=1    passed through: the Free plan instead of Pro (the Pro card in
-#                             "Notatki AI", "Zapytaj" and "Zapytaj wszystkie spotkania", the
-#                             "Pro" badge on "Zapytaj wszystkie")
-#   CAPTYLO_PREVIEW_ACCOUNT=<s>  passed through, main-ustawienia: the "Konto Captylo" panel as
-#                             `signedout`, `code` (the code step), `free` or `pro` (an invented
-#                             account; default `pro`, or `signedout` with CAPTYLO_PREVIEW_FREE=1).
-#                             Pro in the whole preview follows it; never the network
 #   CAPTYLO_PREVIEW_CALENDAR=1  passed through: "Kalendarz" on with three invented events
 #                             (the "Nadchodzące" strip in main-spotkania, the rows on in
 #                             main-ustawienia); never the real calendar

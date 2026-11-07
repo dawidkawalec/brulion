@@ -1,14 +1,13 @@
 import SwiftUI
 
 /// "Spotkania" in Ustawienia, right after "Nagrywanie": meeting detection, the consent reminder,
-/// the calendar ("Kalendarz" and "Przypominaj przed spotkaniem", Free), how long the track files
+/// the calendar ("Kalendarz" and "Przypominaj przed spotkaniem"), how long the track files
 /// stay ("Zachowuj nagrania spotkań"; transcripts and notes always stay), "Dostęp dla asystentów
-/// AI (MCP)" (`MCPSettingsRow`, Free, off by default), the system audio check,
-/// "Redukcja echa (eksperymentalna)" (voice processing on the mic, read at the next meeting start)
-/// and, in debug builds only, "Tryb Pro (dev)", which stands in for a licence until accounts exist.
+/// AI (MCP)" (`MCPSettingsRow`, off by default), the system audio check and
+/// "Redukcja echa (eksperymentalna)" (voice processing on the mic, read at the next meeting start).
 /// `level` splits it between the tabs of Ustawienia: detection, consent, shortcut, calendar, the
 /// transcript after the meeting and the track retention in "Podstawowe", MCP, the system audio
-/// check, echo reduction and the dev switch in "Zaawansowane".
+/// check and echo reduction in "Zaawansowane".
 @MainActor
 struct MeetingsSettingsPanel: View {
     @Environment(AppState.self) private var appState
@@ -70,7 +69,7 @@ struct MeetingsSettingsPanel: View {
         CalendarSettings(settings: settings, calendar: appState.meetingCalendar)
         GlassRowSeparator()
             .padding(.vertical, 6)
-        MeetingTranscriptSettings(settings: settings, isPro: appState.proAccess.isPro)
+        MeetingTranscriptSettings(settings: settings)
         GlassRowSeparator()
             .padding(.vertical, 6)
         GlassRow(
@@ -100,16 +99,6 @@ struct MeetingsSettingsPanel: View {
             systemImage: "waveform.badge.minus",
             isOn: $settings.meetingsVoiceProcessing
         )
-        #if DEBUG
-        GlassRowSeparator()
-            .padding(.vertical, 6)
-        GlassToggleRow(
-            "Tryb Pro (dev)",
-            subtitle: "Tylko w wersji deweloperskiej: włącza bez konta notatki AI, rozpoznawanie mówców, transkrypt z chmury i poprawki AI.",
-            systemImage: "hammer",
-            isOn: $settings.devPro
-        )
-        #endif
     }
 }
 
@@ -202,33 +191,18 @@ private struct CalendarSettings: View {
 
 // MARK: - Transcript after the meeting
 
-/// Pro: "Dokładniejszy transkrypt z chmury" and "Poprawiaj transkrypt przez AI" (the fixes and the
-/// AI notes run as "Captylo AI", no model to pick). In Free the switches are off and say it is Pro.
+/// "Poprawiaj transkrypt przez AI": the fixes run on the correction model wherever the AI runs
+/// (Modele), no model to pick here.
 @MainActor
 private struct MeetingTranscriptSettings: View {
     @Bindable var settings: AppSettings
-    let isPro: Bool
 
     var body: some View {
         GlassToggleRow(
             "Poprawiaj transkrypt przez AI",
             subtitle: "Po spotkaniu AI poprawia źle rozpoznane słowa, nazwy i interpunkcję. Niczego nie skraca, a oryginał da się przywrócić.",
             systemImage: "wand.and.stars",
-            isOn: proBinding($settings.meetingsAICorrection)
-        )
-        .disabled(!isPro)
-        if !isPro {
-            ToolStatusLine(text: String(localized: "Transkrypt z chmury i poprawki AI są w Captylo Pro."))
-                .padding(.leading, GlassTokens.Size.rowIconColumn + 16)
-                .padding(.bottom, 4)
-        }
-    }
-
-    /// Free shows the switch off whatever is stored.
-    private func proBinding(_ binding: Binding<Bool>) -> Binding<Bool> {
-        Binding(
-            get: { isPro && binding.wrappedValue },
-            set: { binding.wrappedValue = $0 }
+            isOn: $settings.meetingsAICorrection
         )
     }
 }

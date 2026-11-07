@@ -178,34 +178,16 @@ struct DesignPreviewTests {
         #expect(live.meeting.notes == live.meeting.noteLines.map(\.text).joined(separator: "\n"))
     }
 
-    /// `CAPTYLO_PREVIEW_TAB` and `CAPTYLO_PREVIEW_FREE` (the "Notatki AI" tab, Pro and Free).
-    @Test func previewPicksTheMeetingTabAndPlan() {
+    /// `CAPTYLO_PREVIEW_TAB` (the "Notatki AI" tab and the others).
+    @Test func previewPicksTheMeetingTab() {
         #expect(DesignPreviewData.meetingTab(environment: ["CAPTYLO_PREVIEW_TAB": "ai"]) == .aiNotes)
         #expect(DesignPreviewData.meetingTab(environment: ["CAPTYLO_PREVIEW_TAB": "ask"]) == .ask)
         #expect(DesignPreviewData.meetingTab(environment: ["CAPTYLO_PREVIEW_TAB": "Notes"]) == .notes)
         #expect(DesignPreviewData.meetingTab(environment: ["CAPTYLO_PREVIEW_TAB": "transcript"]) == .transcript)
         #expect(DesignPreviewData.meetingTab(environment: ["CAPTYLO_PREVIEW_TAB": "x"]) == nil)
         #expect(DesignPreviewData.meetingTab(environment: [:]) == nil)
-        #expect(DesignPreviewData.showsFreePlan(environment: ["CAPTYLO_PREVIEW_FREE": "1"]))
-        #expect(!DesignPreviewData.showsFreePlan(environment: ["CAPTYLO_PREVIEW_FREE": "0"]))
-        #expect(!DesignPreviewData.showsFreePlan(environment: [:]))
         #expect(DesignPreviewData.editsMeetingTitle(environment: ["CAPTYLO_PREVIEW_TITLE_EDIT": "1"]))
         #expect(!DesignPreviewData.editsMeetingTitle(environment: [:]))
-    }
-
-    /// `CAPTYLO_PREVIEW_ACCOUNT` (the "Konto Captylo" panel), defaulting to the plan the preview shows.
-    @Test func previewPicksTheAccountState() {
-        let now = Date(timeIntervalSince1970: 1_790_000_000)
-        let email = DesignPreviewData.sampleAccountEmail
-        #expect(email.hasSuffix("@example.com"))
-        #expect(DesignPreviewData.previewAccount(environment: [:], now: now) == .signedIn(DesignPreviewData.sampleAccount(plan: .pro, now: now)))
-        #expect(DesignPreviewData.previewAccount(environment: ["CAPTYLO_PREVIEW_FREE": "1"], now: now) == .signedOut)
-        #expect(DesignPreviewData.previewAccount(environment: ["CAPTYLO_PREVIEW_ACCOUNT": "code"], now: now) == .codeSent(email: email))
-        #expect(DesignPreviewData.previewAccount(environment: ["CAPTYLO_PREVIEW_ACCOUNT": "SignedOut"], now: now) == .signedOut)
-        let free = DesignPreviewData.previewAccount(environment: ["CAPTYLO_PREVIEW_ACCOUNT": "free"], now: now)
-        #expect(free == .signedIn(DesignPreviewData.sampleAccount(plan: .free, now: now)))
-        #expect(DesignPreviewData.sampleAccount(plan: .free, now: now).usage.audioSeconds == 0)
-        #expect(DesignPreviewData.sampleAccount(plan: .pro, now: now).periodEnd ?? now > now)
     }
 
     /// `CAPTYLO_PREVIEW_AUDIO_CHECK`: the result the system audio check row in Ustawienia shows.

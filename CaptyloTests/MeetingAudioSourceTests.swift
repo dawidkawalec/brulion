@@ -204,7 +204,7 @@ struct MeetingAudioSourceTests {
 
     // MARK: Core Audio process list
 
-    @Test func processListFindsThisProcessWhenCoreAudioKnowsIt() {
+    @Test func processListFindsOurOwnProcessWhenCoreAudioKnowsIt() {
         // Our own object first: the first Core Audio call is what registers this process.
         let ownID = CoreAudioProcesses.ownObjectID()
         let processes = CoreAudioProcesses.all()

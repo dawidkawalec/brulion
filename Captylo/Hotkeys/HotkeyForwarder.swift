@@ -2,7 +2,7 @@
 /// controller needs it), so its callback resolves the controller through this box.
 /// `HotkeyTap` already invokes the callback on the main actor.
 @MainActor
-final class HotkeyRelay {
+final class HotkeyForwarder {
     weak var controller: HotkeyController?
     /// Runs before every dictation hotkey event ("Popraw" closes its panel).
     var willHandle: (() -> Void)?

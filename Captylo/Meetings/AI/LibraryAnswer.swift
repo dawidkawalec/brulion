@@ -1,6 +1,6 @@
 import Foundation
 
-/// One "Zapytaj wszystkie spotkania" exchange (Pro): the question, the meetings it was answered
+/// One "Zapytaj wszystkie spotkania" exchange: the question, the meetings it was answered
 /// from (`S1` first) and either the AI's answer (Markdown with `[S1 12:34]` citations) or why it
 /// failed (Polish). Kept for the session only (`MeetingAskRuns.libraryAnswers`), never stored.
 struct LibraryAnswer: Sendable, Equatable, Identifiable {

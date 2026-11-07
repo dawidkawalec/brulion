@@ -1,20 +1,18 @@
 import SwiftUI
 
-/// The "Zapytaj" tab of a finished meeting (Pro): questions about this meeting and the AI's
+/// The "Zapytaj" tab of a finished meeting: questions about this meeting and the AI's
 /// answers, oldest first. Each question sits in a small glass bubble on the right, its answer
 /// under it like the AI notes (`MeetingNotesSections`, `[mm:ss]` citations as stamps that play
-/// that moment), a failure as a status line ("Przejdź na Pro" when there is no AI route). While
+/// that moment), a failure as a status line ("Otwórz Modele" when there is no AI route). While
 /// `MeetingAskRuns` answers, the question shows with a spinner "Szukam odpowiedzi...". At the
 /// bottom the field "Zapytaj o to spotkanie..." (Return sends); with no questions yet, three
 /// suggested questions above it. A trash icon left of the field (confirmed: "Wyczyść") removes
 /// the history.
 ///
-/// While the meeting records the tab says it works after the end. Free: a blurred sample under
-/// `MeetingProCard`.
+/// While the meeting records the tab says it works after the end.
 @MainActor
 struct MeetingAskView: View {
     let meeting: MeetingRecord
-    let isPro: Bool
     /// The meeting is still being recorded: nothing to ask about yet.
     let isRecording: Bool
     /// The question `MeetingAskRuns` is answering for this meeting, nil when none.
@@ -22,7 +20,7 @@ struct MeetingAskView: View {
     let onAsk: (String) -> Void
     /// Removes every question of the meeting (after the confirmation here).
     let onClear: () -> Void
-    /// Opens Modele, where the AI key goes.
+    /// Opens Modele, where the AI models and "Bielik w chmurze" are.
     let onAddKey: () -> Void
     /// Play the meeting from this second; nil without a recording (the stamps are plain text).
     var onPlay: ((Double) -> Void)?
@@ -42,19 +40,7 @@ struct MeetingAskView: View {
     }
 
     var body: some View {
-        if !isPro {
-            ScrollView {
-                MeetingProCard(
-                    title: "Zapytaj jest w Captylo Pro",
-                    message: "Zadaj pytanie o spotkanie i dostań krótką odpowiedź z odnośnikami do momentów rozmowy.",
-                    systemImage: "bubble.left.and.text.bubble.right"
-                ) {
-                    Self.proSample
-                }
-                .padding(.top, 6)
-            }
-            .scrollBounceBehavior(.basedOnSize)
-        } else if isRecording {
+        if isRecording {
             VStack(alignment: .leading) {
                 ToolCaption(verbatim: MeetingAsker.recordingMessage)
                     .padding(.top, 6)
@@ -133,7 +119,7 @@ struct MeetingAskView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     ToolStatusLine(text: asked.error ?? String(localized: "AI zwróciło pustą odpowiedź."), tone: .error)
                     if asked.error == MeetingSummaryError.noKey.errorDescription {
-                        Button("Przejdź na Pro", action: onAddKey)
+                        Button("Otwórz Modele", action: onAddKey)
                             .buttonStyle(.glass(.neutral, size: .small, shape: .capsule))
                             .fixedSize()
                     }
@@ -226,27 +212,4 @@ struct MeetingAskView: View {
         onAsk(trimmed)
         draft = ""
     }
-
-    // MARK: Pro card
-
-    /// Invented questions and answers behind the Pro card's blur.
-    private static var proSample: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            ForEach(Array(sampleExchanges.enumerated()), id: \.offset) { _, sample in
-                VStack(alignment: .leading, spacing: 8) {
-                    MeetingQuestionBubble(text: sample.question)
-                    MeetingNotesSections(
-                        document: MeetingNotesDocument(markdown: sample.answer),
-                        toggledTasks: .constant([]),
-                        onPlay: nil
-                    )
-                }
-            }
-        }
-    }
-
-    private static let sampleExchanges: [(question: String, answer: String)] = [
-        ("Co ustaliliśmy?", "- Start kampanii w drugim tygodniu miesiąca [12:05]\n- Budżet bez zmian do końca kwartału [15:40]"),
-        ("Kto przygotuje ofertę?", "- Mówca 2: dwie oferty agencji do środy [18:02]"),
-    ]
 }

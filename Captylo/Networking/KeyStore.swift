@@ -14,8 +14,6 @@ final class KeyStore: Sendable {
     enum Account {
         /// The user's CloudFerro Sherlock key for "Bielik w chmurze" (`CloudAIRouteProvider`).
         static let cloudFerroSherlock = "cloudferro-sherlock"
-        /// The Captylo account session token (`AccountStore`).
-        static let captyloAccount = "captylo-account"
     }
 
     /// One Keychain lookup: the value (nil when absent or unreadable) and the raw status.

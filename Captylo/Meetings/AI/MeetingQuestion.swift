@@ -1,6 +1,6 @@
 import Foundation
 
-/// One "Zapytaj" exchange about a meeting (Pro): the question, and either the AI's answer
+/// One "Zapytaj" exchange about a meeting: the question, and either the AI's answer
 /// (Markdown with `[mm:ss]` citations) and the model that wrote it, or why it failed (Polish).
 /// Stored on the meeting row (`MeetingRecord.questions`, newest last) and in the JSON export.
 struct MeetingQuestion: Codable, Sendable, Equatable, Identifiable {

@@ -126,8 +126,8 @@ final class DebugRunner: DebugCommandRunner {
     /// real local model and VAD, a real `MeetingTranscriber` and an in-memory store. Both tracks start
     /// at meeting time 0 and are fed 4096-sample chunks alternately, like the live sources.
     /// Prints the transcript as stored (echo marks written back like at a meeting's stop);
-    /// `transcribed` differs from the stored count only when a segment failed to save. With Pro
-    /// on (`CAPTYLO_DEV_PRO=1`) and macOS 15+ it also labels the speakers of the `them` file.
+    /// `transcribed` differs from the stored count only when a segment failed to save. On macOS
+    /// 15+ it also labels the speakers of the `them` file.
     private func meetingFromFiles(me: URL, them: URL) async -> Int32 {
         let started = ContinuousClock.now
         do {
@@ -169,10 +169,10 @@ final class DebugRunner: DebugCommandRunner {
             let result = await transcriber.finish()
             try await database.updateSegments(result.echoChanges)
 
-            // Speaker labels like after a real meeting (Pro and macOS 15+), over the `them` file
-            // itself. Called directly, not through `SpeakerLabelProcessor`, so a failure shows here.
+            // Speaker labels like after a real meeting (macOS 15+), over the `them` file itself.
+            // Called directly, not through `SpeakerLabelProcessor`, so a failure shows here.
             var turns: [SpeakerTurn]?
-            if SpeakerLabelProcessor.systemSupportsDiarization, appState.proAccess.allows(.speakerLabels) {
+            if SpeakerLabelProcessor.systemSupportsDiarization {
                 let found = try await FluidSpeakerDiarizer().diarize(url: them)
                 let transcript = try await database.segments(meetingID: record.id)
                 try await database.updateSegments(SpeakerAssigner.assign(transcript, turns: found))
@@ -453,14 +453,7 @@ final class DebugRunner: DebugCommandRunner {
         case .notFound: loginStatus = "notFound"
         @unknown default: loginStatus = "unknown"
         }
-        // Account: the state at launch (from the cache, no network); never the address or the token.
-        let accountInfo = appState.account.info
         let payload: [String: Any] = [
-            "account": [
-                "signedIn": accountInfo != nil,
-                "plan": Self.orNull(accountInfo?.plan.rawValue),
-                "cached": settings.accountCache != nil,
-            ],
             "bundle": Bundle.main.bundleIdentifier ?? "",
             "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "",
             "permissions": [

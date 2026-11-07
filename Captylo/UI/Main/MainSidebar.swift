@@ -4,7 +4,7 @@ import SwiftUI
 /// edge from top to bottom (Brand Direction 01, the owner's pick #38): an Abyss-tinted frosted
 /// column with a hairline on its right, the "captylo" wordmark on top, the seven sections as white
 /// icon + label rows with a brighter glass pill under the selection that slides between them,
-/// the Free plan support card, version and captylo.com at the bottom.
+/// the version at the bottom.
 /// Keyboard: Cmd+1...7 jump to a section; with the sidebar focused, the arrow keys move.
 @MainActor
 struct MainSidebar: View {
@@ -40,10 +40,6 @@ struct MainSidebar: View {
             }
 
             Spacer(minLength: 16)
-
-            SupportCard(now: Date())
-                .padding(.horizontal, 12)
-                .padding(.bottom, 14)
 
             footer
                 .padding(.horizontal, 18)
@@ -108,17 +104,6 @@ struct MainSidebar: View {
                 Text("Wersja \(Self.version)")
                     .font(GlassFont.caption)
                     .foregroundStyle(GlassColor.textTertiary)
-                Link(destination: SiteLinks.url("/")) {
-                    HStack(spacing: 4) {
-                        Text(verbatim: "captylo.com")
-                        Image(systemName: "arrow.up.right")
-                            .font(.system(size: 9, weight: .semibold))
-                    }
-                    .font(GlassFont.caption)
-                    .foregroundStyle(GlassColor.textSecondary)
-                }
-                .buttonStyle(.plain)
-                .pointerStyleLink()
             }
         }
     }
@@ -182,24 +167,6 @@ private struct SidebarBackdrop: View {
             Rectangle()
                 .fill(Color.white.opacity(MainShellMetrics.sidebarHairline))
                 .frame(width: 1)
-        }
-    }
-}
-
-private extension View {
-    /// Pointing-hand cursor over links (macOS 15 `pointerStyle`, cursor push below).
-    @ViewBuilder
-    func pointerStyleLink() -> some View {
-        if #available(macOS 15.0, *) {
-            pointerStyle(.link)
-        } else {
-            onHover { inside in
-                if inside {
-                    NSCursor.pointingHand.push()
-                } else {
-                    NSCursor.pop()
-                }
-            }
         }
     }
 }

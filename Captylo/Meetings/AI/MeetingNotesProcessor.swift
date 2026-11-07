@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-/// After a meeting (Pro): AI notes from the template picked by the title, stored on the meeting
+/// After a meeting: AI notes from the template picked by the title, stored on the meeting
 /// row. Runs after `SpeakerLabelProcessor`, so the transcript already carries "Mówca N".
 struct MeetingNotesProcessor: MeetingPostProcessing {
     let database: Database

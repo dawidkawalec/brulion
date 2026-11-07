@@ -47,19 +47,6 @@ enum HTTP {
         return URLSession(configuration: configuration)
     }()
 
-    /// Captylo account calls (`AccountClient`: sign-in, `/me`, billing links): small JSON
-    /// requests, never cached, 15 s per request.
-    static let accountSession: URLSession = {
-        let configuration = URLSessionConfiguration.default
-        configuration.urlCache = nil
-        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
-        configuration.waitsForConnectivity = false
-        configuration.timeoutIntervalForRequest = 15
-        configuration.timeoutIntervalForResource = 30
-        configuration.httpMaximumConnectionsPerHost = 2
-        return URLSession(configuration: configuration)
-    }()
-
     /// Log-friendly preview of a response body: single line, at most 200 characters.
     static func shortBody(_ data: Data) -> String {
         let limit = 200

@@ -76,7 +76,7 @@ actor MeetingTranscriptCorrector {
     }
 }
 
-/// After a meeting (Pro and "Poprawiaj transkrypt przez AI"), and for "Popraw transkrypt przez
+/// After a meeting (with "Poprawiaj transkrypt przez AI" on), and for "Popraw transkrypt przez
 /// AI" in the details: stores the fixed lines (each keeps its earlier text for "Przywróć") and
 /// names the model on the meeting. Runs after the cloud transcript and the speaker labels,
 /// before the AI notes, so the notes read the fixed text.

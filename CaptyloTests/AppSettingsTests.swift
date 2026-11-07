@@ -38,7 +38,6 @@ struct AppSettingsTests {
         #expect(settings.dashboardRange == 14)
         #expect(settings.dashboardMode == .daily)
         #expect(settings.dashboardMetric == .words)
-        #expect(settings.supportCardHiddenUntil == nil)
         #expect(settings.outputSettings == OutputSettings())
     }
 
@@ -94,20 +93,16 @@ struct AppSettingsTests {
         #expect(raw.contains("ai.modes"))
         #expect(raw.contains("ai.activeModeID"))
         #expect(raw.contains("ui.windowBackground"))
-        #expect(raw.contains("supportCard.hiddenUntil"))
         #expect(raw.contains("ui.backgroundDim"))
         #expect(raw.contains("ui.panelSmoke"))
         #expect(raw.contains("learning.enabled"))
         #expect(raw.contains("learning.notifications"))
         #expect(raw.contains("learning.excludedApps"))
         #expect(raw.contains("learning.fixShortcut"))
-        #expect(raw.contains("meetings.proBannerHiddenUntil"))
-        #expect(raw.contains("dev.pro"))
         #expect(raw.contains("meetings.autoDetect"))
         #expect(raw.contains("meetings.consentReminder"))
         #expect(raw.contains("meetings.audioRetention"))
         #expect(raw.contains("meetings.shortcut"))
-        #expect(raw.contains("meetings.cloudTranscript"))
         #expect(raw.contains("meetings.aiCorrection"))
         #expect(raw.contains("meetings.calendar"))
         #expect(raw.contains("meetings.calendarReminder"))
@@ -115,28 +110,16 @@ struct AppSettingsTests {
         #expect(raw.contains("meetings.voiceProcessing"))
         #expect(raw.contains("meetings.mcp"))
         #expect(raw.contains("meetings.calendarPromptDismissed"))
-        #expect(raw.contains("account.cache"))
-        #expect(raw.contains("account.refreshedAt"))
-        #expect(raw.contains("ai.captylo"))
-        #expect(raw.contains("stt.captylo"))
+        #expect(raw.contains("ai.cloud.enabled"))
+        #expect(raw.contains("ai.cloud.model"))
         #expect(raw.contains("notes.shortcut"))
-        #expect(AppSettings.keys.count == 52)
-    }
-
-    @Test func accountCacheDefaultsEmptyAndPersists() throws {
-        let settings = try makeSettings()
-        #expect(settings.accountCache == nil)
-        #expect(settings.accountRefreshedAt == nil)
-        let refreshed = Date(timeIntervalSince1970: 1_790_000_000.5)
-        settings.accountCache = "{}"
-        settings.accountRefreshedAt = refreshed
-        let reloaded = AppSettings(defaults: try #require(UserDefaults(suiteName: Self.suiteName)))
-        #expect(reloaded.accountCache == "{}")
-        #expect(reloaded.accountRefreshedAt == refreshed)
-        settings.accountCache = nil
-        settings.accountRefreshedAt = nil
-        #expect(reloaded.accountCache == nil)
-        #expect(reloaded.accountRefreshedAt == nil)
+        // Nothing of the account, Pro, the support card or the old cloud settings is left.
+        for gone in ["account.cache", "account.refreshedAt", "dev.pro", "supportCard.hiddenUntil",
+                     "meetings.proBannerHiddenUntil", "meetings.cloudTranscript", "ai.captylo",
+                     "stt.captylo", "ai.model", "openRouter.modelsCache"] {
+            #expect(!raw.contains(gone), "\(gone)")
+        }
+        #expect(AppSettings.keys.count == 43)
     }
 
     @Test func meetingMCPDefaultsOff() throws {

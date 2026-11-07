@@ -12,8 +12,6 @@ import SwiftUI
 final class WindowPresenter {
     /// Section the main window shows; `MainView` binds its sidebar selection to it.
     var selectedSection: MainSection = .pulpit
-    /// Ustawienia scrolls to this panel and clears it (`openAccount()`, `MainRouter.openAccount()`).
-    var settingsAnchor: SettingsAnchor?
     /// The note Notatki selects when it shows; the screen clears it (`openNote(id:)`).
     var pendingNoteID: UUID?
     /// Bumped on every open request; observed by `OpenWindowBridge`.
@@ -76,12 +74,6 @@ final class WindowPresenter {
     }
 
     func openSettings() {
-        openMain(section: .ustawienia)
-    }
-
-    /// Ustawienia scrolled to "Konto Captylo" (deep links, "Zobacz Pro", "Przejdź na Pro").
-    func openAccount() {
-        settingsAnchor = .account
         openMain(section: .ustawienia)
     }
 

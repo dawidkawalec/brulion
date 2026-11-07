@@ -12,7 +12,7 @@ struct MeetingRecord: Sendable, Equatable, Identifiable {
     /// Free text the user typed; `noteLines` keeps each line with its meeting time.
     var notes: String = ""
     var noteLines: [MeetingNoteLine] = []
-    /// AI notes (Markdown), Pro.
+    /// AI notes (Markdown).
     var summary: String? = nil
     var summaryTemplateID: String? = nil
     var summaryModel: String? = nil
@@ -35,7 +35,7 @@ struct MeetingRecord: Sendable, Equatable, Identifiable {
     var calendarEventID: String? = nil
     /// Attendee names from the calendar event (the user left out), empty without an event.
     var participants: [String] = []
-    /// "Zapytaj" (Pro): questions about this meeting and their answers, oldest first, at most
+    /// "Zapytaj": questions about this meeting and their answers, oldest first, at most
     /// `MeetingAsker.maxStoredQuestions`.
     var questions: [MeetingQuestion] = []
 

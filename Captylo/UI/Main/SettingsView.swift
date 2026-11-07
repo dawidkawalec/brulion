@@ -2,9 +2,7 @@ import AppKit
 import SwiftUI
 
 /// "Ustawienia": grouped Dusk Glass panels of rows and blue switches (mockup 03) in two tabs
-/// (`SettingsLevel`). "Podstawowe": the Captylo account first (`AccountSettingsPanel`, the target
-/// of `openAccount()`, which switches back to this tab), the shortcut recorder as a glass keycap,
-/// the window background, microphone and recording toggles, meetings (`MeetingsSettingsPanel`),
+/// (`SettingsLevel`). "Podstawowe": the shortcut recorder as a glass keycap, the window background, microphone and recording toggles, meetings (`MeetingsSettingsPanel`),
 /// history and learning (privacy stays one click away), login item.
 /// "Zaawansowane": the tone sliders, system mute, the rest of meetings, pasting, learning
 /// details, onboarding reset. The version footer closes both.
@@ -28,35 +26,12 @@ struct SettingsView: View {
         .onAppear {
             appState.launchAtLogin.refresh()
             appState.audioDevices.refresh()
-            showAnchoredTab()
-        }
-        .onChange(of: appState.windowPresenter.settingsAnchor) {
-            showAnchoredTab()
-        }
-    }
-
-    /// The anchored panels (`SettingsAnchor`) live in "Podstawowe".
-    private func showAnchoredTab() {
-        if appState.windowPresenter.settingsAnchor != nil {
-            level = .basic
         }
     }
 
     @ViewBuilder
     private var basic: some View {
         @Bindable var settings = appState.settings
-
-        // The reader only needs the anchored panel; its proxy scrolls the page's scroll view.
-        ScrollViewReader { proxy in
-            AccountSettingsPanel(account: appState.account)
-                .id(SettingsAnchor.account)
-                .onAppear {
-                    scrollToAnchor(proxy)
-                }
-                .onChange(of: appState.windowPresenter.settingsAnchor) {
-                    scrollToAnchor(proxy)
-                }
-        }
 
         GlassPanel(spacing: 14) {
             sectionHeader("Skrót", systemImage: "keyboard")
@@ -191,15 +166,6 @@ struct SettingsView: View {
         GlassPanel(spacing: 4) {
             sectionHeader("Aplikacja", systemImage: "macwindow")
             OnboardingResetRow(settings: settings)
-        }
-    }
-
-    /// `openAccount()` (deep links, "Zobacz Pro"): scrolls to the panel once, then forgets it.
-    private func scrollToAnchor(_ proxy: ScrollViewProxy) {
-        guard let anchor = appState.windowPresenter.settingsAnchor else { return }
-        appState.windowPresenter.settingsAnchor = nil
-        withAnimation(GlassMotion.spring) {
-            proxy.scrollTo(anchor, anchor: .top)
         }
     }
 

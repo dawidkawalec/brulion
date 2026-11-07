@@ -33,7 +33,7 @@ final class Meeting {
     var calendarEventID: String? = nil
     /// JSON `[String]` (attendee names from the calendar event).
     var participantsJSON: Data = Data()
-    /// JSON `[MeetingQuestion]` ("Zapytaj", Pro); empty when never asked.
+    /// JSON `[MeetingQuestion]` ("Zapytaj"); empty when never asked.
     var questionsJSON: Data = Data()
     /// Folded text of every segment that is not echo (`MeetingSearch`), for search without a join.
     var searchText: String = ""

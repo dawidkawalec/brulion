@@ -12,8 +12,8 @@ import UniformTypeIdentifiers
 /// (`MeetingRecorder.liveSegments` and the grey partial lines) and the notes editor, stacked when
 /// narrow. Afterwards a `[mm:ss]` stamp (in the transcript or an AI notes citation) plays its
 /// track from a second before that moment in the player under the tabs, and a "Mówca N" chip
-/// takes a name. "Notatki AI" is `MeetingAINotesView` (Pro notes, or the Pro card in Free),
-/// "Zapytaj" is `MeetingAskView` (questions about this meeting, Pro), whose citations play too.
+/// takes a name. "Notatki AI" is `MeetingAINotesView`, "Zapytaj" is `MeetingAskView` (questions
+/// about this meeting), whose citations play too.
 ///
 /// A search hit line clicked in the list arrives as `jump`: once this meeting and its segments
 /// are loaded on "Transkrypt", the transcript scrolls to the line holding the segment and lights
@@ -93,20 +93,18 @@ struct MeetingDetailView: View {
     let database: Database
     let recorder: MeetingRecorder
     let settings: AppSettings
-    /// "Notatki AI": Pro shows the notes, Free the Pro card (follows the dev switch live).
-    let proAccess: ProAccess
     /// "Wygeneruj ponownie" runs; the section reloads when one finishes.
     let notesRuns: MeetingNotesRuns
     /// "Zapytaj" questions being answered; the section reloads when one finishes.
     let askRuns: MeetingAskRuns
-    /// "Popraw" above the transcript (Pro): cloud again, AI fix, restore.
+    /// "Popraw" above the transcript: AI fix, restore.
     let transcriptRuns: MeetingTranscriptRuns
     @Binding var tab: Tab
     let onCopy: (String) -> Void
     let onDelete: (UUID) -> Void
     /// "Usuń tylko nagranie": the section confirms, removes the track files and reloads.
     let onDeleteAudio: (UUID) -> Void
-    /// Opens Modele (its Pro card): "Przejdź na Pro" under a no-access failure of the AI notes, "Otwórz Modele"
+    /// Opens Modele: "Otwórz Modele" under a no-AI failure of the AI notes or "Zapytaj", and
     /// when the speech model fails while recording.
     let onOpenModels: () -> Void
     /// A new title was saved (the saved row): the list shows it without a reload.
@@ -117,7 +115,6 @@ struct MeetingDetailView: View {
     let jump: MeetingTranscriptJump?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(MainRouter.self) private var router: MainRouter?
 
     @State private var meeting: MeetingRecord?
     /// The segment whose line is lit up after a jump; back to nil after `highlightDuration`.
@@ -139,7 +136,6 @@ struct MeetingDetailView: View {
         database: Database,
         recorder: MeetingRecorder,
         settings: AppSettings,
-        proAccess: ProAccess,
         notesRuns: MeetingNotesRuns,
         askRuns: MeetingAskRuns,
         transcriptRuns: MeetingTranscriptRuns,
@@ -157,7 +153,6 @@ struct MeetingDetailView: View {
         self.database = database
         self.recorder = recorder
         self.settings = settings
-        self.proAccess = proAccess
         self.notesRuns = notesRuns
         self.askRuns = askRuns
         self.transcriptRuns = transcriptRuns
@@ -605,7 +600,6 @@ struct MeetingDetailView: View {
             EmptyView()
         case .transcript:
             VStack(alignment: .leading, spacing: 14) {
-                proBanner(meeting)
                 transcriptBar(meeting)
                 MeetingTranscriptView(
                     meeting: meeting,
@@ -620,29 +614,9 @@ struct MeetingDetailView: View {
         }
     }
 
-    /// Free: what Pro would add to this meeting (`MeetingProBanner`), until closed for two weeks.
-    @ViewBuilder
-    private func proBanner(_ meeting: MeetingRecord) -> some View {
-        let offer = proAccess.offer
-        if MeetingProBanner.isVisible(
-            offer: offer,
-            status: meeting.status,
-            hasTranscript: !segments.isEmpty,
-            hiddenUntil: settings.meetingsProBannerHiddenUntil,
-            now: Date()
-        ) {
-            MeetingProBanner(
-                offer: offer,
-                onShowSample: { tab = .aiNotes },
-                onOffer: { router?.openAccount() },
-                onClose: { settings.meetingsProBannerHiddenUntil = Date().addingTimeInterval(SupportPromo.hideInterval) }
-            )
-        }
-    }
-
     /// Where the transcript comes from ("Transkrypt z Maca", "poprawiony przez AI"), the run in
-    /// progress or the last failure, and in Pro the "Popraw" menu. Nothing while the
-    /// post-processors still work on the meeting.
+    /// progress or the last failure, and the "Popraw" menu. Nothing while the post-processors
+    /// still work on the meeting.
     @ViewBuilder
     private func transcriptBar(_ meeting: MeetingRecord) -> some View {
         let running = transcriptRuns.kind(meeting.id)
@@ -663,7 +637,7 @@ struct MeetingDetailView: View {
                         .lineLimit(1)
                 }
                 Spacer(minLength: 8)
-                if proAccess.allows(.meetingTranscriptCorrection), !segments.isEmpty {
+                if !segments.isEmpty {
                     transcriptMenu(meeting)
                         .disabled(busy)
                 }
@@ -682,7 +656,7 @@ struct MeetingDetailView: View {
             } label: {
                 Label("Popraw przez AI", systemImage: "wand.and.stars")
             }
-            .disabled(segments.isEmpty || !proAccess.allows(.meetingTranscriptCorrection))
+            .disabled(segments.isEmpty)
             if meeting.transcriptAIModel != nil || segments.contains(where: { $0.originalText != nil }) {
                 Divider()
                 Button {
@@ -715,13 +689,12 @@ struct MeetingDetailView: View {
         }
     }
 
-    /// Pro notes, the Pro card in Free (`MeetingAINotesView`). A new meeting starts with the
-    /// template menu and the checked tasks reset.
+    /// The AI notes (`MeetingAINotesView`). A new meeting starts with the template menu and the
+    /// checked tasks reset.
     private func aiNotes(_ meeting: MeetingRecord) -> some View {
         let id = meeting.id
         return MeetingAINotesView(
             meeting: meeting,
-            isPro: proAccess.allows(.meetingAINotes),
             isPending: isLive || meeting.status == .processing,
             isRunning: notesRuns.isRunning(id),
             onRegenerate: { templateID in
@@ -737,12 +710,11 @@ struct MeetingDetailView: View {
         .id(id)
     }
 
-    /// "Zapytaj" (Pro; the Pro card in Free). A new meeting starts with an empty field.
+    /// "Zapytaj". A new meeting starts with an empty field.
     private func ask(_ meeting: MeetingRecord) -> some View {
         let id = meeting.id
         return MeetingAskView(
             meeting: meeting,
-            isPro: proAccess.allows(.meetingAsk),
             isRecording: isLive || meeting.status == .recording,
             pendingQuestion: askRuns.pendingQuestion(id),
             onAsk: { question in

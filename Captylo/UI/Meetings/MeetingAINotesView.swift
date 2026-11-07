@@ -2,21 +2,17 @@ import SwiftUI
 
 /// The "Notatki AI" tab of a finished meeting.
 ///
-/// Pro: the notes as sections (`MeetingNotesSections`): each heading like a panel header with a
+/// The notes as sections (`MeetingNotesSections`): each heading like a panel header with a
 /// line icon, bullets as rows with hairlines between them, the bullets under "Zadania" as rows
 /// with a check circle (checked on screen only in M1), and each `[mm:ss]` citation as a stamp on
 /// the right of its row that plays that moment like the transcript's stamps (plain text when the
 /// recording is gone). On top: the template menu, the action ("Napisz notatki", "Wygeneruj
 /// ponownie", or "Spróbuj ponownie" after a failure; a spinner and "Piszę notatki..." while
 /// `MeetingNotesRuns` writes them) and "Kopiuj" (the Markdown). A failure shows its message as a
-/// banner, with "Przejdź na Pro" when there is no AI route; earlier notes stay under it.
-///
-/// Free: a blurred sample of notes under a card "Notatki AI są w Captylo Pro" with "Zobacz Pro"
-/// (the "Konto Captylo" panel in Ustawienia), `MeetingProCard`.
+/// banner, with "Otwórz Modele" when there is no AI route; earlier notes stay under it.
 @MainActor
 struct MeetingAINotesView: View {
     let meeting: MeetingRecord
-    let isPro: Bool
     /// The meeting is still finishing (its row says "processing"): the notes are on their way.
     let isPending: Bool
     /// "Wygeneruj ponownie" runs for this meeting (`MeetingNotesRuns`).
@@ -24,7 +20,7 @@ struct MeetingAINotesView: View {
     /// Write the notes again with this template id.
     let onRegenerate: (String) -> Void
     let onCopy: (String) -> Void
-    /// Opens Modele, where the AI key goes.
+    /// Opens Modele, where the AI models and "Bielik w chmurze" are.
     let onAddKey: () -> Void
     /// Play the meeting from this second; nil without a recording (the stamps are plain text).
     var onPlay: ((Double) -> Void)?
@@ -36,38 +32,10 @@ struct MeetingAINotesView: View {
     @State private var toggledTasks: Set<Int> = []
 
     var body: some View {
-        if isPro {
-            proContent
-        } else {
-            MeetingProCard(
-                title: "Notatki AI są w Captylo Pro",
-                message: "Podsumowanie, decyzje i zadania z każdego spotkania, w Twoim szablonie. Rozpoznawanie, kto mówi.",
-                systemImage: "sparkles"
-            ) {
-                MeetingNotesSections(
-                    document: MeetingNotesDocument(markdown: Self.proSample),
-                    toggledTasks: .constant([]),
-                    onPlay: nil
-                )
-            }
-        }
+        content
     }
 
-    /// Invented notes behind the Pro card's blur (never readable, only their shape shows).
-    private static let proSample = """
-    ## Podsumowanie
-    - Zespół omówił plan na kolejny kwartał i podział budżetu [0:42]
-    - Najwięcej pytań dotyczyło terminu startu kampanii [6:10]
-    ## Decyzje
-    - Start kampanii w drugim tygodniu miesiąca [12:05]
-    ## Zadania
-    - Ja: harmonogram do piątku [14:30]
-    - Mówca 2: dwie oferty agencji do środy [18:02]
-    ## Następne kroki
-    - Krótkie spotkanie po otrzymaniu ofert [24:40]
-    """
-
-    // MARK: Pro
+    // MARK: Notes
 
     private var summary: String? {
         guard let summary = meeting.summary, !summary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
@@ -90,7 +58,7 @@ struct MeetingAINotesView: View {
     }
 
     @ViewBuilder
-    private var proContent: some View {
+    private var content: some View {
         if isPending, summary == nil, !isRunning {
             writingLine
         } else {
@@ -99,7 +67,7 @@ struct MeetingAINotesView: View {
                 if let failure, !isRunning {
                     MainBanner(symbol: "exclamationmark.triangle", tone: .warning, text: failure, surface: .raised) {
                         if failure == MeetingSummaryError.noKey.errorDescription {
-                            Button("Przejdź na Pro", action: onAddKey)
+                            Button("Otwórz Modele", action: onAddKey)
                         }
                     }
                     .transition(.opacity)

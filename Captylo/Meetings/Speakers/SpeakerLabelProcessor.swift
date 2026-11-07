@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-/// After a meeting: "Mówca 1/2/3" on the "Rozmówcy" track, Pro and macOS 15+ only. Runs the
+/// After a meeting: "Mówca 1/2/3" on the "Rozmówcy" track, macOS 15+ only. Runs the
 /// diarizer over the closed `them` track file and writes the labels onto the stored segments;
 /// with one remote voice (a 1:1 call) or on any failure the segments keep "Rozmówcy".
 struct SpeakerLabelProcessor: MeetingPostProcessing {

@@ -257,23 +257,12 @@ enum OnboardingLayout {
 struct ModelStep: View {
     let model: OnboardingModel
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    @State private var cloudExpanded = false
-    /// "Klucz jest zapisany w pęku kluczy." when an own cloud key is already there.
-    @State private var keyMessage: String?
-
     private var modelStore: LocalModelStore { model.appState.modelStore }
-    private var keyStore: KeyStore { model.appState.keyStore }
 
     var body: some View {
         stepContent
             .onAppear {
                 modelStore.refresh()
-                cloudExpanded = model.settings.sttEngine == .elevenLabs
-                if keyStore.get(KeyStore.Account.elevenLabs) != nil {
-                    keyMessage = String(localized: "Klucz jest zapisany w pęku kluczy.")
-                }
             }
     }
 
@@ -310,11 +299,8 @@ struct ModelStep: View {
                 }
                 .accessibilityLabel(Text("Język transkrypcji"))
             }
-
-            GlassRowSeparator()
-                .padding(.vertical, 8)
-
-            cloudSection(settings: settings)
+            // Transcription is local only. The AI models ("Pobierz Bielika") get their own
+            // onboarding step later, next to this one (see `OnboardingStep`).
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -409,62 +395,6 @@ struct ModelStep: View {
             .buttonStyle(.glass(.neutral, size: .small, shape: .capsule))
         case .downloading, .optimizing, .ready:
             EmptyView()
-        }
-    }
-
-    // MARK: Cloud
-
-    private func cloudSection(settings: AppSettings) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Button {
-                withAnimation(reduceMotion ? nil : GlassMotion.spring) {
-                    cloudExpanded.toggle()
-                }
-            } label: {
-                GlassRow("Użyj chmury", systemImage: "cloud") {
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(GlassColor.textSecondary)
-                        .rotationEffect(.degrees(cloudExpanded ? 180 : 0))
-                        .accessibilityHidden(true)
-                }
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text("Użyj chmury"))
-            .accessibilityValue(cloudExpanded ? Text("Rozwinięte") : Text("Zwinięte"))
-
-            if cloudExpanded {
-                cloudContent(settings: settings)
-                    .padding(.leading, OnboardingLayout.rowTextInset)
-                    .padding(.bottom, 4)
-                    .transition(.opacity)
-            }
-        }
-    }
-
-    private func cloudContent(settings: AppSettings) -> some View {
-        @Bindable var settings = settings
-        return VStack(alignment: .leading, spacing: 12) {
-            Text("Transkrypcja w chmurze wysyła nagranie na serwer. Gdy chmura zawiedzie, Captylo wraca do modelu lokalnego.")
-                .font(GlassFont.caption)
-                .foregroundStyle(GlassColor.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-            // No key field on day one: own keys live in Modele > Zaawansowane.
-            Text("Chmura działa w Captylo Pro: zalogujesz się w Ustawieniach po zakończeniu. Własny klucz dodasz później w Modele > Zaawansowane.")
-                .font(GlassFont.caption)
-                .foregroundStyle(GlassColor.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-            if let keyMessage {
-                Text(verbatim: keyMessage)
-                    .font(GlassFont.caption)
-                    .foregroundStyle(GlassColor.textSecondary)
-            }
-            GlassToggleRow("Transkrybuj w chmurze zamiast lokalnie", isOn: Binding(
-                get: { settings.sttEngine == .elevenLabs },
-                set: { settings.sttEngine = $0 ? .elevenLabs : .local }
-            ))
-            // Pro reaches the cloud without a key (through Captylo).
-            .disabled(keyStore.get(KeyStore.Account.elevenLabs) == nil && !model.appState.account.isPro)
         }
     }
 

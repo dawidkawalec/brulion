@@ -58,34 +58,6 @@ enum HTTP {
         return URLSession(configuration: configuration)
     }()
 
-    /// Resource cap for audio uploads. The real per-take deadline (`max(20, 10 + 0.5 * seconds)`)
-    /// is enforced in `ElevenLabsSTT`; this only has to stay above it for the longest file
-    /// (a 4 h recording needs about 7210 s).
-    static let uploadResourceTimeout: TimeInterval = 4 * 3600
-
-    /// Session for audio uploads (cloud STT): longer timeouts, same no-cache policy.
-    static let uploadSession: URLSession = {
-        let configuration = URLSessionConfiguration.default
-        configuration.urlCache = nil
-        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
-        configuration.waitsForConnectivity = false
-        configuration.timeoutIntervalForRequest = 60
-        configuration.timeoutIntervalForResource = uploadResourceTimeout
-        configuration.httpMaximumConnectionsPerHost = 4
-        return URLSession(configuration: configuration)
-    }()
-
-    /// Fresh ephemeral session for a one-off retry (a stuck upload gets a new connection).
-    static func makeEphemeral() -> URLSession {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.urlCache = nil
-        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
-        configuration.waitsForConnectivity = false
-        configuration.timeoutIntervalForRequest = 60
-        configuration.timeoutIntervalForResource = uploadResourceTimeout
-        return URLSession(configuration: configuration)
-    }
-
     /// Log-friendly preview of a response body: single line, at most 200 characters.
     static func shortBody(_ data: Data) -> String {
         let limit = 200
@@ -96,49 +68,6 @@ enum HTTP {
             return text
         }
         return String(text.prefix(limit - 3)) + "..."
-    }
-}
-
-/// `multipart/form-data` body builder (CRLF line endings, one closing boundary).
-struct Multipart: Sendable {
-    let boundary: String
-    private var parts = Data()
-
-    init() {
-        boundary = "Boundary-\(UUID().uuidString)"
-    }
-
-    /// Value for the `Content-Type` request header.
-    var contentTypeHeader: String {
-        "multipart/form-data; boundary=\(boundary)"
-    }
-
-    /// The finished body: every part followed by the closing boundary.
-    var body: Data {
-        var data = parts
-        data.append(string: "--\(boundary)--\r\n")
-        return data
-    }
-
-    mutating func addField(name: String, value: String) {
-        parts.append(string: "--\(boundary)\r\n")
-        parts.append(string: "Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n")
-        parts.append(string: value)
-        parts.append(string: "\r\n")
-    }
-
-    mutating func addFile(name: String, fileName: String, contentType: String, data: Data) {
-        parts.append(string: "--\(boundary)\r\n")
-        parts.append(string: "Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(fileName)\"\r\n")
-        parts.append(string: "Content-Type: \(contentType)\r\n\r\n")
-        parts.append(data)
-        parts.append(string: "\r\n")
-    }
-}
-
-private extension Data {
-    mutating func append(string: String) {
-        append(Data(string.utf8))
     }
 }
 

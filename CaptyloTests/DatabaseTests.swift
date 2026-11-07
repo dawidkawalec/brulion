@@ -310,10 +310,8 @@ struct DatabaseTests {
         #expect(CSV.line(["a", "b,c", ""]) == "a,\"b,c\",")
     }
 
-    @Test func csvLabelsTheCloudModelWithoutTheVendor() {
-        var record = Self.record(text: "z chmury")
-        record.modelName = STTEngine.elevenLabs.modelName
-        #expect(CSV.fields(for: record)[5] == STTEngine.elevenLabs.displayName)
+    @Test func csvKeepsTheSpeechModelName() {
+        var record = Self.record(text: "lokalnie")
         record.modelName = STTEngine.local.modelName
         #expect(CSV.fields(for: record)[5] == "whisper-large-v3-turbo")
     }

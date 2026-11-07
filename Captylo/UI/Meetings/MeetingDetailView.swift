@@ -640,8 +640,8 @@ struct MeetingDetailView: View {
         }
     }
 
-    /// Where the transcript comes from ("Transkrypt z Maca" / "z chmury", "poprawiony przez AI"),
-    /// the run in progress or the last failure, and in Pro the "Popraw" menu. Nothing while the
+    /// Where the transcript comes from ("Transkrypt z Maca", "poprawiony przez AI"), the run in
+    /// progress or the last failure, and in Pro the "Popraw" menu. Nothing while the
     /// post-processors still work on the meeting.
     @ViewBuilder
     private func transcriptBar(_ meeting: MeetingRecord) -> some View {
@@ -663,8 +663,7 @@ struct MeetingDetailView: View {
                         .lineLimit(1)
                 }
                 Spacer(minLength: 8)
-                if proAccess.allows(.meetingTranscriptCorrection) || proAccess.allows(.cloudMeetingTranscription),
-                   !segments.isEmpty || meeting.hasAudio {
+                if proAccess.allows(.meetingTranscriptCorrection), !segments.isEmpty {
                     transcriptMenu(meeting)
                         .disabled(busy)
                 }
@@ -684,12 +683,6 @@ struct MeetingDetailView: View {
                 Label("Popraw przez AI", systemImage: "wand.and.stars")
             }
             .disabled(segments.isEmpty || !proAccess.allows(.meetingTranscriptCorrection))
-            Button {
-                transcriptRuns.start(.cloud, meetingID: id)
-            } label: {
-                Label("Transkrybuj ponownie w chmurze", systemImage: "cloud")
-            }
-            .disabled(!meeting.hasAudio || !proAccess.allows(.cloudMeetingTranscription))
             if meeting.transcriptAIModel != nil || segments.contains(where: { $0.originalText != nil }) {
                 Divider()
                 Button {
@@ -707,18 +700,16 @@ struct MeetingDetailView: View {
         .fixedSize()
     }
 
-    /// "Transkrypt z Maca" / "Transkrypt z chmury", plus "poprawiony przez AI".
+    /// "Transkrypt z Maca", plus "poprawiony przez AI". Every transcript is local (Whisper on
+    /// this Mac); `transcriptModel` stays in the schema but is never set.
     static func sourceText(_ meeting: MeetingRecord) -> String {
-        let source = meeting.transcriptModel == nil
-            ? String(localized: "Transkrypt z Maca")
-            : String(localized: "Transkrypt z chmury")
+        let source = String(localized: "Transkrypt z Maca")
         guard meeting.transcriptAIModel != nil else { return source }
         return source + ", " + String(localized: "poprawiony przez AI")
     }
 
     static func runningText(_ kind: MeetingTranscriptRuns.Kind) -> String {
         switch kind {
-        case .cloud: return String(localized: "Transkrybuję w chmurze...")
         case .aiFix: return String(localized: "AI poprawia transkrypt...")
         case .restore: return String(localized: "Przywracam transkrypt...")
         }

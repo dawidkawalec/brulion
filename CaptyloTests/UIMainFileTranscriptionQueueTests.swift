@@ -57,7 +57,7 @@ private final class UIMainFlakyRouter: TranscriptionRouting, Sendable {
 
     func transcribe(_ audio: CapturedAudio, engine: STTEngine, language: String?, vocabulary: [String]) async throws -> TranscriptionResult {
         let call = calls.withLock { $0 += 1; return $0 }
-        if call == 1 { throw DictationError.stt(.timeout) }
+        if call == 1 { throw DictationError.modelPreparing }
         return TranscriptionResult(text: "raz dwa trzy cztery", modelName: "fake-model", ms: 7)
     }
 }

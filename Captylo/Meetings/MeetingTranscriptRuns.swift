@@ -1,15 +1,14 @@
 import Foundation
 import Observation
 
-/// The transcript actions in a meeting's details: "Transkrybuj ponownie w chmurze", "Popraw
-/// przez AI" and "Przywróć transkrypt sprzed poprawek AI". Owned by `AppState` like
+/// The transcript actions in a meeting's details: "Popraw przez AI" and "Przywróć transkrypt
+/// sprzed poprawek AI". Owned by `AppState` like
 /// `MeetingNotesRuns`, so a run that takes minutes keeps its spinner while the user looks
 /// elsewhere, and `finishedCount` tells the meeting views to reload.
 @MainActor
 @Observable
 final class MeetingTranscriptRuns {
     enum Kind: Sendable, Equatable {
-        case cloud
         case aiFix
         case restore
     }

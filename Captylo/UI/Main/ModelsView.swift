@@ -10,13 +10,11 @@ import SwiftUI
 /// so a hidden key never sends anything unseen.
 @MainActor
 struct ModelsView: View {
-    static let elevenLabsKeysURL = URL(string: "https://elevenlabs.io/app/settings/api-keys")!
     static let openRouterKeysURL = URL(string: "https://openrouter.ai/settings/keys")!
 
     @Environment(AppState.self) private var appState
     @State private var level: SettingsLevel = .basic
-    /// Whether own keys are saved (read on appear, updated by the key fields).
-    @State private var hasOwnCloudKey = false
+    /// Whether an own key is saved (read on appear, updated by the key field).
     @State private var hasOwnAIKey = false
 
     var body: some View {
@@ -29,7 +27,6 @@ struct ModelsView: View {
             }
         }
         .onAppear {
-            hasOwnCloudKey = Self.isSaved(appState.keyStore.get(KeyStore.Account.elevenLabs))
             hasOwnAIKey = Self.isSaved(appState.keyStore.get(KeyStore.Account.openRouter))
         }
     }
@@ -51,24 +48,7 @@ struct ModelsView: View {
 
         GlassPanel {
             GlassSectionHeader("Silnik mowy", systemImage: "waveform")
-            GlassSegmentedPicker(selection: $settings.sttEngine, segments: [
-                GlassSegment(STTEngine.local, "Lokalnie", systemImage: "cpu"),
-                GlassSegment(STTEngine.elevenLabs, "Chmura", systemImage: "cloud"),
-            ])
-            .accessibilityLabel(Text("Silnik"))
-
-            if settings.sttEngine == .local {
-                LocalModelSection(store: appState.modelStore, detector: appState.speechDetectorStatus, showsCloudNote: false)
-            } else {
-                CloudSummary(
-                    source: CloudSource(isPro: isPro, prefersCaptylo: settings.sttCaptylo, hasOwnKey: hasOwnCloudKey),
-                    onChange: showAdvanced
-                )
-                // The cloud path still uses the local model for the fallback and the live
-                // preview, so it stays manageable without switching engines.
-                GlassRowSeparator()
-                LocalModelSection(store: appState.modelStore, detector: appState.speechDetectorStatus, showsCloudNote: true)
-            }
+            LocalModelSection(store: appState.modelStore, detector: appState.speechDetectorStatus)
             if appState.modelStore.hasLegacyParakeet {
                 GlassRowSeparator()
                 LegacyParakeetRow(store: appState.modelStore)
@@ -77,7 +57,6 @@ struct ModelsView: View {
             GlassRowSeparator()
             LanguagePicker(language: $settings.language)
         }
-        .animation(GlassMotion.spring, value: settings.sttEngine)
 
         AIModesPanel(settings: settings, tester: appState.modeTester)
 
@@ -99,28 +78,6 @@ struct ModelsView: View {
     private var advanced: some View {
         @Bindable var settings = appState.settings
         let isPro = appState.account.isPro
-
-        GlassPanel {
-            GlassSectionHeader("Transkrypcja w chmurze", systemImage: "cloud")
-            ToolCaption("Własne klucze są opcjonalne. Z kluczem nagrania i tekst idą z Twojego Maca prosto do dostawcy, a klucz zostaje w pęku kluczy macOS.")
-                .padding(.horizontal, GlassTokens.Padding.rowHorizontal)
-            if isPro {
-                // Pro: "Chmura Captylo" first; the own key only once one is saved.
-                SourcePicker(captylo: $settings.sttCaptylo, hasOwnKey: hasOwnCloudKey, captyloName: String(localized: "Chmura Captylo"))
-                GlassRowSeparator()
-            }
-            ElevenLabsSection(
-                keyStore: appState.keyStore,
-                client: appState.elevenLabs,
-                settings: settings,
-                isPro: isPro,
-                onKeyPresence: { hasOwnCloudKey = $0 }
-            )
-            if settings.sttEngine == .local {
-                ToolCaption("Teraz dyktujesz lokalnie. Chmurę włączysz w zakładce Podstawowe, w Silniku mowy.")
-                    .padding(.leading, GlassTokens.Size.rowIconColumn + 16)
-            }
-        }
 
         GlassPanel {
             GlassSectionHeader("Klucz i model AI", systemImage: "sparkles")
@@ -169,41 +126,6 @@ struct CloudSource: Equatable, Sendable {
     }
 }
 
-/// "Podstawowe", cloud engine: where the recordings go, with "Zmień" / "Dodaj klucz" opening
-/// "Zaawansowane".
-@MainActor
-private struct CloudSummary: View {
-    let source: CloudSource
-    let onChange: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            GlassRow(title: Text("Transkrypcja w chmurze"), subtitle: subtitle, systemImage: "cloud") {
-                Button(source.kind == .none ? "Dodaj klucz" : "Zmień", action: onChange)
-                    .buttonStyle(.glass(.neutral, size: .small, shape: .capsule))
-            }
-            ToolCaption(caption)
-                .padding(.leading, GlassTokens.Size.rowIconColumn + 16)
-        }
-    }
-
-    private var subtitle: Text {
-        switch source.kind {
-        case .captylo: return Text("Chmura Captylo, w ramach Pro")
-        case .ownKey: return Text("Twój klucz API chmury")
-        case .none: return Text("Chmura działa w Pro albo z własnym kluczem.")
-        }
-    }
-
-    private var caption: LocalizedStringKey {
-        switch source.kind {
-        case .captylo: return "Nagrania idą do transkrypcji przez Captylo. Gdy chmura nie odpowie, Captylo użyje modelu lokalnego, jeśli jest pobrany."
-        case .ownKey: return "Nagrania idą z Twojego Maca prosto do dostawcy chmury. Gdy chmura nie odpowie, Captylo użyje modelu lokalnego, jeśli jest pobrany."
-        case .none: return "Do tego czasu Captylo przepisuje nagrania na Macu, modelem lokalnym."
-        }
-    }
-}
-
 /// "Podstawowe", AI cleanup: the model in use and where the text goes, with "Zmień" /
 /// "Dodaj klucz" opening "Zaawansowane".
 @MainActor
@@ -236,47 +158,6 @@ private struct AISummary: View {
     }
 }
 
-/// "Zaawansowane", Pro: Captylo's own service first ("Chmura Captylo"), then the own key, which
-/// can be picked only once one is saved below.
-@MainActor
-private struct SourcePicker: View {
-    @Binding var captylo: Bool
-    let hasOwnKey: Bool
-    let captyloName: String
-
-    private var usesCaptylo: Bool { captylo || !hasOwnKey }
-
-    var body: some View {
-        VStack(spacing: 2) {
-            ModelRow(
-                name: captyloName,
-                detail: String(localized: "W ramach Pro, bez klucza"),
-                detailIsID: false,
-                trailing: String(localized: "w Pro"),
-                symbol: "sparkles",
-                isSelected: usesCaptylo
-            ) {
-                withAnimation(GlassMotion.selection) { captylo = true }
-            }
-            ModelRow(
-                name: String(localized: "Własny klucz"),
-                detail: hasOwnKey ? String(localized: "Prosto do dostawcy, z Twojego Maca") : String(localized: "Najpierw zapisz klucz poniżej"),
-                detailIsID: false,
-                trailing: "",
-                symbol: nil,
-                isSelected: !usesCaptylo
-            ) {
-                withAnimation(GlassMotion.selection) { captylo = false }
-            }
-            .disabled(!hasOwnKey)
-            .opacity(hasOwnKey ? 1 : 0.5)
-        }
-        .padding(6)
-        .glassSurface(.card, cornerRadius: GlassTokens.Radius.card, shadow: false)
-        .padding(.leading, GlassTokens.Size.rowIconColumn + 16)
-    }
-}
-
 // MARK: - Local model
 
 @MainActor
@@ -284,8 +165,6 @@ private struct LocalModelSection: View {
     let store: LocalModelStore
     /// The meeting voice detector that downloads with the model ("Wykrywanie mowy do spotkań").
     let detector: SpeechDetectorStatus
-    /// On the cloud engine: explain why the local model still matters.
-    let showsCloudNote: Bool
 
     @State private var confirmDelete = false
     @State private var deleteError: String?
@@ -335,9 +214,6 @@ private struct LocalModelSection: View {
     private var subtitle: Text? {
         switch store.status {
         case .missing:
-            if showsCloudNote {
-                return Text("Potrzebny, gdy chmura nie odpowie, i do podglądu na żywo podczas nagrywania.")
-            }
             return Text("Model nie jest pobrany (ok. 1,6 GB, działa bez internetu).")
         case .downloading(let progress):
             return Text("Pobieram model... \(Int((progress * 100).rounded()))%")
@@ -547,95 +423,6 @@ private extension View {
             pointerStyle(.link)
         } else {
             self
-        }
-    }
-}
-
-// MARK: - ElevenLabs
-
-@MainActor
-private struct ElevenLabsSection: View {
-    let keyStore: KeyStore
-    let client: ElevenLabsSTT
-    let settings: AppSettings
-    /// Pro sends the cloud through Captylo unless the own key is chosen above.
-    let isPro: Bool
-    /// Whether an own key is saved (on appear, after "Zapisz" and after "Usuń klucz").
-    let onKeyPresence: (Bool) -> Void
-
-    @State private var key = ""
-    @State private var isSaved = false
-    @State private var status: (text: String, tone: InlineStatus.Tone)?
-    @State private var isChecking = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            APIKeyField(
-                title: "Klucz API chmury",
-                placeholder: "xi-...",
-                key: $key,
-                status: status,
-                isChecking: isChecking,
-                linkTitle: "Skąd wziąć klucz",
-                linkURL: ModelsView.elevenLabsKeysURL,
-                isSaved: isSaved,
-                removeMessage: isPro
-                    ? String(localized: "Transkrypcja w chmurze przejdzie na Captylo w ramach Pro.")
-                    : String(localized: "Bez klucza Captylo przepisze nagrania na Macu, dopóki nie dodasz klucza albo nie przejdziesz na Pro."),
-                onSave: save,
-                onVerify: verify,
-                onRemove: remove
-            )
-            if isPro, isSaved {
-                ToolCaption("Z własnym kluczem wybierzesz powyżej, czy chmura działa przez Captylo, czy przez Twój klucz.")
-                    .padding(.leading, GlassTokens.Size.rowIconColumn + 16)
-            }
-        }
-        .onAppear {
-            key = keyStore.get(KeyStore.Account.elevenLabs) ?? ""
-            isSaved = !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            onKeyPresence(isSaved)
-        }
-    }
-
-    private func save() {
-        do {
-            try keyStore.set(key.trimmingCharacters(in: .whitespacesAndNewlines), account: KeyStore.Account.elevenLabs)
-            isSaved = true
-            onKeyPresence(true)
-            status = (String(localized: "Klucz zapisany w pęku kluczy."), .success)
-        } catch {
-            status = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)
-        }
-    }
-
-    private func remove() {
-        do {
-            try keyStore.delete(account: KeyStore.Account.elevenLabs)
-            key = ""
-            isSaved = false
-            onKeyPresence(false)
-            if isPro {
-                settings.sttCaptylo = true
-            }
-            status = (isPro ? String(localized: "Klucz usunięty. Działa Chmura Captylo.") : String(localized: "Klucz usunięty."), .success)
-        } catch {
-            status = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)
-        }
-    }
-
-    private func verify() {
-        isChecking = true
-        let candidate = key
-        let client = client
-        Task {
-            do {
-                try await client.verify(key: candidate)
-                status = (String(localized: "OK, klucz działa."), .success)
-            } catch {
-                status = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)
-            }
-            isChecking = false
         }
     }
 }

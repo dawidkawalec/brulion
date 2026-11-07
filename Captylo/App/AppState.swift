@@ -40,7 +40,6 @@ final class AppState {
     @ObservationIgnored let modelStore: LocalModelStore
     @ObservationIgnored let livePreview: LivePreview
     @ObservationIgnored let keyStore: KeyStore
-    @ObservationIgnored let elevenLabs: ElevenLabsSTT
     @ObservationIgnored let transcriptionRouter: TranscriptionRouter
 
     // AI cleanup
@@ -153,8 +152,6 @@ final class AppState {
     /// The dictation AI route runs off the main actor, so it reads this snapshot of `settings.aiModel`.
     @ObservationIgnored private let aiModelSnapshot: OSAllocatedUnfairLock<String>
     @ObservationIgnored private let aiCaptyloSnapshot: OSAllocatedUnfairLock<Bool>
-    /// The cloud transcription route runs off the main actor too: `settings.sttCaptylo`.
-    @ObservationIgnored private let sttCaptyloSnapshot: OSAllocatedUnfairLock<Bool>
     @ObservationIgnored private var wakeObserver: (any NSObjectProtocol)?
     /// ⌃⌥⌘M, registered while "Skrót ⌃⌥⌘M" is on (`applyMeetingShortcut`).
     @ObservationIgnored private var meetingShortcut: GlobalShortcut?
@@ -208,24 +205,11 @@ final class AppState {
             aiClient: openRouter
         )
 
-        // "Chmura Captylo" in Pro while it is chosen in Modele, else the own cloud key.
-        let cloudCaptyloSnapshot = OSAllocatedUnfairLock(initialState: settings.sttCaptylo)
-        sttCaptyloSnapshot = cloudCaptyloSnapshot
-        elevenLabs = ElevenLabsSTT(
-            session: HTTP.uploadSession,
-            credentialProvider: {
-                await cloudRouter.sttCredential(
-                    timeout: ElevenLabsSTT.keyLookupTimeout,
-                    preferRelay: cloudCaptyloSnapshot.withLock { $0 }
-                )
-            },
-            retrySession: { HTTP.makeEphemeral() }
-        )
+        // Transcription is local only (Whisper on this Mac).
         transcriptionRouter = TranscriptionRouter(
             local: engine,
             localInstalled: { WhisperEngine.isDownloaded },
-            localReady: { engine.state == .ready },
-            elevenLabs: elevenLabs
+            localReady: { engine.state == .ready }
         )
 
         // AI cleanup
@@ -276,8 +260,7 @@ final class AppState {
         // Meetings: nothing records until the user starts a meeting (the design preview and the
         // test host never do), and never without the speech model on disk. The VAD loads once,
         // on the first meeting, and serves both tracks. After a meeting stops, in the background:
-        // the cloud transcript (Pro, setting) replaces the live one, then speaker labels (Pro,
-        // macOS 15+; the diarizer loads on first use), the AI fixes of the transcript (Pro,
+        // speaker labels (Pro, macOS 15+; the diarizer loads on first use), the AI fixes of the transcript (Pro,
         // setting) and the AI notes (Pro), both as "Captylo AI" on the Pro relay (`meetingRoute`),
         // so the notes see "Mówca N" and the fixed text.
         let meetingVAD = SpeechDetectorCache { try await FluidSpeechDetector.load() }
@@ -299,15 +282,6 @@ final class AppState {
                 return nil
             }
         }
-        let cloudSTT = elevenLabs
-        let meetingCloud = MeetingCloudTranscription(
-            database: database,
-            isEnabled: { @MainActor in access.allows(.cloudMeetingTranscription) && settings.meetingsCloudTranscript },
-            trackURL: { id, track in AppPaths.meetingTrackURL(id, track: track) },
-            language: { @MainActor in settings.transcriptionLanguage },
-            vocabulary: meetingVocabulary,
-            transcribe: { request, mimeType in try await cloudSTT.transcribeWords(request, mimeType: mimeType) }
-        )
         let speakerLabels = SpeakerLabelProcessor(
             database: database,
             diarizer: FluidSpeakerDiarizer(),
@@ -355,15 +329,6 @@ final class AppState {
         }
         meetingTranscriptRuns = MeetingTranscriptRuns { id, kind in
             switch kind {
-            case .cloud:
-                guard await access.allows(.cloudMeetingTranscription) else { return }
-                // The new "Rozmówcy" lines have no speaker labels yet, and like after a meeting
-                // the cloud text gets the AI fixes when they are on.
-                if await meetingCloud.run(meetingID: id) {
-                    await speakerLabels.process(meetingID: id)
-                    await meetingCorrection.process(meetingID: id)
-                    await refreshNotes(id)
-                }
             case .aiFix:
                 guard await access.allows(.meetingTranscriptCorrection) else { return }
                 if await meetingCorrection.run(meetingID: id) {
@@ -407,10 +372,9 @@ final class AppState {
             expectingSystemAudio: { CoreAudioProcesses.anyOtherProcessPlaying() },
             language: { settings.transcriptionLanguage },
             setMuteSuppressed: { mute.isSuppressed = $0 },
-            postProcessors: [meetingCloud, speakerLabels, meetingCorrection, meetingNotes, meetingRetention],
+            postProcessors: [speakerLabels, meetingCorrection, meetingNotes, meetingRetention],
             // After a quit mid-processing: only the AI steps still missing on the row, then
-            // retention. Never the diarizer (a crash there would repeat at every launch) or the
-            // cloud pass (paid; the live transcript is already there).
+            // retention. Never the diarizer (a crash there would repeat at every launch).
             resumeProcessors: [
                 MeetingResumeStep(database: database, isDone: { $0.transcriptAIModel != nil }, processor: meetingCorrection),
                 MeetingResumeStep(database: database, isDone: { $0.summary != nil }, processor: meetingNotes),
@@ -640,7 +604,7 @@ final class AppState {
         }
 
         // API keys and the account token: read once on the Keychain queue so the hot path hits the cache.
-        keyStore.preload([KeyStore.Account.openRouter, KeyStore.Account.elevenLabs, KeyStore.Account.captyloAccount])
+        keyStore.preload([KeyStore.Account.openRouter, KeyStore.Account.captyloAccount])
         // The plan: refreshed now and every 6 hours (the cache already answered at init).
         account.start()
 
@@ -892,7 +856,6 @@ final class AppState {
             _ = settings.hotkey
             _ = settings.aiModel
             _ = settings.aiCaptylo
-            _ = settings.sttCaptylo
             _ = settings.paragraphs
             _ = settings.menuBarOnly
             _ = settings.meetingsShortcut
@@ -917,8 +880,6 @@ final class AppState {
         aiModelSnapshot.withLock { $0 = model }
         let captylo = settings.aiCaptylo
         aiCaptyloSnapshot.withLock { $0 = captylo }
-        let cloudCaptylo = settings.sttCaptylo
-        sttCaptyloSnapshot.withLock { $0 = cloudCaptylo }
         if dictionary.paragraphs != settings.paragraphs {
             dictionary.setParagraphs(settings.paragraphs)
         }

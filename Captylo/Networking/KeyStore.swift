@@ -13,7 +13,6 @@ import os
 final class KeyStore: Sendable {
     enum Account {
         static let openRouter = "openrouter"
-        static let elevenLabs = "elevenlabs"
         /// The Captylo account session token (`AccountStore`).
         static let captyloAccount = "captylo-account"
     }

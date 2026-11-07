@@ -786,7 +786,7 @@ private struct HistoryRow: View {
     private var metadata: some View {
         HStack(spacing: 12) {
             if let model = record.modelName {
-                Text(verbatim: STTEngine.label(forModelName: model))
+                Text(verbatim: model)
             }
             if let ms = record.transcriptionMs {
                 Text("STT \(ms) ms")

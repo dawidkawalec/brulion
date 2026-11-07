@@ -9,9 +9,9 @@ enum WidgetDebugState: String, CaseIterable, Sendable {
 
 /// Headless CLI flags kept in Release (docs/architecture.md "Debug CLI flags").
 enum DebugCommand: Sendable, Equatable {
-    /// `--transcribe <file> [--ai] [--language pl] [--engine local|cloud]`. `language` is the raw
+    /// `--transcribe <file> [--ai] [--language pl] [--engine local]`. `language` is the raw
     /// flag value (nil = use the app setting; "auto" is passed through and mapped by the runner);
-    /// `engine` nil = the app setting (`--engine local` never reads the Keychain without `--ai`).
+    /// `engine` nil = the app setting (always local; any other engine name fails to parse).
     case transcribe(url: URL, ai: Bool, language: String?, engine: STTEngine? = nil)
     /// `--show-widget <recording|transcribing|enhancing>`
     case showWidget(WidgetDebugState)
@@ -115,7 +115,6 @@ enum DebugCommand: Sendable, Equatable {
                     guard index + 1 < rest.count else { return nil }
                     switch rest[index + 1].lowercased() {
                     case "local", "whisper", "parakeet": engine = .local
-                    case "cloud", "elevenlabs": engine = .elevenLabs
                     default: return nil
                     }
                     index += 1

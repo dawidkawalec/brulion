@@ -24,7 +24,7 @@ enum CSV {
             String(format: "%.1f", record.audioDuration),
             record.text,
             record.enhancedText ?? "",
-            record.modelName.map(STTEngine.label(forModelName:)) ?? "",
+            record.modelName ?? "",
             record.status.rawValue,
         ]
     }

@@ -101,8 +101,6 @@ struct DataTypesTests {
 
     @Test func errorsHavePolishDescriptions() {
         #expect(DictationError.emptyResult.errorDescription == "Nic nie usłyszałem.")
-        #expect(DictationError.stt(.unauthorized).errorDescription == "Nieprawidłowy klucz API")
-        #expect(STTError.server(500, "boom").errorDescription == "Błąd serwera (500).")
         #expect(DictationError.noMicrophone(lidClosed: true).errorDescription?.contains("Pokrywa") == true)
     }
 }

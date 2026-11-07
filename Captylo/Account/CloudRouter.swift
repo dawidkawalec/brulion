@@ -15,29 +15,17 @@ struct CloudRouter: Sendable {
     let accountToken: @Sendable (Duration) async -> KeyStore.KeyLookup
     let relayBaseURL: URL
     let aiClient: OpenRouterClient
-    let sttBaseURL: URL
 
     init(
         keyStore: KeyStore,
         accountToken: @escaping @Sendable (Duration) async -> KeyStore.KeyLookup,
         relayBaseURL: URL = AccountClient.resolveBaseURL(),
-        aiClient: OpenRouterClient = OpenRouterClient(),
-        sttBaseURL: URL = ElevenLabsSTT.apiBaseURL
+        aiClient: OpenRouterClient = OpenRouterClient()
     ) {
         self.keyStore = keyStore
         self.accountToken = accountToken
         self.relayBaseURL = relayBaseURL
         self.aiClient = aiClient
-        self.sttBaseURL = sttBaseURL
-    }
-
-    /// The speech-to-text credential; `.value(nil)` = no route. With `preferRelay` ("Chmura
-    /// Captylo" chosen in Modele) a Pro session goes to the relay even when an own key is saved;
-    /// without Pro the own key still works.
-    func sttCredential(timeout: Duration, preferRelay: Bool = false) async -> KeyStore.Lookup<CloudCredential> {
-        await route(KeyStore.Account.elevenLabs, timeout: timeout, preferRelay: preferRelay,
-                    own: { CloudCredential.ownKey($0, baseURL: sttBaseURL) },
-                    relay: { CloudCredential.relay(token: $0, baseURL: relayBaseURL) })
     }
 
     /// The AI route for `model` (used only with an own key); `.value(nil)` = no route. With

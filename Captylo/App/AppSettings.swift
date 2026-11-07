@@ -10,7 +10,6 @@ final class AppSettings {
         case hotkey
         case language
         case sttEngine
-        case sttCaptylo = "stt.captylo"
         case livePreview
         case aiEnabled = "ai.enabled"
         case aiModel = "ai.model"
@@ -49,7 +48,6 @@ final class AppSettings {
         case meetingAudioRetention = "meetings.audioRetention"
         case meetingsShortcut = "meetings.shortcut"
         case notesShortcut = "notes.shortcut"
-        case meetingsCloudTranscript = "meetings.cloudTranscript"
         case meetingsAICorrection = "meetings.aiCorrection"
         case meetingsCalendar = "meetings.calendar"
         case meetingsCalendarReminder = "meetings.calendarReminder"
@@ -95,17 +93,11 @@ final class AppSettings {
     /// `language` as the engines expect it (nil = auto detect).
     var transcriptionLanguage: String? { TranscriptionLanguages.engineCode(for: language) }
 
+    /// Always the local engine (Whisper on this Mac); kept as a setting so the debug flags and
+    /// the transcription seam keep their shape.
     var sttEngine: STTEngine {
         get { track(\.sttEngine); return STTEngine(rawValue: string(.sttEngine, default: "")) ?? .local }
         set { withMutation(keyPath: \.sttEngine) { defaults.set(newValue.rawValue, forKey: Key.sttEngine.rawValue) } }
-    }
-
-    /// In Pro, cloud transcription runs through Captylo (the relay), even with an own cloud key
-    /// saved: "Chmura Captylo" in Modele > Zaawansowane, on by default, so turning Pro on switches
-    /// to it. Off = the own key. Without Pro it changes nothing.
-    var sttCaptylo: Bool {
-        get { track(\.sttCaptylo); return bool(.sttCaptylo, default: true) }
-        set { withMutation(keyPath: \.sttCaptylo) { defaults.set(newValue, forKey: Key.sttCaptylo.rawValue) } }
     }
 
     var livePreview: Bool {
@@ -401,23 +393,17 @@ final class AppSettings {
         set { withMutation(keyPath: \.meetingAudioRetention) { defaults.set(newValue.rawValue, forKey: Key.meetingAudioRetention.rawValue) } }
     }
 
-    /// "Skrót ⌃⌥⌘M": the system-wide shortcut that starts and ends a meeting recording.
+    /// "Skrót ⌃⌥⇧M" (`GlobalShortcut.meeting`): the system-wide shortcut that starts and ends a
+    /// meeting recording.
     var meetingsShortcut: Bool {
         get { track(\.meetingsShortcut); return bool(.meetingsShortcut, default: true) }
         set { withMutation(keyPath: \.meetingsShortcut) { defaults.set(newValue, forKey: Key.meetingsShortcut.rawValue) } }
     }
 
-    /// "Skrót ⌃⌥⌘N": the system-wide shortcut that records a voice note (Notatki).
+    /// "Skrót ⌃⌥⇧N" (`GlobalShortcut.note`): the system-wide shortcut that records a voice note.
     var notesShortcut: Bool {
         get { track(\.notesShortcut); return bool(.notesShortcut, default: true) }
         set { withMutation(keyPath: \.notesShortcut) { defaults.set(newValue, forKey: Key.notesShortcut.rawValue) } }
-    }
-
-    /// "Dokładniejszy transkrypt z chmury" (Pro): after a meeting both tracks go to the cloud
-    /// engine and its transcript replaces the live one.
-    var meetingsCloudTranscript: Bool {
-        get { track(\.meetingsCloudTranscript); return bool(.meetingsCloudTranscript, default: false) }
-        set { withMutation(keyPath: \.meetingsCloudTranscript) { defaults.set(newValue, forKey: Key.meetingsCloudTranscript.rawValue) } }
     }
 
     /// "Poprawiaj transkrypt przez AI" (Pro): after a meeting an AI model fixes misheard words,

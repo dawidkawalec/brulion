@@ -48,7 +48,7 @@ struct MeetingProAccessTests {
         let pro = account(.signedIn(try AccountFixtures.proInfo()), settings: s)
         let access = ProAccess(settings: s, account: pro, environment: [:])
         #expect(access.isPro)
-        #expect(access.allows(.cloudMeetingTranscription))
+        #expect(access.allows(.meetingAINotes))
     }
 
     @Test func aFreeOrSignedOutAccountIsNotPro() throws {

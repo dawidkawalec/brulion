@@ -82,14 +82,14 @@ final class DictationController: RecorderCoordinator {
             env.pasteWatcher.prepare()
         }
 
-        if env.settings.sttEngine == .local, !env.isLocalModelInstalled() {
+        if !env.isLocalModelInstalled() {
             env.toasts.showError(DictationError.modelNotReady)
             env.openModels()
             return
         }
-        // Said now, not after the take: the router uses the cloud or waits a bounded time.
-        if env.settings.sttEngine == .local, !env.isLocalModelReady() {
-            env.toasts.showInfo(String(localized: "Model lokalny jeszcze się przygotowuje. Jeśli to możliwe, tym razem użyję chmury."))
+        // Said now, not after the take: the router waits for the model a bounded time.
+        if !env.isLocalModelReady() {
+            env.toasts.showInfo(String(localized: "Model lokalny jeszcze się przygotowuje, ten tekst może pojawić się później niż zwykle."))
         }
         let now = Date()
         if DiskSpace.shouldWarn(available: DiskSpace.availableBytes(), lastWarning: lastDiskWarning, now: now) {
@@ -293,9 +293,6 @@ final class DictationController: RecorderCoordinator {
             try Task.checkCancellation()
             record.modelName = result.modelName
             record.transcriptionMs = result.ms
-            if let notice = result.fallbackNotice {
-                env.toasts.showInfo(notice)
-            }
 
             // A take that is only a spelling corrects the previous dictation: learn the pair,
             // paste nothing, keep no row. Never for a note: its text is the user's content.

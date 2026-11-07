@@ -46,8 +46,8 @@ struct DebugCommandTests {
             #expect(DebugCommand.parse(["app", "--transcribe", "/tmp/a.wav", "--engine", name])
                 == .transcribe(url: url, ai: false, language: nil, engine: .local))
         }
-        #expect(DebugCommand.parse(["app", "--transcribe", "/tmp/a.wav", "--engine", "cloud", "--ai"])
-            == .transcribe(url: url, ai: true, language: nil, engine: .elevenLabs))
+        // There is no cloud engine any more.
+        #expect(DebugCommand.parse(["app", "--transcribe", "/tmp/a.wav", "--engine", "cloud", "--ai"]) == nil)
         #expect(DebugCommand.parse(["app", "--transcribe", "/tmp/a.wav", "--engine", "gpu"]) == nil)
         #expect(DebugCommand.parse(["app", "--transcribe", "/tmp/a.wav", "--engine"]) == nil)
     }

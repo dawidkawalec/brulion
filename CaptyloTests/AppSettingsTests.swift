@@ -49,7 +49,6 @@ struct AppSettingsTests {
         let custom = Hotkey(kind: .key, keyCode: KeyCode.space, flags: [.control, .option])
         settings.hotkey = custom
         settings.micSelection = .device(uid: "AppleUSBAudioEngine:1", modelUID: "USB Audio")
-        settings.sttEngine = .elevenLabs
         settings.language = "auto"
         settings.dashboardMode = .cumulative
         settings.dashboardMetric = .minutes
@@ -60,7 +59,7 @@ struct AppSettingsTests {
         let reloaded = AppSettings(defaults: try #require(UserDefaults(suiteName: Self.suiteName)))
         #expect(reloaded.hotkey == custom)
         #expect(reloaded.micSelection == .device(uid: "AppleUSBAudioEngine:1", modelUID: "USB Audio"))
-        #expect(reloaded.sttEngine == .elevenLabs)
+        #expect(reloaded.sttEngine == .local)
         #expect(reloaded.transcriptionLanguage == nil)
         #expect(reloaded.dashboardMode == .cumulative)
         #expect(reloaded.dashboardMetric == .minutes)
@@ -204,16 +203,6 @@ struct AppSettingsTests {
         #expect(settings.aiCaptylo)
     }
 
-    /// "Chmura Captylo" is the default cloud in Pro, the same way.
-    @Test func captyloCloudIsOnByDefaultAndResets() throws {
-        let settings = try makeSettings()
-        #expect(settings.sttCaptylo)
-        settings.sttCaptylo = false
-        #expect(!settings.sttCaptylo)
-        settings.reset()
-        #expect(settings.sttCaptylo)
-    }
-
     @Test func voiceNoteShortcutIsOnByDefaultAndResets() throws {
         let settings = try makeSettings()
         #expect(settings.notesShortcut)
@@ -227,7 +216,6 @@ struct AppSettingsTests {
     @Test func meetingTranscriptSettingsDefaultOff() throws {
         let settings = try makeSettings()
         #expect(settings.meetingsShortcut)
-        #expect(!settings.meetingsCloudTranscript)
         #expect(!settings.meetingsAICorrection)
     }
 

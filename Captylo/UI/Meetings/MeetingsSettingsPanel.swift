@@ -211,13 +211,6 @@ private struct MeetingTranscriptSettings: View {
 
     var body: some View {
         GlassToggleRow(
-            "Dokładniejszy transkrypt z chmury",
-            subtitle: "Po spotkaniu wysyła nagranie do chmury i zastępuje nim transkrypt z Maca. W Pro działa bez własnego klucza.",
-            systemImage: "cloud",
-            isOn: proBinding($settings.meetingsCloudTranscript)
-        )
-        .disabled(!isPro)
-        GlassToggleRow(
             "Poprawiaj transkrypt przez AI",
             subtitle: "Po spotkaniu AI poprawia źle rozpoznane słowa, nazwy i interpunkcję. Niczego nie skraca, a oryginał da się przywrócić.",
             systemImage: "wand.and.stars",

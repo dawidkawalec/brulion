@@ -9,7 +9,6 @@ struct UIMainModelBannerTests {
         #expect(ModelBanner(engine: .local, status: .downloading(0.426)) == .downloading(percent: 43))
         #expect(ModelBanner(engine: .local, status: .optimizing) == nil)
         #expect(ModelBanner(engine: .local, status: .ready) == nil)
-        #expect(ModelBanner(engine: .elevenLabs, status: .missing) == nil)
     }
 }
 

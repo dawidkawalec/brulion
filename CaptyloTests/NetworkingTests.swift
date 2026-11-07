@@ -18,49 +18,12 @@ struct NetworkingTests {
         #expect(configuration.httpMaximumConnectionsPerHost == 4)
     }
 
-    @Test func uploadSessionHasLongTimeouts() {
-        let configuration = HTTP.uploadSession.configuration
-        #expect(configuration.timeoutIntervalForRequest == 60)
-        // The resource cap must stay above the per-take deadline of a long file (brief 5.2).
-        #expect(configuration.timeoutIntervalForResource >= ElevenLabsSTT.timeout(forAudioSeconds: 2 * 3600))
-        let retry = HTTP.makeEphemeral().configuration
-        #expect(retry.urlCache == nil)
-        #expect(retry.timeoutIntervalForResource == configuration.timeoutIntervalForResource)
-    }
-
     @Test func shortBodyIsSingleLineAndCapped() {
         #expect(HTTP.shortBody(Data("ab\ncd\r\nef".utf8)) == "ab cd ef")
         let long = String(repeating: "x", count: 500)
         let short = HTTP.shortBody(Data(long.utf8))
         #expect(short.count == 200)
         #expect(short.hasSuffix("..."))
-    }
-
-    // MARK: Multipart
-
-    @Test func multipartUsesCRLFAndClosesOnce() throws {
-        var form = Multipart()
-        form.addField(name: "model_id", value: "scribe_v2")
-        form.addFile(name: "file", fileName: "a.wav", contentType: "audio/wav", data: Data([0x52, 0x49, 0x46, 0x46]))
-        let body = form.body
-        let text = String(decoding: body, as: UTF8.self)
-        let boundary = form.boundary
-
-        #expect(boundary.hasPrefix("Boundary-"))
-        #expect(form.contentTypeHeader == "multipart/form-data; boundary=\(boundary)")
-        let expected = "--\(boundary)\r\n"
-            + "Content-Disposition: form-data; name=\"model_id\"\r\n\r\n"
-            + "scribe_v2\r\n"
-            + "--\(boundary)\r\n"
-            + "Content-Disposition: form-data; name=\"file\"; filename=\"a.wav\"\r\n"
-            + "Content-Type: audio/wav\r\n\r\n"
-            + "RIFF\r\n"
-            + "--\(boundary)--\r\n"
-        #expect(text == expected)
-        #expect(text.components(separatedBy: "--\(boundary)--").count == 2)
-        #expect(!text.contains("\n\n"))
-        // Reading `body` twice must not append a second closing boundary.
-        #expect(form.body == body)
     }
 
     // MARK: Prewarmer
@@ -123,7 +86,6 @@ struct NetworkingTests {
         let store = KeyStore(service: "com.captylo.app.tests", seed: ["openrouter": "sk-test"])
         #expect(store.get(KeyStore.Account.openRouter) == "sk-test")
         #expect(KeyStore.Account.openRouter == "openrouter")
-        #expect(KeyStore.Account.elevenLabs == "elevenlabs")
     }
 
     @Test func keyStoreCachesOnlyDefiniteAnswers() {

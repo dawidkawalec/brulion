@@ -336,16 +336,14 @@ final class DebugRunner: DebugCommandRunner {
         let started = ContinuousClock.now
         do {
             let (samples, duration) = try await AudioDecoder.decode16kMono(url)
-            // The router needs a finalized 16 kHz WAV for the cloud path; write one next to the temp files.
+            // A take carries its finalized 16 kHz WAV like a dictation; write one next to the temp files.
             let id = UUID()
             let wavURL = FileManager.default.temporaryDirectory.appending(path: "\(id.uuidString).wav")
             try AudioDecoder.writeWAV16k(samples, to: wavURL)
             defer { try? FileManager.default.removeItem(at: wavURL) }
 
             // Loaded first so `transcriptionMs` is the pass alone, like a dictation on a warm model.
-            if engine == .local {
-                try await appState.localEngine.load()
-            }
+            try await appState.localEngine.load()
             let audio = CapturedAudio(id: id, fileURL: wavURL, samples: samples, duration: duration)
             let result = try await appState.transcriptionRouter.transcribe(
                 audio,
@@ -395,7 +393,6 @@ final class DebugRunner: DebugCommandRunner {
                 "transcriptionMs": result.ms,
                 "enhancementMs": Self.orNull(enhancementMs),
                 "durationSeconds": (duration * 100).rounded() / 100,
-                "usedFallback": result.usedFallback,
                 "totalMs": Int(total / .milliseconds(1)),
             ]
             if let enhancementModel {
@@ -511,7 +508,6 @@ final class DebugRunner: DebugCommandRunner {
             ],
             "keys": [
                 "openRouter": appState.keyStore.get(KeyStore.Account.openRouter) != nil,
-                "elevenLabs": appState.keyStore.get(KeyStore.Account.elevenLabs) != nil,
             ],
             "dictionary": [
                 "vocabulary": appState.dictionary.data.vocabulary.count,

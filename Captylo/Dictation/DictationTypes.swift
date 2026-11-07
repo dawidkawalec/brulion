@@ -54,7 +54,6 @@ enum DictationError: LocalizedError, Sendable, Equatable {
     case tooShort
     case emptyResult
     case capture(OSStatus)
-    case stt(STTError)
     case cancelled
 
     var errorDescription: String? {
@@ -77,8 +76,6 @@ enum DictationError: LocalizedError, Sendable, Equatable {
             return String(localized: "Nic nie usłyszałem.")
         case .capture(let status):
             return String(localized: "Błąd nagrywania (kod \(status)).")
-        case .stt(let error):
-            return error.errorDescription
         case .cancelled:
             return String(localized: "Anulowano.")
         }

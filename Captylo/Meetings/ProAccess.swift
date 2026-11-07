@@ -6,7 +6,6 @@ enum ProFeature: Sendable {
     case meetingAINotes
     case speakerLabels
     case meetingAsk
-    case cloudMeetingTranscription
     case meetingTranscriptCorrection
 }
 

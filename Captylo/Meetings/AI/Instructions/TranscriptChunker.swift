@@ -41,6 +41,8 @@ enum TranscriptChunker {
             return .single(user: whole)
         }
         let lines = timeline(meeting: meeting, segments: spoken)
+        // Nothing to split (only a budget smaller than the frame gets here): one call anyway.
+        guard !lines.isEmpty else { return .single(user: whole) }
         let header = header(meeting)
         // The frame of a part at its longest: header, part line and the empty tags.
         let frame = render(header: header, partLine: partLine(number: 99, count: 99, start: 359_999, end: 359_999), lines: [])
@@ -73,16 +75,16 @@ enum TranscriptChunker {
     static func ranges(costs: [Int], limit: Int) -> [Range<Int>] {
         guard !costs.isEmpty else { return [] }
         let limit = max(1, limit)
-        let total = costs.reduce(0, +)
-        let count = max(1, Int((Double(total) / Double(limit)).rounded(.up)))
         var result: [Range<Int>] = []
-        var remaining = total
+        // What the closed ranges left, the open one included.
+        var remaining = costs.reduce(0, +)
         var start = 0
         var sum = 0
         for (index, cost) in costs.enumerated() {
             if index > start {
-                // The even share of what the closed ranges left.
-                let target = Double(remaining) / Double(max(1, count - result.count))
+                // The even share of what is left over the ranges it still needs.
+                let needed = max(1, (Double(remaining) / Double(limit)).rounded(.up))
+                let target = Double(remaining) / needed
                 let over = sum + cost > limit
                 // Stop at the boundary nearest that share, never at a sliver.
                 let nearer = abs(Double(sum) - target) <= abs(Double(sum + cost) - target)

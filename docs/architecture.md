@@ -67,7 +67,7 @@ Captylo/
                   Meetings/ (MeetingsView, MeetingListView, MeetingDetailView, MeetingLiveBar, MeetingTranscriptView, MeetingNotesEditor, MeetingAINotesView, MeetingConsentCard, MeetingsEmptyState, MeetingsSettingsPanel,
                              UpcomingMeetingsStrip, MeetingParticipantsLabel, MeetingSearchHitsView, MeetingAskView, LibraryAskPanel + LibraryAnswerView, MCPSettingsRow and small helpers),
                   MenuBar/ (MenuBarMenu, MenuBarLabel), Onboarding/ (OnboardingView, OnboardingSteps, BielikStep + BielikDownloadPlan ("Pobierz Bielika"), OnboardingHeader, OnboardingProgressTrack, OnboardingOrb, OnboardingBrandMark, OnboardingKeycap, OnboardingWaveform, PasteOnlyTextView)
-  Resources/      Assets.xcassets (AppIcon, MenuBarIcon template, BrandSymbol, BrandWordmark, AccentColor), Fonts/ (Manrope, Inter, OFL), Sounds/, Localizable.xcstrings, InfoPlist.xcstrings
+  Resources/      Assets.xcassets (AppIcon from scripts/make-szpak-icon.swift, MenuBarIcon template, BrandSymbol, AccentColor; the "szpak" wordmark is text, `UI/Glass/BrandWordmark.swift`), Fonts/ (Manrope, Inter, OFL), Sounds/, Localizable.xcstrings, InfoPlist.xcstrings
 CaptyloTests/     TextProcessorTests, HotkeyTests, StatsTests, NetworkingTests, EnhancerTests, Meeting*Tests, ...
 ```
 

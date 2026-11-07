@@ -270,9 +270,9 @@ enum DesignPreviewData {
         let url = folder.appending(path: "dictionary.json")
         let learnedRule = ReplacementRule(triggers: ["supa bejs"], replacement: "Supabase")
         let data = DictionaryData(
-            vocabulary: ["Captylo", "Whisper", "Notion", "Kubernetes", "Figma", "Dawid Kawalec", "PRD", "Supabase", "Honcho"],
+            vocabulary: ["Szpak", "Whisper", "Notion", "Kubernetes", "Figma", "Dawid Kawalec", "PRD", "Supabase", "Honcho"],
             replacements: [
-                ReplacementRule(triggers: ["kapytlo", "kaptylo"], replacement: "Captylo"),
+                ReplacementRule(triggers: ["szpag", "spak"], replacement: "Szpak"),
                 ReplacementRule(triggers: ["pe er de"], replacement: "PRD"),
                 ReplacementRule(triggers: ["noszyn"], replacement: "Notion"),
                 learnedRule,

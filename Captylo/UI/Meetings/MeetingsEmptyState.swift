@@ -34,7 +34,7 @@ struct MeetingsEmptyState: View {
                     .font(GlassFont.display(17))
                     .foregroundStyle(GlassColor.textPrimary)
                     .multilineTextAlignment(.center)
-                Text("Nagraj pierwsze, a Captylo zapisze, kto co powiedział.")
+                Text("Nagraj pierwsze, a Szpak zapisze, kto co powiedział.")
                     .font(GlassFont.body)
                     .foregroundStyle(GlassColor.textSecondary)
                     .multilineTextAlignment(.center)

@@ -21,7 +21,7 @@ struct LearnedPanel: View {
             GlassSectionHeader("Nauczone", systemImage: "sparkles") {
                 GlassBadge(title: Text(verbatim: "\(entries.count)"))
             }
-            ToolCaption("Słowa, których Captylo nauczył się z Twoich poprawek, z \(GlobalShortcut.correction.display) i z literowania na głos. Reguła zamiany działa zawsze, podpowiedź pomaga tylko poprawianiu przez AI. Cofnięte słowo wróci tylko przez \(GlobalShortcut.correction.display) albo „Odblokuj” niżej.")
+            ToolCaption("Słowa, których Szpak nauczył się z Twoich poprawek, z \(GlobalShortcut.correction.display) i z literowania na głos. Reguła zamiany działa zawsze, podpowiedź pomaga tylko poprawianiu przez AI. Cofnięte słowo wróci tylko przez \(GlobalShortcut.correction.display) albo „Odblokuj” niżej.")
             if !isEnabled {
                 ToolStatusLine(text: String(localized: "Nauka jest wyłączona w Ustawieniach. Nauczone słowa nadal działają."))
             }
@@ -49,7 +49,7 @@ struct LearnedPanel: View {
                 }
             }
         }
-        .confirmationDialog("Wyczyścić wszystko, czego Captylo się nauczył?", isPresented: $confirmsReset) {
+        .confirmationDialog("Wyczyścić wszystko, czego Szpak się nauczył?", isPresented: $confirmsReset) {
             Button("Wyczyść naukę", role: .destructive) {
                 learning.resetAll()
             }

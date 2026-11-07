@@ -74,7 +74,7 @@ struct PermissionsStep: View {
             OnboardingHeader(
                 symbol: OnboardingStep.permissions.symbol,
                 title: String(localized: "Dwa uprawnienia"),
-                subtitle: String(localized: "macOS pyta o nie raz. Bez nich Captylo nie usłyszy Cię ani nie wklei tekstu.")
+                subtitle: String(localized: "macOS pyta o nie raz. Bez nich Szpak nie usłyszy Cię ani nie wklei tekstu.")
             )
 
             GlassRowSeparator()
@@ -154,7 +154,7 @@ struct PermissionsStep: View {
         PermissionRow(
             symbol: "hand.raised",
             title: String(localized: "Dostępność"),
-            explanation: String(localized: "Do globalnego skrótu i wklejania tekstu tam, gdzie piszesz. Captylo nie czyta ekranu ani innych aplikacji."),
+            explanation: String(localized: "Do globalnego skrótu i wklejania tekstu tam, gdzie piszesz. Szpak nie czyta ekranu ani innych aplikacji."),
             status: accessibilityStatus
         ) {
             if !permissions.isAccessibilityTrusted {
@@ -177,7 +177,7 @@ struct PermissionsStep: View {
         if permissions.suggestsRelaunch {
             return .required(hint: String(localized: "Nadal brak dostępu. macOS często wymaga ponownego uruchomienia aplikacji po włączeniu."))
         }
-        return .required(hint: String(localized: "Po kliknięciu włącz Captylo na liście w Ustawieniach systemowych."))
+        return .required(hint: String(localized: "Po kliknięciu włącz Szpaka na liście w Ustawieniach systemowych."))
     }
 
     private var oldAppRow: some View {

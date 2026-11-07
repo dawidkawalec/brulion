@@ -15,7 +15,7 @@ struct MenuBarLabel: View {
         let recording = appState.dictationController.phase.isCapturing || appState.meetingRecorder.isRecording
         icon(recording: recording)
             .background(OpenWindowBridge(presenter: appState.windowPresenter))
-            .accessibilityLabel(recording ? Text("Captylo, nagrywanie") : Text("Captylo"))
+            .accessibilityLabel(recording ? Text("Szpak, nagrywanie") : Text("Szpak"))
     }
 
     @ViewBuilder

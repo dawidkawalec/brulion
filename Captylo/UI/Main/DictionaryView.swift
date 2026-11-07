@@ -16,7 +16,7 @@ struct DictionaryView: View {
     private var dictionary: DictionaryStore { appState.dictionary }
 
     var body: some View {
-        ToolPage(subtitle: "Słowa i reguły, dzięki którym Captylo pisze Twoje nazwy poprawnie.") {
+        ToolPage(subtitle: "Słowa i reguły, dzięki którym Szpak pisze Twoje nazwy poprawnie.") {
             transferButtons
         } content: {
             if let transferMessage {
@@ -44,7 +44,7 @@ struct DictionaryView: View {
     private func corruptNotice(_ backup: URL) -> some View {
         ToolNoticePanel(
             title: Text("Nie udało się odczytać słownika"),
-            message: Text("Plik słownika był uszkodzony, więc Captylo zaczęło od domyślnego. Oryginał zachowano jako \(backup.lastPathComponent). Po poprawieniu możesz go wczytać przyciskiem Importuj JSON.")
+            message: Text("Plik słownika był uszkodzony, więc Szpak zaczął od domyślnego. Oryginał zachowano jako \(backup.lastPathComponent). Po poprawieniu możesz go wczytać przyciskiem Importuj JSON.")
         ) {
             Button("Pokaż w Finderze") {
                 NSWorkspace.shared.activateFileViewerSelecting([backup])
@@ -205,7 +205,7 @@ struct DictionaryView: View {
     private func exportJSON() {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.json]
-        panel.nameFieldStringValue = "Captylo-slownik.json"
+        panel.nameFieldStringValue = "Szpak-slownik.json"
         panel.canCreateDirectories = true
         Task {
             guard await panel.begin() == .OK, let url = panel.url else { return }
@@ -263,11 +263,11 @@ private struct ReplacementsPanel: View {
             }
             GlassRowSeparator()
             ReplacementColumns {
-                TextField("np. kap tylo, kaptilo", text: $newTriggers)
+                TextField("np. szpag, spak", text: $newTriggers)
                     .textFieldStyle(.glass)
                     .onSubmit(add)
             } target: {
-                TextField("np. Captylo", text: $newReplacement)
+                TextField("np. Szpak", text: $newReplacement)
                     .textFieldStyle(.glass)
                     .onSubmit(add)
             } actions: {

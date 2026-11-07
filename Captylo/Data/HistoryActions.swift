@@ -187,7 +187,7 @@ final class HistoryActions {
     func exportCSV(ids: [UUID]) async {
         guard !ids.isEmpty else { return }
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "Captylo-historia.csv"
+        panel.nameFieldStringValue = "Szpak-historia.csv"
         panel.allowedContentTypes = [.commaSeparatedText]
         panel.canCreateDirectories = true
         panel.isExtensionHidden = false

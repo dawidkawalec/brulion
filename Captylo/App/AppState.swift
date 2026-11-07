@@ -158,7 +158,7 @@ final class AppState {
     @ObservationIgnored private var correctionShortcut: GlobalShortcut?
     /// ⌃⌥⌘N, a voice note, registered while its switch is on (`applyNoteShortcut`).
     @ObservationIgnored private var noteShortcut: GlobalShortcut?
-    /// Services menu "Popraw w Captylo"; set in `startServices`.
+    /// Services menu "Popraw w Szpaku"; set in `startServices`.
     @ObservationIgnored private var correctionService: CorrectionServiceProvider?
     @ObservationIgnored private var servicesStarted = false
 
@@ -665,7 +665,7 @@ final class AppState {
         applyMeetingShortcut()
         applyCorrectionShortcut()
         applyNoteShortcut()
-        // Services menu "Popraw w Captylo" (`NSServices` in Info.plist).
+        // Services menu "Popraw w Szpaku" (`NSServices` in Info.plist).
         let service = CorrectionServiceProvider(correction: manualCorrection)
         correctionService = service
         NSApp.servicesProvider = service
@@ -772,7 +772,7 @@ final class AppState {
         case .stop:
             Task { await controller.stop() }
         case .busy:
-            toasts.showInfo(String(localized: "Captylo jeszcze przepisuje poprzednie nagranie. Spróbuj za chwilę."))
+            toasts.showInfo(String(localized: "Szpak jeszcze przepisuje poprzednie nagranie. Spróbuj za chwilę."))
         }
     }
 

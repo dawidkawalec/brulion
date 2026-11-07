@@ -22,7 +22,7 @@ struct MeetingsSettingsPanel: View {
         case .denied, .restricted:
             return String(localized: "Brak dostępu do kalendarza. Zezwól w Ustawieniach systemowych.")
         case .writeOnly:
-            return String(localized: "Captylo ma tylko dostęp do zapisu. Włącz pełny dostęp.")
+            return String(localized: "Szpak ma tylko dostęp do zapisu. Włącz pełny dostęp.")
         }
     }
 
@@ -50,7 +50,7 @@ struct MeetingsSettingsPanel: View {
 
         GlassToggleRow(
             "Wykrywaj spotkania",
-            subtitle: "Gdy aplikacja do rozmów zacznie używać mikrofonu, Captylo zapyta, czy nagrać spotkanie.",
+            subtitle: "Gdy aplikacja do rozmów zacznie używać mikrofonu, Szpak zapyta, czy nagrać spotkanie.",
             systemImage: "dot.radiowaves.left.and.right",
             isOn: $settings.meetingsAutoDetect
         )
@@ -134,7 +134,7 @@ private struct CalendarSettings: View {
             .padding(.bottom, 4)
         } else if settings.meetingsCalendar, calendar.access.isGranted {
             HStack(alignment: .center, spacing: 10) {
-                ToolStatusLine(text: String(localized: "Captylo widzi kalendarze z aplikacji Kalendarz. Google lub Outlooka dodasz w Kontach internetowych macOS."))
+                ToolStatusLine(text: String(localized: "Szpak widzi kalendarze z aplikacji Kalendarz. Google lub Outlooka dodasz w Kontach internetowych macOS."))
                 Button("Konta internetowe") {
                     CalendarAccess.openInternetAccounts()
                 }
@@ -232,7 +232,7 @@ private struct SystemAudioCheckRow: View {
         VStack(alignment: .leading, spacing: 4) {
             GlassRow(
                 "Dostęp do dźwięku systemu",
-                subtitle: "Tak Captylo słyszy rozmówców. Puść coś (np. film) i sprawdź.",
+                subtitle: "Tak Szpak słyszy rozmówców. Puść coś (np. film) i sprawdź.",
                 systemImage: "hifispeaker"
             ) {
                 HStack(spacing: 10) {
@@ -283,11 +283,11 @@ private struct SystemAudioCheckRow: View {
         case .checking:
             ToolStatusLine(text: String(localized: "Słucham dźwięku systemu przez 2 sekundy..."))
         case .done(.works):
-            ToolStatusLine(text: String(localized: "Captylo słyszy dźwięk innych aplikacji."), tone: .success)
+            ToolStatusLine(text: String(localized: "Szpak słyszy dźwięk innych aplikacji."), tone: .success)
         case .done(.noAccess):
             HStack(spacing: 10) {
                 ToolStatusLine(
-                    text: String(localized: "Coś gra, a Captylo słyszy ciszę. Zezwól na nagrywanie dźwięku systemu i sprawdź ponownie."),
+                    text: String(localized: "Coś gra, a Szpak słyszy ciszę. Zezwól na nagrywanie dźwięku systemu i sprawdź ponownie."),
                     tone: .error
                 )
                 Button("Otwórz Ustawienia systemowe") {

@@ -5,7 +5,7 @@ struct CaptyloApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     var body: some Scene {
-        Window("Captylo", id: WindowID.main) {
+        Window("Szpak", id: WindowID.main) {
             MainView()
                 .environment(delegate.appState)
         }

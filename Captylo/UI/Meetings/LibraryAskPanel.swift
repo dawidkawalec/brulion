@@ -68,7 +68,7 @@ struct LibraryAskPanel: View {
                     .font(GlassFont.sectionTitle)
                     .foregroundStyle(GlassColor.textPrimary)
                     .accessibilityAddTraits(.isHeader)
-                ToolCaption("Odpowiedź z Twoich spotkań, ze źródłami i odnośnikami do momentów rozmowy. Pytania znikają po zamknięciu Captylo.")
+                ToolCaption("Odpowiedź z Twoich spotkań, ze źródłami i odnośnikami do momentów rozmowy. Pytania znikają po zamknięciu Szpaka.")
             }
             Spacer(minLength: 10)
             ToolIconButton("xmark", label: Text("Zamknij"), size: GlassTokens.Size.buttonHeightSmall) {
@@ -85,7 +85,7 @@ struct LibraryAskPanel: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     if runs.libraryAnswers.isEmpty, runs.libraryPending == nil {
-                        ToolCaption("Zapytaj o cokolwiek ze spotkań i notatek na tym Macu. Captylo znajdzie pasujące rozmowy i notatki i pokaże, skąd pochodzi odpowiedź.")
+                        ToolCaption("Zapytaj o cokolwiek ze spotkań i notatek na tym Macu. Szpak znajdzie pasujące rozmowy i notatki i pokaże, skąd pochodzi odpowiedź.")
                     }
                     ForEach(runs.libraryAnswers) { answer in
                         LibraryAnswerView(answer: answer, onOpen: onOpen, onOpenNote: onOpenNote, onAddKey: onAddKey)

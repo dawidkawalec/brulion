@@ -201,9 +201,10 @@ struct MeetingExportTests {
 
     /// "Skopiuj informację" on the consent card: one Polish and one English sentence, whatever
     /// the UI language, so it works in any call.
-    @Test func consentDisclosureNamesCaptyloInPolishAndEnglish() {
+    @Test func consentDisclosureNamesSzpakInPolishAndEnglish() {
         let text = MeetingConsent.disclosure
-        #expect(text.contains("Captylo"))
+        #expect(text.contains("w Szpaku"))
+        #expect(text.contains("with Szpak"))
         #expect(text.contains("nagranie zostaje na moim komputerze"))
         #expect(text.contains("the recording stays on my computer"))
         #expect(!text.contains("\u{2014}") && !text.contains("\u{2013}"))

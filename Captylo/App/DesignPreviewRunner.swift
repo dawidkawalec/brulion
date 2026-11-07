@@ -214,7 +214,7 @@ final class DesignPreviewRunner {
         let hosting = NSHostingController(rootView: root.previewActive())
         hosting.sizingOptions = []
         hosting.sceneBridgingOptions = [.title, .toolbars]
-        window.title = "Captylo"
+        window.title = "Szpak"
         window.isReleasedWhenClosed = false
         window.contentViewController = hosting
         window.setContentSize(size)

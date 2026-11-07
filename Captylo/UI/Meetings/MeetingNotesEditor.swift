@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The user's own notes of a meeting: a plain editor on the recessed track with the placeholder
-/// "Pisz notatki. Captylo połączy je z rozmową.". Every change goes to `MeetingNotesDraft` with
+/// "Pisz notatki. Szpak połączy je z rozmową.". Every change goes to `MeetingNotesDraft` with
 /// the meeting time from `elapsed` (the recording clock, or the meeting's length afterwards),
 /// which stamps each new line and saves a second after the last keystroke. Fills the height it
 /// is given.
@@ -24,7 +24,7 @@ struct MeetingNotesEditor: View {
         .padding(.vertical, 10)
         .overlay(alignment: .topLeading) {
             if draft.text.isEmpty {
-                Text("Pisz notatki. Captylo połączy je z rozmową.")
+                Text("Pisz notatki. Szpak połączy je z rozmową.")
                     .font(GlassFont.body)
                     .foregroundStyle(GlassColor.textTertiary)
                     .padding(.leading, 13)

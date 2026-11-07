@@ -72,7 +72,7 @@ struct MenuBarMenu: View {
 
         Divider()
 
-        Button("Otwórz Captylo") {
+        Button("Otwórz Szpaka") {
             appState.windowPresenter.openMain(section: .pulpit)
         }
         Button("Ustawienia...") {
@@ -91,7 +91,7 @@ struct MenuBarMenu: View {
 
         Divider()
 
-        Button("Zakończ Captylo") {
+        Button("Zakończ Szpaka") {
             NSApplication.shared.terminate(nil)
         }
         .keyboardShortcut("q", modifiers: .command)

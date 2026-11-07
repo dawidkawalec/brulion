@@ -64,7 +64,7 @@ final class SystemAudioTap: MeetingAudioSource, @unchecked Sendable {
         }
 
         let aggregate: [String: Any] = [
-            kAudioAggregateDeviceNameKey: "Captylo Meeting",
+            kAudioAggregateDeviceNameKey: "Szpak Meeting",
             kAudioAggregateDeviceUIDKey: "com.captylo.app.meeting.\(UUID().uuidString)",
             kAudioAggregateDeviceIsPrivateKey: true,
             kAudioAggregateDeviceTapAutoStartKey: true,

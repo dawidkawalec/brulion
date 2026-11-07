@@ -12,7 +12,7 @@ enum DictionaryImportError: LocalizedError, Sendable, Equatable {
         case .unreadable:
             return String(localized: "Nie udało się odczytać pliku.")
         case .invalidFormat:
-            return String(localized: "To nie jest plik słownika Captylo.")
+            return String(localized: "To nie jest plik słownika Szpaka.")
         case .saveFailed:
             return String(localized: "Nie udało się zapisać słownika. Zmiany działają tylko do zamknięcia aplikacji.")
         }

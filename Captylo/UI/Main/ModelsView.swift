@@ -338,7 +338,7 @@ private struct LegacyParakeetRow: View {
         VStack(alignment: .leading, spacing: 8) {
             GlassRow(
                 title: Text("Poprzedni model lokalny"),
-                subtitle: Text("Captylo go już nie używa. Zajmuje ok. 460 MB."),
+                subtitle: Text("Szpak go już nie używa. Zajmuje ok. 460 MB."),
                 systemImage: "archivebox"
             ) {
                 Button {

@@ -54,7 +54,7 @@ struct MeetingUpcomingStripTests {
         #expect(MeetingsSettingsPanel.calendarStatusText(for: .notDetermined) == nil)
         #expect(MeetingsSettingsPanel.calendarStatusText(for: .denied) == String(localized: "Brak dostępu do kalendarza. Zezwól w Ustawieniach systemowych."))
         #expect(MeetingsSettingsPanel.calendarStatusText(for: .restricted) == String(localized: "Brak dostępu do kalendarza. Zezwól w Ustawieniach systemowych."))
-        #expect(MeetingsSettingsPanel.calendarStatusText(for: .writeOnly) == String(localized: "Captylo ma tylko dostęp do zapisu. Włącz pełny dostęp."))
+        #expect(MeetingsSettingsPanel.calendarStatusText(for: .writeOnly) == String(localized: "Szpak ma tylko dostęp do zapisu. Włącz pełny dostęp."))
         #expect(MeetingsSettingsPanel.reminderMinutesTitle(0) == String(localized: "W chwili startu"))
         #expect(MeetingsSettingsPanel.reminderMinutesTitle(5) == String(localized: "5 min"))
         #expect(CalendarAccess.settingsURL.scheme == "x-apple.systempreferences")

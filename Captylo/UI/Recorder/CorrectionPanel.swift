@@ -95,8 +95,8 @@ final class CorrectionPanel: NSPanel {
 
 // MARK: - View
 
-/// "Popraw w Captylo": the selection, a field for the right version and one line that says what
-/// Captylo will do with it (learn a rule, a hint for AI, or only replace the text).
+/// "Popraw w Szpaku": the selection, a field for the right version and one line that says what
+/// the app will do with it (learn a rule, a hint for AI, or only replace the text).
 @MainActor
 struct CorrectionView: View {
     @Bindable var model: CorrectionModel
@@ -106,7 +106,7 @@ struct CorrectionView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
                 GlassIconBadge(systemImage: "pencil.and.scribble")
-                Text("Popraw w Captylo")
+                Text("Popraw w Szpaku")
                     .font(GlassFont.sectionTitle)
                     .foregroundStyle(GlassColor.textPrimary)
                 Spacer()

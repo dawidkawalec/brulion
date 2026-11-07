@@ -14,7 +14,7 @@ struct GlassGallery: View {
     @State private var saveAfter = true
     @State private var range: Range = .week
     @State private var mode = 0
-    @State private var name = "Captylo"
+    @State private var name = "Szpak"
     @State private var key = "sk-or-v1-design-preview"
 
     var body: some View {

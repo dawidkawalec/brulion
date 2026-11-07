@@ -20,7 +20,7 @@ final class MCPServer: Sendable {
 
     /// The tool call answer while the setting is off.
     static var disabledMessage: String {
-        String(localized: "Włącz dostęp w Captylo: Ustawienia > Spotkania > Dostęp dla asystentów AI (MCP).")
+        String(localized: "Włącz dostęp w Szpaku: Ustawienia > Spotkania > Dostęp dla asystentów AI (MCP).")
     }
 
     /// Whether the setting is on in the app's own defaults domain (the `--mcp` process is the
@@ -101,11 +101,11 @@ final class MCPServer: Sendable {
             "capabilities": .object(["tools": .object(["listChanged": .bool(false)])]),
             "serverInfo": .object([
                 "name": .string(AppIdentity.mcpServerName),
-                "title": .string("Captylo"),
+                "title": .string("Szpak"),
                 "version": .string(version),
             ]),
             "instructions": .string("""
-                Read-only access to the meetings and notes recorded with Captylo on this Mac. Use \
+                Read-only access to the meetings and notes recorded with Szpak on this Mac. Use \
                 search_meetings to find what was said or written (Polish word forms match; it lists \
                 matching notes too), list_meetings and list_notes to browse by date, get_meeting for \
                 the notes and the full transcript, and get_note for a note's text. Cite moments as \

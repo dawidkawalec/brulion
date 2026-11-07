@@ -51,7 +51,7 @@ struct MCPTools: Sendable {
                 "list_meetings",
                 title: "List meetings",
                 description: """
-                    List the meetings recorded with Captylo on this Mac, newest first: date and time, \
+                    List the meetings recorded with Szpak on this Mac, newest first: date and time, \
                     title, length, the call app and the meeting id. Optionally only meetings whose title, \
                     notes or transcript contain the query, or that started on or after a date.
                     """,
@@ -122,7 +122,7 @@ struct MCPTools: Sendable {
                 "list_notes",
                 title: "List notes",
                 description: """
-                    List the user's notes in Captylo (typed, dictated or voice notes), newest first: date \
+                    List the user's notes in Szpak (typed, dictated or voice notes), newest first: date \
                     and time, title (or the first line), the length of a recording and the note id. \
                     Optionally only notes whose title or text contain the query, or created on or after a date.
                     """,

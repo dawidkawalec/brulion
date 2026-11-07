@@ -51,9 +51,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "No meetings" } }
       }
     },
-    "Captylo jeszcze przepisuje poprzednie nagranie. Spróbuj za chwilę.": {
+    "Szpak jeszcze przepisuje poprzednie nagranie. Spróbuj za chwilę.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Captylo is still transcribing the previous recording. Try again in a moment." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Szpak is still transcribing the previous recording. Try again in a moment." } }
       }
     },
     "Nie udało się przepisać notatki. Nagranie jest w Notatkach.": {
@@ -261,9 +261,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Note saved" } }
       }
     },
-    "Captylo sam uzupełnia ten opis co kilka Twoich poprawek stylu: powitania, interpunkcję, ton. Działa z trybami AI. Możesz go dowolnie zmienić.": {
+    "Szpak sam uzupełnia ten opis co kilka Twoich poprawek stylu: powitania, interpunkcję, ton. Działa z trybami AI. Możesz go dowolnie zmienić.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Captylo updates this description by itself every few style corrections you make: greetings, punctuation, tone. Works with AI modes. Change it any way you like." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Szpak updates this description by itself every few style corrections you make: greetings, punctuation, tone. Works with AI modes. Change it any way you like." } }
       }
     },
     "Nowe poprawki stylu: %lld z %lld do następnej aktualizacji.": {
@@ -276,9 +276,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Your style" } }
       }
     },
-    "Włącz tryb AI, aby Captylo uczył się Twojego stylu.": {
+    "Włącz tryb AI, aby Szpak uczył się Twojego stylu.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Turn on an AI mode so Captylo can learn your style." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Turn on an AI mode so Szpak can learn your style." } }
       }
     },
     "Wyczyść": {
@@ -291,9 +291,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Update now" } }
       }
     },
-    "Captylo nie czyta tu poprawek. Menedżery haseł, terminale i pola haseł są wykluczone zawsze.": {
+    "Szpak nie czyta tu poprawek. Menedżery haseł, terminale i pola haseł są wykluczone zawsze.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Captylo does not read corrections here. Password managers, terminals and password fields are always excluded." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Szpak does not read corrections here. Password managers, terminals and password fields are always excluded." } }
       }
     },
     "Dodaj aplikację": {
@@ -301,9 +301,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Add app" } }
       }
     },
-    "Ile słów na 100 wklejonych poprawiasz ręcznie (ostatnie 14 dni). Im mniej, tym lepiej Captylo zna Twoje słowa.": {
+    "Ile słów na 100 wklejonych poprawiasz ręcznie (ostatnie 14 dni). Im mniej, tym lepiej Szpak zna Twoje słowa.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "How many of every 100 pasted words you fix by hand (last 14 days). The lower, the better Captylo knows your words." } }
+        "en": { "stringUnit": { "state": "translated", "value": "How many of every 100 pasted words you fix by hand (last 14 days). The lower, the better Szpak knows your words." } }
       }
     },
     "Poprawki/100 słów": {
@@ -336,9 +336,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Added to the dictionary: %@" } }
       }
     },
-    "Gdy przeliterujesz słowo na głos albo poprawisz wklejony tekst, Captylo zapamięta poprawną wersję. Wszystko zostaje na tym Macu, a nauczone słowa zobaczysz i cofniesz w Słowniku.": {
+    "Gdy przeliterujesz słowo na głos albo poprawisz wklejony tekst, Szpak zapamięta poprawną wersję. Wszystko zostaje na tym Macu, a nauczone słowa zobaczysz i cofniesz w Słowniku.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "When you spell a word out loud or fix pasted text, Captylo remembers the right version. Everything stays on this Mac, and you can see and undo what it learned in Dictionary." } }
+        "en": { "stringUnit": { "state": "translated", "value": "When you spell a word out loud or fix pasted text, Szpak remembers the right version. Everything stays on this Mac, and you can see and undo what it learned in Dictionary." } }
       }
     },
     "Literowanie": {
@@ -386,9 +386,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Rule" } }
       }
     },
-    "Słowa, których Captylo nauczył się z Twoich poprawek, z %@ i z literowania na głos. Reguła zamiany działa zawsze, podpowiedź pomaga tylko poprawianiu przez AI. Cofnięte słowo wróci tylko przez %@ albo „Odblokuj” niżej.": {
+    "Słowa, których Szpak nauczył się z Twoich poprawek, z %@ i z literowania na głos. Reguła zamiany działa zawsze, podpowiedź pomaga tylko poprawianiu przez AI. Cofnięte słowo wróci tylko przez %@ albo „Odblokuj” niżej.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Words Captylo learned from your corrections, from %@ and from spelling out loud. A replacement rule always applies, a hint only helps the AI cleanup. An undone word comes back only through %@ or “Unblock” below." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Words Szpak learned from your corrections, from %@ and from spelling out loud. A replacement rule always applies, a hint only helps the AI cleanup. An undone word comes back only through %@ or “Unblock” below." } }
       }
     },
     "Ucz się z moich poprawek": {
@@ -401,9 +401,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Clear learning" } }
       }
     },
-    "Wyczyścić wszystko, czego Captylo się nauczył?": {
+    "Wyczyścić wszystko, czego Szpak się nauczył?": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Clear everything Captylo has learned?" } }
+        "en": { "stringUnit": { "state": "translated", "value": "Clear everything Szpak has learned?" } }
       }
     },
     "Zapamiętałem: %@ → %@": {
@@ -893,22 +893,22 @@
         }
       }
     },
-    "Captylo": {
+    "Szpak": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Captylo"
+            "value": "Szpak"
           }
         }
       }
     },
-    "Captylo, nagrywanie": {
+    "Szpak, nagrywanie": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Captylo, recording"
+            "value": "Szpak, recording"
           }
         }
       }
@@ -1668,12 +1668,12 @@
         }
       }
     },
-    "Do globalnego skrótu i wklejania tekstu tam, gdzie piszesz. Captylo nie czyta ekranu ani innych aplikacji.": {
+    "Do globalnego skrótu i wklejania tekstu tam, gdzie piszesz. Szpak nie czyta ekranu ani innych aplikacji.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "For the global shortcut and for pasting text where you type. Captylo does not read the screen or other apps."
+            "value": "For the global shortcut and for pasting text where you type. Szpak does not read the screen or other apps."
           }
         }
       }
@@ -2198,12 +2198,12 @@
         }
       }
     },
-    "Nowy język pojawi się po ponownym uruchomieniu Captylo.": {
+    "Nowy język pojawi się po ponownym uruchomieniu Szpaka.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The new language appears after Captylo restarts."
+            "value": "The new language appears after Szpak restarts."
           }
         }
       }
@@ -3128,12 +3128,12 @@
         }
       }
     },
-    "Otwórz Captylo": {
+    "Otwórz Szpaka": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Captylo"
+            "value": "Open Szpak"
           }
         }
       }
@@ -3168,12 +3168,12 @@
         }
       }
     },
-    "Captylo go już nie używa. Zajmuje ok. 460 MB.": {
+    "Szpak go już nie używa. Zajmuje ok. 460 MB.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Captylo no longer uses it. It takes about 460 MB."
+            "value": "Szpak no longer uses it. It takes about 460 MB."
           }
         }
       }
@@ -3228,12 +3228,12 @@
         }
       }
     },
-    "Plik słownika był uszkodzony, więc Captylo zaczęło od domyślnego. Oryginał zachowano jako %@. Po poprawieniu możesz go wczytać przyciskiem Importuj JSON.": {
+    "Plik słownika był uszkodzony, więc Szpak zaczął od domyślnego. Oryginał zachowano jako %@. Po poprawieniu możesz go wczytać przyciskiem Importuj JSON.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The dictionary file was damaged, so Captylo started from the default one. The original was kept as %@. Once fixed, you can load it with Import JSON."
+            "value": "The dictionary file was damaged, so Szpak started from the default one. The original was kept as %@. Once fixed, you can load it with Import JSON."
           }
         }
       }
@@ -3632,12 +3632,12 @@
         }
       }
     },
-    "Przenieś Captylo do folderu Programy, aby włączyć tę opcję.": {
+    "Przenieś Szpaka do folderu Programy, aby włączyć tę opcję.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Move Captylo to the Applications folder to turn this on."
+            "value": "Move Szpak to the Applications folder to turn this on."
           }
         }
       }
@@ -3742,12 +3742,12 @@
         }
       }
     },
-    "Po kliknięciu włącz Captylo na liście w Ustawieniach systemowych.": {
+    "Po kliknięciu włącz Szpaka na liście w Ustawieniach systemowych.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "After clicking, turn on Captylo in the list in System Settings."
+            "value": "After clicking, turn on Szpak in the list in System Settings."
           }
         }
       }
@@ -3992,12 +3992,12 @@
         }
       }
     },
-    "Słowa i reguły, dzięki którym Captylo pisze Twoje nazwy poprawnie.": {
+    "Słowa i reguły, dzięki którym Szpak pisze Twoje nazwy poprawnie.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Words and rules that help Captylo spell your names correctly."
+            "value": "Words and rules that help Szpak spell your names correctly."
           }
         }
       }
@@ -4102,12 +4102,12 @@
         }
       }
     },
-    "To nie jest plik słownika Captylo.": {
+    "To nie jest plik słownika Szpaka.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This is not a Captylo dictionary file."
+            "value": "This is not a Szpak dictionary file."
           }
         }
       }
@@ -4844,12 +4844,12 @@
         }
       }
     },
-    "Wymagane. Po kliknięciu włącz Captylo na liście w Ustawieniach systemowych.": {
+    "Wymagane. Po kliknięciu włącz Szpaka na liście w Ustawieniach systemowych.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Required. After clicking, turn on Captylo in the list in System Settings."
+            "value": "Required. After clicking, turn on Szpak in the list in System Settings."
           }
         }
       }
@@ -4986,12 +4986,12 @@
         }
       }
     },
-    "Zakończ Captylo": {
+    "Zakończ Szpaka": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quit Captylo"
+            "value": "Quit Szpak"
           }
         }
       }
@@ -5388,12 +5388,12 @@
         }
       }
     },
-    "macOS pyta o nie raz. Bez nich Captylo nie usłyszy Cię ani nie wklei tekstu.": {
+    "macOS pyta o nie raz. Bez nich Szpak nie usłyszy Cię ani nie wklei tekstu.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS asks for them once. Without them Captylo cannot hear you or paste the text."
+            "value": "macOS asks for them once. Without them Szpak cannot hear you or paste the text."
           }
         }
       }
@@ -5408,22 +5408,22 @@
         }
       }
     },
-    "np. Captylo": {
+    "np. Szpak": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "e.g. Captylo"
+            "value": "e.g. Szpak"
           }
         }
       }
     },
-    "np. kap tylo, kaptilo": {
+    "np. szpag, spak": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "e.g. kap tylo, kaptilo"
+            "value": "e.g. szpag, spak"
           }
         }
       }
@@ -5653,9 +5653,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Your meetings will appear here." } }
       }
     },
-    "Nagraj pierwsze, a Captylo zapisze, kto co powiedział.": {
+    "Nagraj pierwsze, a Szpak zapisze, kto co powiedział.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Record your first one and Captylo will note who said what." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Record your first one and Szpak will note who said what." } }
       }
     },
     "Nagrywam": {
@@ -5798,9 +5798,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Couldn't save the title." } }
       }
     },
-    "Na razie nie słyszę rozmówców. Jeśli ktoś już mówi, Captylo potrzebuje dostępu do dźwięku systemu.": {
+    "Na razie nie słyszę rozmówców. Jeśli ktoś już mówi, Szpak potrzebuje dostępu do dźwięku systemu.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "I can't hear the other side yet. If someone is already talking, Captylo needs access to system audio." } }
+        "en": { "stringUnit": { "state": "translated", "value": "I can't hear the other side yet. If someone is already talking, Szpak needs access to system audio." } }
       }
     },
     "Otwórz Ustawienia systemowe": {
@@ -5813,9 +5813,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Connect your calendar: meetings get titles and participants from events, and I remind you to record before a call. Google and Outlook work once added in macOS Internet Accounts." } }
       }
     },
-    "Captylo widzi kalendarze z aplikacji Kalendarz. Google lub Outlooka dodasz w Kontach internetowych macOS.": {
+    "Szpak widzi kalendarze z aplikacji Kalendarz. Google lub Outlooka dodasz w Kontach internetowych macOS.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Captylo sees the calendars in the Calendar app. Add Google or Outlook in macOS Internet Accounts." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Szpak sees the calendars in the Calendar app. Add Google or Outlook in macOS Internet Accounts." } }
       }
     },
     "Konta internetowe": {
@@ -5873,9 +5873,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Don't show again" } }
       }
     },
-    "Pisz notatki. Captylo połączy je z rozmową.": {
+    "Pisz notatki. Szpak połączy je z rozmową.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Type your notes. Captylo links them to the conversation." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Type your notes. Szpak links them to the conversation." } }
       }
     },
     "Transkrypt na żywo": {
@@ -5993,9 +5993,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Detect meetings" } }
       }
     },
-    "Gdy aplikacja do rozmów zacznie używać mikrofonu, Captylo zapyta, czy nagrać spotkanie.": {
+    "Gdy aplikacja do rozmów zacznie używać mikrofonu, Szpak zapyta, czy nagrać spotkanie.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "When a call app starts using the microphone, Captylo asks whether to record the meeting." } }
+        "en": { "stringUnit": { "state": "translated", "value": "When a call app starts using the microphone, Szpak asks whether to record the meeting." } }
       }
     },
     "Przypominaj o poinformowaniu uczestników": {
@@ -6103,9 +6103,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "System audio access" } }
       }
     },
-    "Tak Captylo słyszy rozmówców. Puść coś (np. film) i sprawdź.": {
+    "Tak Szpak słyszy rozmówców. Puść coś (np. film) i sprawdź.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "This is how Captylo hears the other side. Play something (e.g. a video) and check." } }
+        "en": { "stringUnit": { "state": "translated", "value": "This is how Szpak hears the other side. Play something (e.g. a video) and check." } }
       }
     },
     "Sprawdź dostęp do dźwięku systemu": {
@@ -6133,14 +6133,14 @@
         "en": { "stringUnit": { "state": "translated", "value": "Listening to system audio for 2 seconds..." } }
       }
     },
-    "Captylo słyszy dźwięk innych aplikacji.": {
+    "Szpak słyszy dźwięk innych aplikacji.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Captylo hears audio from other apps." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Szpak hears audio from other apps." } }
       }
     },
-    "Coś gra, a Captylo słyszy ciszę. Zezwól na nagrywanie dźwięku systemu i sprawdź ponownie.": {
+    "Coś gra, a Szpak słyszy ciszę. Zezwól na nagrywanie dźwięku systemu i sprawdź ponownie.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Something is playing, but Captylo hears silence. Allow system audio recording and check again." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Something is playing, but Szpak hears silence. Allow system audio recording and check again." } }
       }
     },
     "Puść coś na chwilę (np. film) i sprawdź ponownie.": {
@@ -6228,9 +6228,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "No calendar access. Allow it in System Settings." } }
       }
     },
-    "Captylo ma tylko dostęp do zapisu. Włącz pełny dostęp.": {
+    "Szpak ma tylko dostęp do zapisu. Włącz pełny dostęp.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Captylo can only add events. Turn on full access." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Szpak can only add events. Turn on full access." } }
       }
     },
     "Przypominaj przed spotkaniem": {
@@ -6383,14 +6383,14 @@
         "en": { "stringUnit": { "state": "translated", "value": "Ask all meetings" } }
       }
     },
-    "Odpowiedź z Twoich spotkań, ze źródłami i odnośnikami do momentów rozmowy. Pytania znikają po zamknięciu Captylo.": {
+    "Odpowiedź z Twoich spotkań, ze źródłami i odnośnikami do momentów rozmowy. Pytania znikają po zamknięciu Szpaka.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "An answer from your meetings, with its sources and links to the moments of the conversation. Questions disappear when you quit Captylo." } }
+        "en": { "stringUnit": { "state": "translated", "value": "An answer from your meetings, with its sources and links to the moments of the conversation. Questions disappear when you quit Szpak." } }
       }
     },
-    "Zapytaj o cokolwiek ze spotkań i notatek na tym Macu. Captylo znajdzie pasujące rozmowy i notatki i pokaże, skąd pochodzi odpowiedź.": {
+    "Zapytaj o cokolwiek ze spotkań i notatek na tym Macu. Szpak znajdzie pasujące rozmowy i notatki i pokaże, skąd pochodzi odpowiedź.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Ask about anything from the meetings and notes on this Mac. Captylo finds the conversations and notes that match and shows where the answer comes from." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Ask about anything from the meetings and notes on this Mac. Szpak finds the conversations and notes that match and shows where the answer comes from." } }
       }
     },
     "Zapytaj o wszystkie spotkania...": {
@@ -6453,9 +6453,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Access for AI assistants (MCP)" } }
       }
     },
-    "Twój asystent AI (np. Claude Desktop, Cursor) może czytać i przeszukiwać spotkania na tym Macu. Captylo niczego nie zmienia ani nie wysyła, ale asystent przekazuje przeczytany tekst do swojej usługi.": {
+    "Twój asystent AI (np. Claude Desktop, Cursor) może czytać i przeszukiwać spotkania na tym Macu. Szpak niczego nie zmienia ani nie wysyła, ale asystent przekazuje przeczytany tekst do swojej usługi.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Your AI assistant (e.g. Claude Desktop, Cursor) can read and search the meetings on this Mac. Captylo changes and sends nothing, but the assistant passes what it reads to its own service." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Your AI assistant (e.g. Claude Desktop, Cursor) can read and search the meetings on this Mac. Szpak changes and sends nothing, but the assistant passes what it reads to its own service." } }
       }
     },
     "Skopiuj konfigurację": {
@@ -6468,14 +6468,14 @@
         "en": { "stringUnit": { "state": "translated", "value": "Paste it into the assistant's MCP settings (in Claude Desktop: Settings > Developer > Edit Config) and restart it." } }
       }
     },
-    "Włącz dostęp w Captylo: Ustawienia > Spotkania > Dostęp dla asystentów AI (MCP).": {
+    "Włącz dostęp w Szpaku: Ustawienia > Spotkania > Dostęp dla asystentów AI (MCP).": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Turn on access in Captylo: Settings > Meetings > Access for AI assistants (MCP)." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Turn on access in Szpak: Settings > Meetings > Access for AI assistants (MCP)." } }
       }
     },
-    "Nie mogę odczytać spotkań Captylo. Uruchom Captylo na tym Macu (po aktualizacji raz wystarczy) i spróbuj ponownie.": {
+    "Nie mogę odczytać spotkań Szpaka. Uruchom Szpaka na tym Macu (po aktualizacji raz wystarczy) i spróbuj ponownie.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Can't read the Captylo meetings. Open Captylo on this Mac (once is enough after an update) and try again." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Can't read the Szpak meetings. Open Szpak on this Mac (once is enough after an update) and try again." } }
       }
     },
     "Brak spotkań.": {
@@ -6643,9 +6643,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Skipped" } }
       }
     },
-    "Popraw w Captylo": {
+    "Popraw w Szpaku": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Fix with Captylo" } }
+        "en": { "stringUnit": { "state": "translated", "value": "Fix with Szpak" } }
       }
     },
     "Popraw zaznaczony tekst: %@": {
@@ -6673,9 +6673,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Fixed. I already know this one." } }
       }
     },
-    "Poprawki, które Captylo zobaczył, i co z nimi zrobił. Gdy słowo nie zostało zapamiętane, zaznacz je w aplikacji i naciśnij %@: wtedy Captylo nauczy się go od razu.": {
+    "Poprawki, które Szpak zobaczył, i co z nimi zrobił. Gdy słowo nie zostało zapamiętane, zaznacz je w aplikacji i naciśnij %@: wtedy Szpak nauczy się go od razu.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Corrections Captylo noticed and what it did with them. When a word was not learned, select it in the app and press %@: Captylo will learn it right away." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Corrections Szpak noticed and what it did with them. When a word was not learned, select it in the app and press %@: Szpak will learn it right away." } }
       }
     },
     "Poprawna wersja": {
@@ -6738,9 +6738,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Select the word you want to fix and press %@." } }
       }
     },
-    "Zaznacz źle rozpoznane słowo w dowolnej aplikacji, naciśnij skrót i wpisz poprawną wersję. Captylo podmieni tekst i od razu się tego nauczy. Działa też z menu prawego przycisku: Usługi > Popraw w Captylo.": {
+    "Zaznacz źle rozpoznane słowo w dowolnej aplikacji, naciśnij skrót i wpisz poprawną wersję. Szpak podmieni tekst i od razu się tego nauczy. Działa też z menu prawego przycisku: Usługi > Popraw w Szpaku.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Select a misheard word in any app, press the shortcut and type the correct version. Captylo replaces the text and learns it right away. Also works from the right-click menu: Services > Popraw w Captylo." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Select a misheard word in any app, press the shortcut and type the correct version. Szpak replaces the text and learns it right away. Also works from the right-click menu: Services > Popraw w Szpaku." } }
       }
     },
     "Zaznaczone: „%@”": {

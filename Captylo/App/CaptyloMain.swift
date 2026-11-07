@@ -37,15 +37,15 @@ enum CaptyloMain {
     }
 
     static let usage = """
-        Captylo: dictation, meeting notes and voice notes for Mac.
+        Szpak: dictation, meeting notes and voice notes for Mac, running on Bielik.
 
         Usage:
-          Captylo              open the app (or bring the running one forward)
-          Captylo --mcp        read-only MCP server for your AI assistant (stdin/stdout)
-          Captylo --version    print the version
-          Captylo --help       print this help
+          Szpak                open the app (or bring the running one forward)
+          Szpak --mcp          read-only MCP server for your AI assistant (stdin/stdout)
+          Szpak --version      print the version
+          Szpak --help         print this help
 
-        More: https://github.com/dawidkawalec/captylo
+        More: https://github.com/dawidkawalec/captylo-bielik
         """
 
     @MainActor
@@ -64,7 +64,7 @@ enum CaptyloMain {
             exit(0)
         case .version:
             let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
-            print("Captylo \(version)")
+            print("Szpak \(version)")
             exit(0)
         }
     }

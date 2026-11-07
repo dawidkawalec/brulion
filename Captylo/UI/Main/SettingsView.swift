@@ -84,13 +84,13 @@ struct SettingsView: View {
             sectionHeader("Nauka", systemImage: "brain")
             GlassToggleRow(
                 "Ucz się z moich poprawek",
-                subtitle: "Gdy przeliterujesz słowo na głos albo poprawisz wklejony tekst, Captylo zapamięta poprawną wersję. Wszystko zostaje na tym Macu, a nauczone słowa zobaczysz i cofniesz w Słowniku.",
+                subtitle: "Gdy przeliterujesz słowo na głos albo poprawisz wklejony tekst, Szpak zapamięta poprawną wersję. Wszystko zostaje na tym Macu, a nauczone słowa zobaczysz i cofniesz w Słowniku.",
                 systemImage: "sparkles",
                 isOn: $settings.learningEnabled
             )
             GlassToggleRow(
                 "Popraw zaznaczony tekst: \(GlobalShortcut.correction.display)",
-                subtitle: "Zaznacz źle rozpoznane słowo w dowolnej aplikacji, naciśnij skrót i wpisz poprawną wersję. Captylo podmieni tekst i od razu się tego nauczy. Działa też z menu prawego przycisku: Usługi > Popraw w Captylo.",
+                subtitle: "Zaznacz źle rozpoznane słowo w dowolnej aplikacji, naciśnij skrót i wpisz poprawną wersję. Szpak podmieni tekst i od razu się tego nauczy. Działa też z menu prawego przycisku: Usługi > Popraw w Szpaku.",
                 systemImage: "pencil.and.scribble",
                 isOn: $settings.learningFixShortcut
             )
@@ -301,7 +301,7 @@ private struct ExcludedAppsRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            GlassRow("Wykluczone aplikacje", subtitle: "Captylo nie czyta tu poprawek. Menedżery haseł, terminale i pola haseł są wykluczone zawsze.", systemImage: "hand.raised") {
+            GlassRow("Wykluczone aplikacje", subtitle: "Szpak nie czyta tu poprawek. Menedżery haseł, terminale i pola haseł są wykluczone zawsze.", systemImage: "hand.raised") {
                 Button {
                     pickApp()
                 } label: {
@@ -378,7 +378,7 @@ private struct AppLanguageRow: View {
                 HStack(spacing: 10) {
                     ToolStatusLine(text: isRecording
                         ? String(localized: "Nowy język po ponownym uruchomieniu. Najpierw zakończ nagrywanie.")
-                        : String(localized: "Nowy język pojawi się po ponownym uruchomieniu Captylo."))
+                        : String(localized: "Nowy język pojawi się po ponownym uruchomieniu Szpaka."))
                     Button("Uruchom ponownie") {
                         appState.relaunchForLanguage()
                     }
@@ -410,7 +410,7 @@ private struct LaunchAtLoginRow: View {
             .disabled(launchAtLogin.isUnavailable)
             Group {
                 if launchAtLogin.isUnavailable {
-                    ToolStatusLine(text: String(localized: "Przenieś Captylo do folderu Programy, aby włączyć tę opcję."))
+                    ToolStatusLine(text: String(localized: "Przenieś Szpaka do folderu Programy, aby włączyć tę opcję."))
                 } else if launchAtLogin.requiresApproval {
                     HStack(spacing: 10) {
                         ToolStatusLine(text: String(localized: "macOS czeka na Twoją zgodę w Ustawieniach systemowych > Ogólne > Logowanie."))
@@ -469,7 +469,7 @@ private struct VersionFooter: View {
                 .frame(width: 26, height: 26)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 1) {
-                Text(verbatim: "Captylo")
+                Text(verbatim: "Szpak")
                     .font(GlassFont.ui(13, .semibold))
                     .foregroundStyle(GlassColor.textPrimary)
                 Text(verbatim: versionLine)

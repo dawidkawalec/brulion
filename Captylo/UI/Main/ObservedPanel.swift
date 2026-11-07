@@ -23,7 +23,7 @@ struct ObservedPanel: View {
             GlassSectionHeader("Ostatnio zauważone", systemImage: "eye") {
                 GlassBadge(title: Text(verbatim: "\(entries.count)"))
             }
-            ToolCaption("Poprawki, które Captylo zobaczył, i co z nimi zrobił. Gdy słowo nie zostało zapamiętane, zaznacz je w aplikacji i naciśnij \(GlobalShortcut.correction.display): wtedy Captylo nauczy się go od razu.")
+            ToolCaption("Poprawki, które Szpak zobaczył, i co z nimi zrobił. Gdy słowo nie zostało zapamiętane, zaznacz je w aplikacji i naciśnij \(GlobalShortcut.correction.display): wtedy Szpak nauczy się go od razu.")
             if !isEnabled {
                 ToolStatusLine(text: String(localized: "Nauka jest wyłączona w Ustawieniach."))
             }

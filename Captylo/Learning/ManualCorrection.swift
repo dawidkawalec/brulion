@@ -1,7 +1,7 @@
 import AppKit
 
 /// "Popraw": the user selects a misheard word in any app, presses ⌃⌥⌘P (or picks "Popraw w
-/// Captylo" from the Services menu) and types the right version. Captylo pastes it over the
+/// Szpaku" from the Services menu) and types the right version. The app pastes it over the
 /// selection and learns the pair at once (`SelfLearning.learnManual`), saying what it decided.
 @MainActor
 final class ManualCorrection {
@@ -52,7 +52,7 @@ final class ManualCorrection {
         }
     }
 
-    /// Services menu "Popraw w Captylo": the app handed the selection over.
+    /// Services menu "Popraw w Szpaku": the app handed the selection over.
     func start(selection: String) {
         guard panel == nil, !isBusy, !isDictating() else { return }
         guard let app = Self.targetApp() ?? NSWorkspace.shared.menuBarOwningApplication.flatMap({
@@ -149,7 +149,7 @@ final class ManualCorrection {
     }
 }
 
-/// The Services menu entry "Popraw w Captylo" (`NSServices` in Info.plist, message
+/// The Services menu entry "Popraw w Szpaku" (`NSServices` in Info.plist, message
 /// `fixSelection`): the selected text arrives on a pasteboard.
 @MainActor
 final class CorrectionServiceProvider: NSObject {

@@ -30,7 +30,7 @@ struct MCPSettingsRow: View {
     var body: some View {
         GlassToggleRow(
             "Dostęp dla asystentów AI (MCP)",
-            subtitle: "Twój asystent AI (np. Claude Desktop, Cursor) może czytać i przeszukiwać spotkania na tym Macu. Captylo niczego nie zmienia ani nie wysyła, ale asystent przekazuje przeczytany tekst do swojej usługi.",
+            subtitle: "Twój asystent AI (np. Claude Desktop, Cursor) może czytać i przeszukiwać spotkania na tym Macu. Szpak niczego nie zmienia ani nie wysyła, ale asystent przekazuje przeczytany tekst do swojej usługi.",
             systemImage: "puzzlepiece.extension",
             isOn: $settings.meetingsMCP
         )

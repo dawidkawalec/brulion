@@ -142,7 +142,7 @@ private struct SavedTimeHero: View {
                         value: correctionRate.formatted(.number.precision(.fractionLength(1)).locale(Stats.locale)),
                         caption: String(localized: "Poprawki/100 słów")
                     )
-                    .help(Text("Ile słów na 100 wklejonych poprawiasz ręcznie (ostatnie 14 dni). Im mniej, tym lepiej Captylo zna Twoje słowa."))
+                    .help(Text("Ile słów na 100 wklejonych poprawiasz ręcznie (ostatnie 14 dni). Im mniej, tym lepiej Szpak zna Twoje słowa."))
                 }
             }
             .padding(.top, 20)

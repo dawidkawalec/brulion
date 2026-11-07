@@ -4,7 +4,7 @@ import Testing
 
 struct DebugCommandTests {
     @Test func parsesTranscribeWithOptions() {
-        let command = DebugCommand.parse(["/Applications/Captylo.app/Contents/MacOS/Captylo", "--transcribe", "/tmp/a.wav", "--ai", "--language", "pl"])
+        let command = DebugCommand.parse(["/Applications/Szpak.app/Contents/MacOS/Szpak", "--transcribe", "/tmp/a.wav", "--ai", "--language", "pl"])
         #expect(command == .transcribe(url: URL(fileURLWithPath: "/tmp/a.wav"), ai: true, language: "pl"))
     }
 
@@ -91,11 +91,11 @@ struct DebugCommandTests {
     }
 
     @Test func parsesMeetingFromFiles() {
-        #expect(DebugCommand.parse(["Captylo", "--meeting-from-files", "/tmp/me.wav", "/tmp/them.wav"])
+        #expect(DebugCommand.parse(["Szpak","--meeting-from-files", "/tmp/me.wav", "/tmp/them.wav"])
                 == .meetingFromFiles(me: URL(filePath: "/tmp/me.wav"), them: URL(filePath: "/tmp/them.wav")))
-        #expect(DebugCommand.parse(["Captylo", "--meeting-from-files", "/tmp/me.wav"]) == nil)
-        #expect(DebugCommand.parse(["Captylo", "--meeting-from-files"]) == nil)
-        #expect(DebugCommand.parse(["Captylo", "--meeting-from-files", "/tmp/me.wav", "--check"]) == nil)
+        #expect(DebugCommand.parse(["Szpak","--meeting-from-files", "/tmp/me.wav"]) == nil)
+        #expect(DebugCommand.parse(["Szpak","--meeting-from-files"]) == nil)
+        #expect(DebugCommand.parse(["Szpak","--meeting-from-files", "/tmp/me.wav", "--check"]) == nil)
         #expect(DebugCommand.meetingFromFiles(me: URL(filePath: "/tmp/me.wav"), them: URL(filePath: "/tmp/them.wav")).isHeadless)
     }
 
@@ -112,47 +112,49 @@ struct DebugCommandTests {
 
     @Test func parsesBenchmark() {
         let audio = URL(filePath: "/tmp/sample.wav")
-        #expect(DebugCommand.parse(["Captylo", "--benchmark", "/tmp/sample.wav"])
+        #expect(DebugCommand.parse(["Szpak","--benchmark", "/tmp/sample.wav"])
                 == .benchmark(url: audio, reference: nil, language: nil))
-        #expect(DebugCommand.parse(["Captylo", "--benchmark", "/tmp/sample.wav", "--reference", "/tmp/ref.txt", "--language", "pl"])
+        #expect(DebugCommand.parse(["Szpak","--benchmark", "/tmp/sample.wav", "--reference", "/tmp/ref.txt", "--language", "pl"])
                 == .benchmark(url: audio, reference: URL(filePath: "/tmp/ref.txt"), language: "pl"))
-        #expect(DebugCommand.parse(["Captylo", "--benchmark", "/tmp/sample.wav", "--language", "en"])
+        #expect(DebugCommand.parse(["Szpak","--benchmark", "/tmp/sample.wav", "--language", "en"])
                 == .benchmark(url: audio, reference: nil, language: "en"))
         #expect(DebugCommand.benchmark(url: audio, reference: nil, language: nil).isHeadless)
     }
 
     @Test func parsesRebuildSearchIndex() {
-        #expect(DebugCommand.parse(["Captylo", "--rebuild-search-index"]) == .rebuildSearchIndex)
+        #expect(DebugCommand.parse(["Szpak","--rebuild-search-index"]) == .rebuildSearchIndex)
         #expect(DebugCommand.rebuildSearchIndex.isHeadless)
     }
 
     @Test func parsesMCP() {
-        #expect(DebugCommand.parse(["/Applications/Captylo.app/Contents/MacOS/Captylo", "--mcp"]) == .mcp)
+        #expect(DebugCommand.parse(["/Applications/Szpak.app/Contents/MacOS/Szpak", "--mcp"]) == .mcp)
         #expect(DebugCommand.mcp.isHeadless)
     }
 
     /// `--mcp` never starts AppKit (no LaunchServices check-in that would swallow a later
     /// launch of the real app); everything else, other debug flags included, is the app.
     @Test func launchModeServesMCPOnlyForTheMCPFlag() {
-        #expect(CaptyloMain.mode(for: ["/Applications/Captylo.app/Contents/MacOS/Captylo", "--mcp"]) == .mcpServer)
-        #expect(CaptyloMain.mode(for: ["/Applications/Captylo.app/Contents/MacOS/Captylo"]) == .app)
-        #expect(CaptyloMain.mode(for: ["Captylo", "--check"]) == .app)
-        #expect(CaptyloMain.mode(for: ["Captylo", "--rebuild-search-index"]) == .app)
+        #expect(CaptyloMain.mode(for: ["/Applications/Szpak.app/Contents/MacOS/Szpak", "--mcp"]) == .mcpServer)
+        #expect(CaptyloMain.mode(for: ["/Applications/Szpak.app/Contents/MacOS/Szpak"]) == .app)
+        #expect(CaptyloMain.mode(for: ["Szpak","--check"]) == .app)
+        #expect(CaptyloMain.mode(for: ["Szpak","--rebuild-search-index"]) == .app)
     }
 
     /// A script or an AI agent probing the binary with `--help` used to start a second full app.
     @Test func helpAndVersionNeverStartTheApp() {
-        let binary = "/Applications/Captylo.app/Contents/MacOS/Captylo"
+        let binary = "/Applications/Szpak.app/Contents/MacOS/Szpak"
         #expect(CaptyloMain.mode(for: [binary, "--help"]) == .help)
         #expect(CaptyloMain.mode(for: [binary, "-h"]) == .help)
         #expect(CaptyloMain.mode(for: [binary, "--version"]) == .version)
         #expect(CaptyloMain.mode(for: [binary, "--mcp", "--help"]) == .mcpServer)
         #expect(CaptyloMain.usage.contains("--mcp"))
+        #expect(CaptyloMain.usage.hasPrefix("Szpak"))
+        #expect(CaptyloMain.usage.contains("https://github.com/dawidkawalec/captylo-bielik"))
     }
 
     /// Only a plain launch hands off to a running Captylo; debug commands and the test host never do.
     @Test func onlyAPlainLaunchHandsOffToARunningCopy() {
-        let binary = "/Applications/Captylo.app/Contents/MacOS/Captylo"
+        let binary = "/Applications/Szpak.app/Contents/MacOS/Szpak"
         #expect(CaptyloMain.handsOffToRunningCopy(arguments: [binary], isTestHost: false))
         #expect(CaptyloMain.handsOffToRunningCopy(arguments: [binary, "--open-section", "historia"], isTestHost: false))
         #expect(!CaptyloMain.handsOffToRunningCopy(arguments: [binary, "--check"], isTestHost: false))
@@ -169,11 +171,11 @@ struct DebugCommandTests {
     }
 
     @Test func benchmarkRejectsMissingValues() {
-        #expect(DebugCommand.parse(["Captylo", "--benchmark"]) == nil)
-        #expect(DebugCommand.parse(["Captylo", "--benchmark", "--language", "pl"]) == nil)
-        #expect(DebugCommand.parse(["Captylo", "--benchmark", "/tmp/sample.wav", "--reference"]) == nil)
-        #expect(DebugCommand.parse(["Captylo", "--benchmark", "/tmp/sample.wav", "--reference", "--language", "pl"]) == nil)
-        #expect(DebugCommand.parse(["Captylo", "--benchmark", "/tmp/sample.wav", "--language"]) == nil)
+        #expect(DebugCommand.parse(["Szpak","--benchmark"]) == nil)
+        #expect(DebugCommand.parse(["Szpak","--benchmark", "--language", "pl"]) == nil)
+        #expect(DebugCommand.parse(["Szpak","--benchmark", "/tmp/sample.wav", "--reference"]) == nil)
+        #expect(DebugCommand.parse(["Szpak","--benchmark", "/tmp/sample.wav", "--reference", "--language", "pl"]) == nil)
+        #expect(DebugCommand.parse(["Szpak","--benchmark", "/tmp/sample.wav", "--language"]) == nil)
     }
 
     @Test func benchmarkExpandsTilde() {

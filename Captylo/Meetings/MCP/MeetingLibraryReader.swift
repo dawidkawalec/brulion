@@ -21,7 +21,7 @@ actor MeetingLibraryReader {
         case storeUnavailable
 
         var errorDescription: String? {
-            String(localized: "Nie mogę odczytać spotkań Captylo. Uruchom Captylo na tym Macu (po aktualizacji raz wystarczy) i spróbuj ponownie.")
+            String(localized: "Nie mogę odczytać spotkań Szpaka. Uruchom Szpaka na tym Macu (po aktualizacji raz wystarczy) i spróbuj ponownie.")
         }
     }
 

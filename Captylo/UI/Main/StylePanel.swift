@@ -22,7 +22,7 @@ struct StylePanel: View {
                         .tint(.white)
                 }
             }
-            ToolCaption("Captylo sam uzupełnia ten opis co kilka Twoich poprawek stylu: powitania, interpunkcję, ton. Działa z trybami AI. Możesz go dowolnie zmienić.")
+            ToolCaption("Szpak sam uzupełnia ten opis co kilka Twoich poprawek stylu: powitania, interpunkcję, ton. Działa z trybami AI. Możesz go dowolnie zmienić.")
             ToolTextArea(text: $draft, minHeight: 90, maxHeight: 180, label: Text("Twój styl"))
             HStack(spacing: 10) {
                 ToolStatusLine(text: statusText)
@@ -63,7 +63,7 @@ struct StylePanel: View {
 
     private var statusText: String {
         if !aiEnabled {
-            return String(localized: "Włącz tryb AI, aby Captylo uczył się Twojego stylu.")
+            return String(localized: "Włącz tryb AI, aby Szpak uczył się Twojego stylu.")
         }
         return String(localized: "Nowe poprawki stylu: \(pending) z \(StyleDistiller.batch) do następnej aktualizacji.")
     }

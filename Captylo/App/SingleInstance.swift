@@ -26,7 +26,7 @@ enum SingleInstance {
         guard let pid = instanceToActivate(currentPID: getpid(), replacedPID: replaced, running: apps.map(\.processIdentifier)),
               let other = apps.first(where: { $0.processIdentifier == pid })
         else { return false }
-        Log.app.notice("Captylo already runs (pid \(pid, privacy: .public)): activating it, this launch exits")
+        Log.app.notice("Szpak already runs (pid \(pid, privacy: .public)): activating it, this launch exits")
         other.activate()
         return true
     }

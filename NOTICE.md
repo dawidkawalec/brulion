@@ -31,6 +31,8 @@ Files: `Captylo/UI/Glass/Grainient.metal`, the shader in `docs/design/lab/brand/
 | [Sparkle](https://github.com/sparkle-project/Sparkle) (sparkle-project/Sparkle) | software updates (Swift package, bundled as `Sparkle.framework`) | MIT; its bundled bsdiff, sais-lite, ed25519 and signature verifier parts keep their BSD, MIT and zlib terms (Sparkle's `LICENSE`) |
 | [Inter](https://rsms.me/inter/) by Rasmus Andersson | UI typeface, app and site | SIL Open Font License 1.1 (`OFL-Inter.txt`) |
 | [Manrope](https://github.com/sharanda/manrope) by Mikhail Sharanda | display typeface, app and site | SIL Open Font License 1.1 (`OFL-Manrope.txt`) |
+| [llama.cpp](https://github.com/ggml-org/llama.cpp) by the ggml authors, with ggml (tag v0.9.0, commit `cd959bae99ff4bed22bef2604f45241c09bbb8c8`) | the local AI's model server, bundled as the `llama-server` helper in `Contents/MacOS` (built from source by `scripts/build-llama-server.sh`, see [docs/local-ai.md](docs/local-ai.md)) | MIT; the vendored parts compiled into the helper (cpp-httplib, nlohmann/json, stb_image, miniaudio, the hash libraries) keep their MIT or public-domain terms (llama.cpp's `vendor/` and `licenses/`) |
+| [Bielik](https://huggingface.co/speakleash) v3.0 Instruct models by SpeakLeash / ACK Cyfronet AGH: Bielik 1.5B (Q8_0), Bielik Minitron 7B (Q4_K_M), Bielik 4.5B (Q8_0), GGUF | the local AI models, downloaded at runtime from SpeakLeash's Hugging Face repositories at pinned revisions (not bundled) | Apache License 2.0 |
 
 ## Server
 

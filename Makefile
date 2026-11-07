@@ -97,6 +97,13 @@ dist-dry:
 	@test -n "$(VERSION)" || { echo "usage: make dist-dry VERSION=1.0.0"; exit 2; }
 	@PRODUCT="$(PRODUCT)" DRY_RUN=1 DIST_IDENTITY="$(DIST_IDENTITY)" "$(CURDIR)/scripts/release.sh" "$(VERSION)" --allow-branch
 
+# The local AI helper (llama-server from the pinned llama.cpp commit, docs/local-ai.md): built once
+# into a shared cache outside the repo (reused when it is there); the "Embed llama-server" build
+# phase copies it into the app. Prints the binary's path.
+.PHONY: llama
+llama:
+	@"$(CURDIR)/scripts/build-llama-server.sh"
+
 clean:
 	rm -rf "$(DERIVED)" $(PROJECT)
 
@@ -104,3 +111,4 @@ help:
 	@echo "gen build test release install run check reset-tcc clean"
 	@echo "dist VERSION=x.y.z      Developer ID release into dist/ (sign, notarize, stapled DMG)"
 	@echo "dist-dry VERSION=x.y.z  the same with Captylo Dev, no notarization, nothing leaves the Mac"
+	@echo "llama                   build (or reuse) the llama-server helper of the local AI"

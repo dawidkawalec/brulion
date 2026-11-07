@@ -43,6 +43,10 @@ settings:
     ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     SWIFT_EMIT_LOC_STRINGS: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    # Local AI helper (docs/local-ai.md): llama.cpp v0.9.0, built by scripts/build-llama-server.sh
+    # (make llama) into a shared cache outside the repo; the script reads the commit from here.
+    LLAMA_CPP_COMMIT: "cd959bae99ff4bed22bef2604f45241c09bbb8c8"
+    LLAMA_SERVER_PATH: "$(HOME)/Library/Caches/Szpak/llama.cpp/$(LLAMA_CPP_COMMIT)/build/bin/llama-server"
   configs:
     Debug:
       SWIFT_OPTIMIZATION_LEVEL: "-Onone"
@@ -120,6 +124,30 @@ targets:
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
         GENERATE_INFOPLIST_FILE: NO
         COMBINE_HIDPI_IMAGES: YES
+        # "Embed llama-server" reads the helper from the cache outside the source tree and it may
+        # be missing in Debug; a sandboxed script phase can do neither (a declared input that does
+        # not exist fails the build). It is the target's only script phase.
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    postBuildScripts:
+      # The local AI helper next to the main executable (Bundle.main.url(forAuxiliaryExecutable:)).
+      # Debug without it only warns (the app then runs without the local AI), Release fails.
+      # Signed here so the app's own signature can seal it; scripts/sign-app.sh re-signs it.
+      - name: Embed llama-server
+        basedOnDependencyAnalysis: false
+        script: |
+          set -eu
+          DEST="$TARGET_BUILD_DIR/$EXECUTABLE_FOLDER_PATH/llama-server"
+          if [ ! -x "$LLAMA_SERVER_PATH" ]; then
+            rm -f "$DEST"
+            if [ "$CONFIGURATION" = "Release" ]; then
+              echo "error: Captylo/LocalAI: no llama-server at $LLAMA_SERVER_PATH (run make llama)"
+              exit 1
+            fi
+            echo "warning: Captylo/LocalAI: no llama-server at $LLAMA_SERVER_PATH, the local AI will not start (run make llama)"
+            exit 0
+          fi
+          ditto "$LLAMA_SERVER_PATH" "$DEST"
+          codesign --force --options runtime --timestamp=none --sign "${EXPANDED_CODE_SIGN_IDENTITY:--}" "$DEST"
     scheme:
       testTargets:
         - CaptyloTests

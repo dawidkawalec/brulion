@@ -85,6 +85,8 @@ for library in "$FRAMEWORKS"/*.framework "$FRAMEWORKS"/*.dylib; do
   sign "$library"
 done
 
+# Helper executables next to the main one (llama-server, the local AI's model server): nested
+# code, so signed before the app, with the same identity and hardened runtime, no entitlements.
 MAIN_EXECUTABLE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Contents/Info.plist" 2>/dev/null || true)"
 for helper in "$APP"/Contents/Helpers/* "$APP"/Contents/MacOS/*; do
   [ "$(basename "$helper")" = "$MAIN_EXECUTABLE" ] && continue

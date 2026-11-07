@@ -36,6 +36,12 @@ deploy/local.env
 .claude/
 .playwright-mcp/
 
+# Local AI: model files are downloaded at runtime and the llama-server helper is built into a cache
+# outside the repo (docs/local-ai.md); neither is ever committed
+*.gguf
+*.gguf.part
+llama-server
+
 # Temporary / scratch
 _temp/
 tmp/

@@ -55,8 +55,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# The product name follows APP_PRODUCT_NAME in project.yml (the fork's working identity).
-PRODUCT="${PRODUCT:-CaptyloBielik}"
+# The product name follows APP_PRODUCT_NAME in project.yml.
+PRODUCT="${PRODUCT:-Szpak}"
 BIN="${CAPTYLO_BIN:-$ROOT/.local-build/Build/Products/Debug/$PRODUCT.app/Contents/MacOS/$PRODUCT}"
 SETTLE="${SNAP_SETTLE:-2.5}"
 DUSK="$ROOT/docs/design/backdrops/dusk-wallpaper.jpg"

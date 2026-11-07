@@ -53,7 +53,7 @@ struct CloudAIRouteProviderTests {
 
     @Test func aKeychainThatDoesNotAnswerMeansNoRoute() async {
         let gate = DispatchSemaphore(value: 0)
-        let keyStore = KeyStore(service: "pl.craftweb.captylobielik.tests") { _, _ in
+        let keyStore = KeyStore(service: "pl.craftweb.szpak.tests") { _, _ in
             gate.wait()
             return KeyStore.ReadResult(value: "late", status: errSecSuccess)
         }
@@ -67,7 +67,7 @@ struct CloudAIRouteProviderTests {
 
     @MainActor
     @Test func theSettingsDefaultToOffAndTheDocumentedModel() throws {
-        let suite = "pl.craftweb.captylobielik.tests.cloud-ai.\(UUID().uuidString)"
+        let suite = "pl.craftweb.szpak.tests.cloud-ai.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let settings = AppSettings(defaults: defaults)

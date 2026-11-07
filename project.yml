@@ -20,12 +20,12 @@ packages:
 
 settings:
   base:
-    # The fork's working identity (docs/PRD.md section 4), next to Captylo on the same Mac.
-    # Renaming the app: these three, the variables at the top of the Makefile and
-    # Captylo/App/AppIdentity.swift. The module stays "Captylo" (tests import it).
-    APP_PRODUCT_NAME: CaptyloBielik
-    APP_BUNDLE_ID: pl.craftweb.captylobielik
-    APP_URL_SCHEME: captylobielik
+    # The app's identity (docs/PRD.md section 4), next to Captylo on the same Mac. Kept in step
+    # with the variables at the top of the Makefile and Captylo/App/AppIdentity.swift. The module
+    # stays "Captylo" (tests import it).
+    APP_PRODUCT_NAME: Szpak
+    APP_BUNDLE_ID: pl.craftweb.szpak
+    APP_URL_SCHEME: szpak
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     SWIFT_APPROACHABLE_CONCURRENCY: YES

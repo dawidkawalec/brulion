@@ -1,10 +1,10 @@
 PROJECT := Captylo.xcodeproj
 SCHEME := Captylo
 DERIVED := $(CURDIR)/.local-build
-# The fork's working identity: keep in step with APP_PRODUCT_NAME / APP_BUNDLE_ID in project.yml
-# and Captylo/App/AppIdentity.swift (docs/PRD.md section 4).
-PRODUCT := CaptyloBielik
-BUNDLE_ID := pl.craftweb.captylobielik
+# The app's identity: keep in step with APP_PRODUCT_NAME / APP_BUNDLE_ID in project.yml and
+# Captylo/App/AppIdentity.swift (docs/PRD.md section 4).
+PRODUCT := Szpak
+BUNDLE_ID := pl.craftweb.szpak
 APP_NAME := $(PRODUCT).app
 EXECUTABLE := $(PRODUCT)
 XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -derivedDataPath "$(DERIVED)" -skipPackagePluginValidation -skipMacroValidation

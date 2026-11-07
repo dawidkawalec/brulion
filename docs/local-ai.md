@@ -71,10 +71,10 @@ For the privacy screen ("Prywatność", PRD 7.6): the local AI contacts the netw
 
 | Tier | Mac | Correction | AI features | Download | Free disk needed | Server memory budget |
 |---|---|---|---|---|---|---|
-| standard | 16 GB RAM and more | Bielik 1.5B Q8_0 | Bielik Minitron 7B Q4_K_M | 6.2 GB | 7.2 GB | 60 % of RAM (10.3 GB on 16 GB: both models, 8.9 GB) |
+| standard | 16 GB RAM and more | Bielik 1.5B Q8_0 | Bielik Minitron 7B Q4_K_M | 6.2 GB | 7.2 GB | 60 % of RAM (10.3 GB on 16 GB: both models, 9.8 GB) |
 | experimental | under 16 GB | Bielik 1.5B Q8_0 | Bielik 1.5B (or the cloud Bielik when the user set it up) | 1.7 GB | 2.7 GB | 45 % of RAM (3.9 GB on 8 GB), one server at a time |
 
-Planned memory per model (mapped file plus working memory at -c 8192): 1.5B 2.3 GB, Minitron 6.6 GB, 4.5B 6.6 GB (estimate, not measured). On the experimental tier a model over 35 % of the RAM (Minitron, 4.5B) is allowed with a memory warning (`HardwareProfile.needsMemoryWarning`).
+Planned memory per model (mapped file plus working memory): 1.5B 2.3 GB at -c 8192 (measured); Minitron 7.5 GB and 4.5B 7.5 GB at the features context -c 24576 (estimates: Minitron measured 6.6 GB at -c 8192, the KV cache grows with the context; the 4.5B not measured). On the experimental tier a model over 35 % of the RAM (Minitron, 4.5B) is allowed with a memory warning (`HardwareProfile.needsMemoryWarning`).
 
 ## Measured numbers
 
@@ -91,8 +91,8 @@ F0, 2026-11-07, M3 Pro 36 GB, llama-server v0.9.0, -c 8192, -ngl 99, temperature
 
 | Constant | Value |
 |---|---|
-| `correctionContext`, `featuresContext` | 8192, 16384 (server `-c`; the trained context is read from the GGUF metadata elsewhere) |
-| `measuredPeakRAM` | 1.5B 2.3 GB, Minitron 6.6 GB, 4.5B 6.56 GB (estimate); `ramFactor` 1.3 only for models without a value |
+| `correctionContext`, `featuresContext` | 8192, 24576 (server `-c`). Bielik 1.5B was trained on 8192 tokens (never more); Minitron 7B on 32768; 24576 = the meeting code's 20k-token input budget (`TranscriptChunker.defaultInputBudget`) plus a 4k answer. A model serving both roles runs with the larger |
+| `measuredPeakRAM` | 1.5B 2.3 GB, Minitron 7.5 GB, 4.5B 7.5 GB (both estimates at -c 24576); `ramFactor` 1.3 only for models without a value |
 | deadline cleanup | 1.0 s + words x 0.04 s x 1.5, cap 15 s |
 | deadline modes | 3.0 s + words x 0.23 s x 1.5, cap 30 s |
 | `guardMinimumSimilarity` | 0.5 (on the merged text) |
@@ -114,14 +114,18 @@ The 1.5B changes the meaning in 8-15 % of dictations even with a good prompt: it
 
 ## Integration points (for the app)
 
-1. **Paths** (from the app's data folder): `modelsDirectory` for `LocalAIModelStore` / `LocalModelDownloader` / `LocalAIService` (e.g. `<data>/LocalModels`), `runDirectory` for the pid files (e.g. `<data>/LocalAI`), the usage stats file (e.g. `<data>/local-ai-usage.json`).
-2. **Plan and settings**: `HardwareProfile.current.plan(cloudFeaturesAvailable:)` gives the defaults; the user's model choice per role in Modele becomes `LocalAIService.setRoleModels`; the idle time in Ustawienia and `HardwareProfile.memoryBudgetBytes` become `LocalAIService.setOptions`.
-3. **AIRole mapping**: the app's roles map onto `LocalRole` (cleanup, transcript fixes, note titles -> `correction`; modes, custom prompts, "Przetwórz przez AI", meeting notes, "Zapytaj", `StyleDistiller` -> `features`). A role assigned to `.cloud` never reaches this module.
-4. **Requests**: the OpenAI-compatible client posts to `endpoint.chatCompletionsURL` with `endpoint.authorizationHeader` and `model: endpoint.modelID`; dictation waits at most `LocalDeadline.limit(for:input:)` and passes every cleanup answer (dictation, transcript fixes) through `CorrectionGuard.apply` with the user's vocabulary (dictionary terms and learned forms) and `CorrectionSpelling`; it pastes `outcome.text` (the raw text on rejection, and on a timeout or a nil endpoint without calling it).
-5. **Lifecycle hooks**: `prewarm(.correction)` on hotkey down; `LocalAIModelStore.willDelete` -> `LocalAIService.stop(modelID:)`; `applicationWillTerminate` -> `terminateAllNow()`; `onUnexpectedExit` and timeouts -> `LocalUsageStats.record`.
-6. **Usage counter**: record `.dictation`, `.correctionAccepted/Rejected`, `.timeout`, `.modeUsed`, `.meetingProcessed`, `.serverFailure`; show `counters`; "Eksportuj" -> `export(to:)` with an `NSSavePanel` URL.
-7. **Onboarding and privacy**: `LocalAIRequirements.title()` / `summary()`, `LocalAIModelStore.spaceNeeded(for:)` with `DiskSpace.availableBytes`, the hosts above.
-8. **Release**: `make llama` before `make release` / `make dist`; the notarization covers the helper because `scripts/sign-app.sh` signs it.
+All wired (F2, branch `bielik-f2-integration`); details in docs/architecture.md ("AI routes", "AI cleanup", "AI in Modele").
+
+1. **Paths** - done. `App/LocalAIServices` builds the store, the service and the usage counter on `AppPaths.localModels` (`<data>/LocalModels`), `AppPaths.localAIRun` (`<data>/LocalAI`, pid files) and `AppPaths.localAIUsage` (`<data>/local-ai-usage.json`). The design preview and the test host get a temp folder and no service (`AppStateOverrides.localAIRoot`, `startsLocalAI = false`): they never start llama-server; the preview pins the download states (`LocalAIModelStore(pinnedStates:)`).
+2. **Plan and settings** - done. `AIRoleRouting` takes `HardwareProfile.current.plan(cloudFeaturesAvailable:)` as the default and the user's pick per role from Modele > Zaawansowane (`AppSettings.aiCorrectionModel` / `aiFeaturesModel`); its `roleModels` go to `LocalAIService.setRoleModels`, the idle time (`AppSettings.localAIIdleMinutes`, 10 min by default, 0 = never) and `HardwareProfile.memoryBudgetBytes` to `setOptions`, live on every change (`AppState.applyAIRouting`). Under 16 GB the AI features default to the cloud when it is on with a key, else the 1.5B, decided per request.
+3. **AIRole mapping** - done. `LocalRole(AIRole)` in `LocalAIRouteProvider`; a role on "Chmura" never reaches this module (`AIRoleRouteProvider`).
+4. **Requests** - done. `LocalAIRouteProvider` turns the endpoint into an `AIRoute` for the app's `ChatCompletionsClient`. The cleanup sends the few-shot conversation in `<tekst>` tags (temperature 0, `max_tokens` = words x 3 + 32) and every cleanup answer goes through `CorrectionGuard.apply` with the dictionary terms, the learned forms and `CorrectionSpelling` (`Enhancer`); dictation waits `LocalDeadline.limit(for:input:)` (the mode's limit as the floor) on the local and the cloud route. Meeting transcript fixes use the meeting module's own line guard, `TranscriptFixGuard`, per line instead (stricter for numbered lines; in trials the 1.5B damaged 62 of 306 clean lines without it, none with it). Long meeting calls hold the endpoint (`withEndpoint` through `AIRouteProviding.withRoute`), so the idle stop never cuts them.
+5. **Lifecycle hooks** - done. Prewarm of the active mode's role on hotkey down (`.correction` for "Czyszczenie", `.features` for other modes) and in `--transcribe --ai`; `LocalAIModelStore.willDelete` -> `LocalAIService.stop(modelID:)`; `stopServices()` (quit) and every headless debug run -> `terminateAllNow()`; `onUnexpectedExit` and timeouts -> `LocalUsageStats.record`.
+6. **Usage counter** - done. `.dictation` per delivered dictation, `.correctionAccepted/Rejected` and `.timeout` from the dictation enhancer, `.modeUsed` (built-in key or mode id), `.meetingProcessed` when a finished meeting's notes were written, `.serverFailure`; shown in Modele > Zaawansowane > "Statystyki lokalnej AI" with "Eksportuj JSON" (`NSSavePanel`) and "Wyzeruj".
+7. **Onboarding and privacy** - done. "Pobierz Bielika" (`BielikStep`) and the requirements box in Modele use `LocalAIRequirements`, `DiskSpace.availableBytes` and `BielikDownloadPlan`; Ustawienia > "Prywatność" names the hosts above.
+8. **Release** - unchanged: `make llama` before `make release` / `make dist`; the notarization covers the helper because `scripts/sign-app.sh` signs it.
+
+Checked end to end on 2026-11-07 (M3 Pro 36 GB, Debug build, `CAPTYLO_DATA_DIR` with `LocalModels` symlinked to the F0 model folder): `--check` found the helper, both models and the standard tier; `--transcribe --ai` on two invented Polish dictations spoken by the system voice ran Whisper and then the cleanup on the 1.5B through the app's route in 0.9 s and 1.8 s (server started by the prewarm), both accepted by the guard; without the prewarm a fresh process missed the 3 s floor, which is why the debug run now prewarms like the hotkey.
 
 ## Tests
 

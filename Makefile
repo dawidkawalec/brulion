@@ -17,7 +17,7 @@ SIGN_PASSWORD_FILE := $(HOME)/.claude/secrets/captylo-dev-keychain.key
 # name, so one Developer ID Application certificate in the login Keychain is enough.
 DIST_IDENTITY ?= Developer ID Application
 
-.PHONY: gen build test release sign install run clean reset-tcc check help dist dist-dry publish publish-check
+.PHONY: gen build test release sign install run clean reset-tcc check help dist dist-dry
 
 gen:
 	xcodegen generate
@@ -40,13 +40,13 @@ release: gen
 # codesign only finds the identity through the keychain search list, so the signing keychain joins
 # the list for this one call and the previous list comes back right after (also on failure or
 # Ctrl-C): a keychain left in the list shows up as a client certificate in VPN and browser prompts.
-# Signing goes inside-out (scripts/sign-app.sh) so the embedded Sparkle.framework and its helpers
-# carry the same identity. That alone is not enough here: hardened runtime library validation
-# matches Team IDs, and neither the self-signed certificate nor an ad-hoc signature has one, so
-# dyld would refuse Sparkle and the app would die at launch (Xcode's own ad-hoc Release product
-# does exactly that). Development signatures therefore add
-# com.apple.security.cs.disable-library-validation to a copy of the app's entitlements made at
-# sign time. The Developer ID release signs with Captylo.entitlements as is, never with this.
+# Signing goes inside-out (scripts/sign-app.sh) so any embedded framework or helper carries the
+# same identity. That alone is not enough for an embedded framework: hardened runtime library
+# validation matches Team IDs, and neither the self-signed certificate nor an ad-hoc signature
+# has one, so dyld would refuse it and the app would die at launch. Development signatures
+# therefore add com.apple.security.cs.disable-library-validation to a copy of the app's
+# entitlements made at sign time. The Developer ID release signs with Captylo.entitlements as
+# is, never with this.
 DEV_ENTITLEMENTS := $(DERIVED)/CaptyloDev.entitlements
 
 sign:
@@ -86,32 +86,21 @@ reset-tcc:
 	-tccutil reset Microphone $(BUNDLE_ID)
 	-tccutil reset ListenEvent $(BUNDLE_ID)
 
-# Public release into dist/<version>/: Developer ID signature, notarization, stapled DMG,
-# appcast item (scripts/release.sh, docs/release.md). dist-dry signs with "Captylo Dev",
-# skips notarization and writes the appcast into dist/ only. publish uploads the DMG and the
-# site and creates the GitHub release (owner only, asks first); publish-check only looks.
+# Release into dist/<version>/: Developer ID signature, notarization, stapled DMG
+# (scripts/release.sh, docs/release.md). dist-dry signs with "Captylo Dev" and skips
+# notarization. There is no update feed: the DMG goes to a GitHub release by hand.
 dist:
 	@test -n "$(VERSION)" || { echo "usage: make dist VERSION=1.0.0"; exit 2; }
-	@DIST_IDENTITY="$(DIST_IDENTITY)" "$(CURDIR)/scripts/release.sh" "$(VERSION)"
+	@PRODUCT="$(PRODUCT)" DIST_IDENTITY="$(DIST_IDENTITY)" "$(CURDIR)/scripts/release.sh" "$(VERSION)"
 
 dist-dry:
 	@test -n "$(VERSION)" || { echo "usage: make dist-dry VERSION=1.0.0"; exit 2; }
-	@DRY_RUN=1 DIST_IDENTITY="$(DIST_IDENTITY)" "$(CURDIR)/scripts/release.sh" "$(VERSION)" --allow-branch
-
-publish:
-	@test -n "$(VERSION)" || { echo "usage: make publish VERSION=1.0.0"; exit 2; }
-	@"$(CURDIR)/scripts/publish-release.sh" "$(VERSION)"
-
-publish-check:
-	@test -n "$(VERSION)" || { echo "usage: make publish-check VERSION=1.0.0"; exit 2; }
-	@"$(CURDIR)/scripts/publish-release.sh" "$(VERSION)" --check
+	@PRODUCT="$(PRODUCT)" DRY_RUN=1 DIST_IDENTITY="$(DIST_IDENTITY)" "$(CURDIR)/scripts/release.sh" "$(VERSION)" --allow-branch
 
 clean:
 	rm -rf "$(DERIVED)" $(PROJECT)
 
 help:
 	@echo "gen build test release install run check reset-tcc clean"
-	@echo "dist VERSION=x.y.z      Developer ID release into dist/ (sign, notarize, DMG, appcast)"
+	@echo "dist VERSION=x.y.z      Developer ID release into dist/ (sign, notarize, stapled DMG)"
 	@echo "dist-dry VERSION=x.y.z  the same with Captylo Dev, no notarization, nothing leaves the Mac"
-	@echo "publish VERSION=x.y.z   upload the DMG and the site (appcast), GitHub release; asks first"
-	@echo "publish-check VERSION=x.y.z  the same checks, nothing leaves the Mac"

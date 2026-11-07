@@ -5,7 +5,7 @@ import SwiftUI
 /// (`SettingsLevel`). "Podstawowe": the Captylo account first (`AccountSettingsPanel`, the target
 /// of `openAccount()`, which switches back to this tab), the shortcut recorder as a glass keycap,
 /// the window background, microphone and recording toggles, meetings (`MeetingsSettingsPanel`),
-/// history and learning (privacy stays one click away), login item, updates (`UpdatesRow`).
+/// history and learning (privacy stays one click away), login item.
 /// "Zaawansowane": the tone sliders, system mute, the rest of meetings, pasting, learning
 /// details, onboarding reset. The version footer closes both.
 @MainActor
@@ -21,7 +21,7 @@ struct SettingsView: View {
             case .basic: basic
             case .advanced: advanced
             }
-            VersionFooter(versionLine: appState.updater.versionLine)
+            VersionFooter(versionLine: AppVersion.versionLine())
                 .padding(.horizontal, 8)
                 .padding(.top, 4)
         }
@@ -132,9 +132,6 @@ struct SettingsView: View {
             AppLanguageRow(appState: appState)
             GlassToggleRow("Ukryj ikonę w Docku", systemImage: "dock.rectangle", isOn: $settings.menuBarOnly)
             LaunchAtLoginRow(launchAtLogin: appState.launchAtLogin)
-            GlassRowSeparator()
-                .padding(.vertical, 6)
-            UpdatesRow(updater: appState.updater)
         }
     }
 
@@ -493,7 +490,7 @@ private struct OnboardingResetRow: View {
 
 @MainActor
 private struct VersionFooter: View {
-    /// "Wersja 1.0.0 (142)" (`AppUpdaterConfiguration.versionLine`).
+    /// "Wersja 1.0.0 (142)" (`AppVersion.versionLine`).
     let versionLine: String
 
     var body: some View {

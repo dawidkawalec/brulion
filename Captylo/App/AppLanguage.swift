@@ -2,7 +2,7 @@ import Foundation
 
 /// "Język aplikacji": follow macOS, or always Polish or English. The choice is the app's own
 /// `AppleLanguages`, the same value System Settings > Language & Region > Applications writes, so
-/// after a relaunch everything follows it: strings, menus, Sparkle's windows, the permission
+/// after a relaunch everything follows it: strings, menus, the permission
 /// prompts and `AppLocale`. A running process keeps the language it started with, hence
 /// `needsRelaunch`. Not the dictation language (`AppSettings.language`).
 enum AppLanguage: String, CaseIterable, Identifiable, Sendable {

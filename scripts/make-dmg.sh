@@ -1,5 +1,5 @@
 #!/bin/bash
-# Packages a signed Captylo.app into a compressed DMG with an Applications shortcut.
+# Packages a signed app into a compressed DMG with an Applications shortcut.
 #
 #   scripts/make-dmg.sh <app> <out.dmg> <volume name> [--sign IDENTITY] [--keychain FILE]
 #

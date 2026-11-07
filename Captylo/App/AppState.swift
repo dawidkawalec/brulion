@@ -110,9 +110,6 @@ final class AppState {
     @ObservationIgnored let launchAtLogin: LaunchAtLogin
     @ObservationIgnored let windowPresenter: WindowPresenter
     @ObservationIgnored let oldAppDetector: OldAppDetector
-    /// "Sprawdź aktualizacje" (Sparkle). Itself `@Observable`. No controller in the design preview
-    /// or the test host; elsewhere it starts only in `startServices()`.
-    @ObservationIgnored let updater: AppUpdater
 
     // Dictation and hotkeys
     @ObservationIgnored let dictationController: DictationController
@@ -469,8 +466,6 @@ final class AppState {
         let presenter = WindowPresenter(settings: settings)
         windowPresenter = presenter
         oldAppDetector = OldAppDetector()
-        // The design preview and the test host never get a live updater (no network, no windows).
-        updater = AppUpdater(enabled: !overrides.isDesignPreview && !AppStateOverrides.isTestHost)
         meetingDetector = MeetingDetector(
             recorder: meetingRecorder,
             toasts: toasts,
@@ -648,9 +643,6 @@ final class AppState {
         keyStore.preload([KeyStore.Account.openRouter, KeyStore.Account.elevenLabs, KeyStore.Account.captyloAccount])
         // The plan: refreshed now and every 6 hours (the cache already answered at init).
         account.start()
-
-        // Updates: Sparkle's scheduler (no-op until the public key is configured).
-        updater.start()
 
         // Hotkey tap: installed now when trusted, otherwise on the Accessibility flip (gotcha 38).
         // Revoking the grant kills the tap but leaves its port behind, so a re-grant always builds

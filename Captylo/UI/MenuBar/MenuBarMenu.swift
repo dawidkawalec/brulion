@@ -75,11 +75,6 @@ struct MenuBarMenu: View {
         Button("Otwórz Captylo") {
             appState.windowPresenter.openMain(section: .pulpit)
         }
-        // Sparkle's own windows take it from here; off until the public build has its key.
-        Button("Sprawdź aktualizacje…") {
-            appState.updater.checkNow()
-        }
-        .disabled(!appState.updater.isConfigured || appState.updater.isChecking)
         Button("Ustawienia...") {
             appState.windowPresenter.openSettings()
         }

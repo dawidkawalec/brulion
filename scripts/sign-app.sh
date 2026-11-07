@@ -1,19 +1,20 @@
 #!/bin/bash
-# Signs a built Captylo.app inside-out with one identity, hardened runtime on.
+# Signs a built app inside-out with one identity, hardened runtime on.
 #
 #   scripts/sign-app.sh <app> <identity> [--entitlements FILE] [--keychain FILE] [--no-timestamp]
 #
 # Under hardened runtime, library validation only lets the app load frameworks signed by
 # the same team, so every nested piece has to carry the app's signature, not Xcode's ad-hoc
-# one: an app re-signed only on the outside dies in dyld at launch ("different Team IDs").
+# one: an app re-signed only on the outside dies in dyld at launch ("different Team IDs"),
+# and notarization rejects any nested binary without the hardened runtime and a timestamp.
 # A nested item has to be signed before the bundle that contains it, so the order is:
 #   1. inside each framework version: XPC services, helper apps, helper executables
-#      (Sparkle's Downloader.xpc, Installer.xpc, Updater.app, Autoupdate)
 #   2. each framework and dylib in Contents/Frameworks
-#   3. the app itself, with the app's entitlements
-# Helper entitlements are not carried over (Xcode's ad-hoc pass leaves an application
-# identifier on Autoupdate that a Developer ID signature must not claim), except for the
-# XPC services, which keep whatever Sparkle shipped them with.
+#   3. helper executables in Contents/MacOS and Contents/Helpers (a bundled model server)
+#   4. the app itself, with the app's entitlements
+# Helper entitlements are not carried over (an ad-hoc pass can leave an application
+# identifier that a Developer ID signature must not claim), except for XPC services, which
+# keep whatever their framework shipped them with.
 #
 # A secure timestamp is on by default (Developer ID and notarization need it); `--no-timestamp`
 # or DRY_RUN=1 turns it off for the self-signed "Captylo Dev" identity, which cannot get one.
@@ -82,6 +83,12 @@ done
 
 for library in "$FRAMEWORKS"/*.framework "$FRAMEWORKS"/*.dylib; do
   sign "$library"
+done
+
+MAIN_EXECUTABLE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Contents/Info.plist" 2>/dev/null || true)"
+for helper in "$APP"/Contents/Helpers/* "$APP"/Contents/MacOS/*; do
+  [ "$(basename "$helper")" = "$MAIN_EXECUTABLE" ] && continue
+  if is_macho "$helper"; then sign "$helper"; fi
 done
 
 if [ -n "$ENTITLEMENTS" ]; then

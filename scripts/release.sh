@@ -1,24 +1,22 @@
 #!/bin/bash
-# Builds a Captylo release: Release build, Developer ID signature, notarization, stapled DMG,
-# Sparkle appcast item and release notes page (site/updates/; the website reads the version
-# from the appcast). Publishing is a separate step (scripts/publish-release.sh).
-# Owner-facing steps: docs/release.md.
+# Builds a release: Release build, Developer ID signature, notarization, stapled DMG.
+# There is no update feed: the DMG goes to a GitHub release by hand (docs/release.md).
 #
 #   scripts/release.sh <version> [--allow-branch]      (make dist VERSION=1.0.0)
 #   DRY_RUN=1 scripts/release.sh <version> --allow-branch   (make dist-dry VERSION=1.0.0)
 #
 # Order: build -> sign the app inside-out -> notarize the app (zip) -> staple the app ->
-# DMG -> sign the DMG -> notarize the DMG -> staple the DMG -> check -> appcast item.
+# DMG -> sign the DMG -> notarize the DMG -> staple the DMG -> check.
 # Both submissions, so the app inside the DMG carries its own ticket too.
 #
 # A dry run signs with the local "Captylo Dev" identity (make sign), leaves the DMG unsigned,
-# skips notarization and stapling, writes the appcast and notes into dist/<version>/ instead
-# of site/, and reports what a real run would refuse instead of stopping.
+# skips notarization and stapling, and reports what a real run would refuse instead of stopping.
 #
-# Environment: DIST_IDENTITY (default "Developer ID Application", matched by codesign as a
-# prefix of the certificate name), NOTARY_PROFILE (default captylo-notary, a notarytool
-# Keychain profile), DRY_RUN=1. Secrets come only from the Keychain: the identity, the
-# notary profile and Sparkle's EdDSA key; nothing is read from or written to the repo.
+# Environment: PRODUCT (the app's name, APP_PRODUCT_NAME in project.yml; make passes it),
+# DIST_IDENTITY (default "Developer ID Application", matched by codesign as a prefix of the
+# certificate name), NOTARY_PROFILE (default captylo-notary, a notarytool Keychain profile),
+# DRY_RUN=1. Secrets come only from the Keychain: the identity and the notary profile; nothing
+# is read from or written to the repo.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -27,9 +25,8 @@ cd "$ROOT"
 DIST_IDENTITY="${DIST_IDENTITY:-Developer ID Application}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-captylo-notary}"
 DRY_RUN="${DRY_RUN:-0}"
-SPARKLE_BIN="$ROOT/.local-build/SourcePackages/artifacts/sparkle/Sparkle/bin"
 DERIVED="$ROOT/.local-build"
-PLACEHOLDER_KEY="REPLACE_ME"
+PRODUCT="${PRODUCT:-$(sed -n 's/^ *APP_PRODUCT_NAME: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' project.yml | head -1)}"
 
 usage() {
   echo "usage: [DRY_RUN=1] $0 <version> [--allow-branch]" >&2
@@ -57,22 +54,13 @@ while [ $# -gt 0 ]; do
   esac
 done
 [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "The version must look like 1.2.3, got \"$VERSION\""
+[ -n "$PRODUCT" ] || die "No product name (APP_PRODUCT_NAME in project.yml)"
 
 OUT="$ROOT/dist/$VERSION"
-APP="$OUT/Captylo.app"
-DMG="$OUT/Captylo-$VERSION.dmg"
-NOTES_MD="$OUT/notes.md"
-DOWNLOAD_URL="https://captylo.com/download/Captylo-$VERSION.dmg"
-NOTES_URL="https://captylo.com/updates/notes/$VERSION.html"
-if dry; then
-  APPCAST="$OUT/appcast.xml"
-  NOTES_HTML="$OUT/notes/$VERSION.html"
-else
-  APPCAST="$ROOT/site/updates/appcast.xml"
-  NOTES_HTML="$ROOT/site/updates/notes/$VERSION.html"
-fi
+APP="$OUT/$PRODUCT.app"
+DMG="$OUT/$PRODUCT-$VERSION.dmg"
 
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/captylo-release.XXXXXX")"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/$PRODUCT-release.XXXXXX")"
 MOUNT=""
 cleanup() {
   if [ -n "$MOUNT" ]; then hdiutil detach "$MOUNT" -quiet >/dev/null 2>&1 || true; fi
@@ -81,9 +69,9 @@ cleanup() {
 trap cleanup EXIT
 
 if dry; then
-  printf 'Captylo %s: DRY RUN (Captylo Dev signature, no notarization, nothing leaves this Mac)\n' "$VERSION"
+  printf '%s %s: DRY RUN (Captylo Dev signature, no notarization, nothing leaves this Mac)\n' "$PRODUCT" "$VERSION"
 else
-  printf 'Captylo %s: release build\n' "$VERSION"
+  printf '%s %s: release build\n' "$PRODUCT" "$VERSION"
 fi
 
 # 1. Guards
@@ -109,26 +97,6 @@ MARKETING_VERSION="$(sed -n 's/^ *MARKETING_VERSION: *"\{0,1\}\([^"]*\)"\{0,1\} 
   die "project.yml says MARKETING_VERSION \"$MARKETING_VERSION\", not \"$VERSION\" (bump it by hand and commit first)"
 note "MARKETING_VERSION: $MARKETING_VERSION"
 
-PUBLIC_KEY="$(sed -n 's/^ *SPARKLE_PUBLIC_ED_KEY: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' project.yml | head -1)"
-SIGN_UPDATES=1
-if [ -z "$PUBLIC_KEY" ] || [ "$PUBLIC_KEY" = "$PLACEHOLDER_KEY" ]; then
-  SIGN_UPDATES=0
-  refuse "SPARKLE_PUBLIC_ED_KEY in project.yml is still the placeholder: run Sparkle's generate_keys once (docs/release.md), put the public key there and commit"
-elif [ "$(printf '%s' "$PUBLIC_KEY" | base64 -D 2>/dev/null | wc -c | tr -d ' ')" != "32" ]; then
-  # A malformed key makes Sparkle show "updater failed to start" at every launch, and 1.0.0
-  # would ship unable to take any update.
-  die "SPARKLE_PUBLIC_ED_KEY in project.yml is not a base64 Ed25519 public key (32 bytes); copy it again from generate_keys -p"
-else
-  note "Sparkle public key: set (32 bytes; compare it with generate_keys -p before the first release)"
-fi
-
-if [ -x "$SPARKLE_BIN/sign_update" ]; then
-  note "Sparkle sign_update: found"
-else
-  SIGN_UPDATES=0
-  refuse "No $SPARKLE_BIN/sign_update (run make build once so SwiftPM fetches Sparkle)"
-fi
-
 VALID_IDENTITIES="$(security find-identity -v -p codesigning | grep -cF "\"$DIST_IDENTITY" || true)"
 if [ "$VALID_IDENTITIES" = "1" ]; then
   note "Signing identity: one valid \"$DIST_IDENTITY...\" in the Keychain"
@@ -152,23 +120,13 @@ else
   die "The notarytool profile \"$NOTARY_PROFILE\" is missing or rejected (xcrun notarytool store-credentials $NOTARY_PROFILE ..., docs/release.md)"
 fi
 
-HAVE_NOTES=1
-if [ -s "$NOTES_MD" ]; then
-  note "Release notes: ${NOTES_MD#"$ROOT"/}"
-else
-  HAVE_NOTES=0
-  refuse "Write the release notes first: ${NOTES_MD#"$ROOT"/} (Markdown, English)"
-fi
-
 # 2. Build
 
-# The public history was squashed after 1.0.2 (build 70): builds count on top of BUILD_BASE, so
-# every new one stays above the builds people already have (Sparkle compares this number).
-BUILD_BASE=100
-BUILD="$((BUILD_BASE + $(git rev-list --count HEAD)))"
-step "Building Captylo $VERSION (build $BUILD), Release"
+# The build number only has to grow with every release: the commit count does that on main.
+BUILD="$(git rev-list --count HEAD)"
+step "Building $PRODUCT $VERSION (build $BUILD), Release"
 mkdir -p "$OUT"
-# Spotlight would list every release's Captylo.app next to the installed one.
+# Spotlight would list every release's app next to the installed one.
 touch "$ROOT/dist/.metadata_never_index"
 make --no-print-directory gen >/dev/null
 BUILD_LOG="$OUT/build.log"
@@ -181,7 +139,7 @@ fi
 note "** BUILD SUCCEEDED ** (log in ${BUILD_LOG#"$ROOT"/})"
 
 rm -rf "$APP"
-ditto "$DERIVED/Build/Products/Release/Captylo.app" "$APP"
+ditto "$DERIVED/Build/Products/Release/$PRODUCT.app" "$APP"
 xattr -cr "$APP"
 PLIST="$APP/Contents/Info.plist"
 BUILT_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$PLIST")"
@@ -225,8 +183,8 @@ if dry; then
   step "Notarizing the app: skipped (dry run)"
 else
   step "Notarizing the app"
-  ditto -c -k --keepParent "$APP" "$WORK/Captylo-$VERSION.zip"
-  notarize "$WORK/Captylo-$VERSION.zip" app
+  ditto -c -k --keepParent "$APP" "$WORK/$PRODUCT-$VERSION.zip"
+  notarize "$WORK/$PRODUCT-$VERSION.zip" app
   xcrun stapler staple "$APP"
   xcrun stapler validate "$APP"
 fi
@@ -235,9 +193,9 @@ fi
 
 step "Packaging ${DMG#"$ROOT"/}"
 if dry; then
-  "$ROOT/scripts/make-dmg.sh" "$APP" "$DMG" "Captylo"
+  "$ROOT/scripts/make-dmg.sh" "$APP" "$DMG" "$PRODUCT"
 else
-  "$ROOT/scripts/make-dmg.sh" "$APP" "$DMG" "Captylo" --sign "$DIST_IDENTITY"
+  "$ROOT/scripts/make-dmg.sh" "$APP" "$DMG" "$PRODUCT" --sign "$DIST_IDENTITY"
 fi
 
 # 6. Notarize and staple the DMG
@@ -257,14 +215,14 @@ step "Checking the DMG"
 MOUNT="$WORK/mnt"
 mkdir -p "$MOUNT"
 hdiutil attach "$DMG" -nobrowse -readonly -noautoopen -mountpoint "$MOUNT" >/dev/null
-[ -d "$MOUNT/Captylo.app" ] || die "No Captylo.app in the DMG"
+[ -d "$MOUNT/$PRODUCT.app" ] || die "No $PRODUCT.app in the DMG"
 [ "$(readlink "$MOUNT/Applications")" = "/Applications" ] || die "No Applications shortcut in the DMG"
-note "Mounted: Captylo.app and the Applications shortcut are there"
-codesign --verify --deep --strict "$MOUNT/Captylo.app"
+note "Mounted: $PRODUCT.app and the Applications shortcut are there"
+codesign --verify --deep --strict "$MOUNT/$PRODUCT.app"
 note "codesign --verify --deep --strict: valid"
 # --mcp runs before AppKit (no UI, no services) and exits when stdin closes; it still makes
-# dyld load every linked framework, so a signature mismatch with Sparkle fails right here.
-"$MOUNT/Captylo.app/Contents/MacOS/Captylo" --mcp </dev/null >/dev/null 2>"$WORK/launch.log" ||
+# dyld load every linked library, so a signature mismatch of a nested item fails right here.
+"$MOUNT/$PRODUCT.app/Contents/MacOS/$PRODUCT" --mcp </dev/null >/dev/null 2>"$WORK/launch.log" ||
   { cat "$WORK/launch.log" >&2; die "The app from the DMG does not launch"; }
 note "Launch check (--mcp, stdin closed): exit 0"
 hdiutil detach "$MOUNT" -quiet
@@ -287,44 +245,13 @@ else
   die "Gatekeeper rejects the app"
 fi
 
-# 8. Appcast item and release notes
-
-step "Writing the appcast item"
-LENGTH="$(stat -f%z "$DMG")"
-if [ "$SIGN_UPDATES" = "1" ] && SIGN_LINE="$("$SPARKLE_BIN/sign_update" "$DMG" 2>"$WORK/sign_update.log")"; then
-  note "sign_update: signed with the EdDSA key from the Keychain"
-  python3 "$ROOT/scripts/appcast.py" item "$APPCAST" --version "$VERSION" --build "$BUILD" \
-    --url "$DOWNLOAD_URL" --sign-update "$SIGN_LINE" --notes "$NOTES_URL" --min-os 14.4
-elif dry; then
-  if [ "$SIGN_UPDATES" = "1" ]; then
-    note "sign_update failed: $(tr '\n' ' ' <"$WORK/sign_update.log")"
-  else
-    note "sign_update skipped: no Sparkle EdDSA key yet (SPARKLE_PUBLIC_ED_KEY is the placeholder)"
-  fi
-  note "The dry-run item carries the signature DRY-RUN-UNSIGNED and is never published"
-  [ -f "$APPCAST" ] || [ ! -f "$ROOT/site/updates/appcast.xml" ] || cp "$ROOT/site/updates/appcast.xml" "$APPCAST"
-  python3 "$ROOT/scripts/appcast.py" item "$APPCAST" --version "$VERSION" --build "$BUILD" \
-    --url "$DOWNLOAD_URL" --signature DRY-RUN-UNSIGNED --length "$LENGTH" --notes "$NOTES_URL" --min-os 14.4
-else
-  cat "$WORK/sign_update.log" >&2
-  die "sign_update failed: is Sparkle's private key in the login Keychain? (docs/release.md)"
-fi
-
-if [ "$HAVE_NOTES" = "1" ]; then
-  python3 "$ROOT/scripts/appcast.py" notes "$NOTES_MD" "$NOTES_HTML" --version "$VERSION"
-else
-  note "Release notes page skipped (no ${NOTES_MD#"$ROOT"/})"
-fi
-
-# 9. Next
+# 8. Next
 
 step "Done"
-note "DMG:     ${DMG#"$ROOT"/} ($LENGTH bytes)"
+note "DMG:     ${DMG#"$ROOT"/} ($(stat -f%z "$DMG") bytes)"
 note "SHA-256: $(shasum -a 256 "$DMG" | cut -d' ' -f1)"
-note "Appcast: ${APPCAST#"$ROOT"/}"
 if dry; then
-  note "Dry run: nothing was notarized, signed for distribution or published."
+  note "Dry run: nothing was notarized or signed for distribution."
 else
-  note "Next: commit site/updates (appcast and notes), push,"
-  note "then make publish VERSION=$VERSION (scripts/publish-release.sh; --check looks first)"
+  note "Next: a GitHub release v$VERSION with the DMG, by hand and only with the owner's go-ahead (docs/release.md)."
 fi

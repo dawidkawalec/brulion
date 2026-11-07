@@ -7,7 +7,8 @@ struct AIMode: Codable, Identifiable, Hashable, Sendable {
     var name: String
     /// SF Symbol shown next to the name.
     var symbol: String
-    /// System prompt; may contain `{DICTIONARY}` (see `CleanupPrompt.system`).
+    /// System prompt; may contain `{DICTIONARY}` (see `CleanupPrompt.system`). For a cleanup
+    /// mode it replaces only the system text: the few-shot turns and the `<tekst>` wrapping stay.
     var prompt: String
     var kind: AIModeKind
     /// Hard deadline of one call in seconds, clamped to `deadlineRange` when used.
@@ -48,9 +49,14 @@ struct AIMode: Codable, Identifiable, Hashable, Sendable {
     var deadline: Duration { .milliseconds(Int((clampedDeadlineSeconds * 1000).rounded())) }
 
     /// The system prompt with the vocabulary filled in (or its line removed when empty) and the
-    /// learned "heard -> meant" hints appended.
+    /// learned "heard -> meant" hints appended (the style profile only for a rewrite).
     func systemPrompt(vocabulary: [String], learned: LearningPromptContext = .none) -> String {
-        CleanupPrompt.system(template: prompt, vocabulary: vocabulary, learned: learned)
+        CleanupPrompt.system(template: prompt, vocabulary: vocabulary, learned: learned, kind: kind)
+    }
+
+    /// What the usage counter calls this mode: the built-in key, else the id (never the prompt).
+    var usageID: String {
+        builtInKey ?? id.uuidString
     }
 
     /// Which model serves this mode (PRD 7.2-7.3): the built-in "Czyszczenie" runs on the small
@@ -59,9 +65,17 @@ struct AIMode: Codable, Identifiable, Hashable, Sendable {
         builtInKey == BuiltInAIModes.Key.cleanup ? .correction : .features
     }
 
-    /// What one call of this mode sends and how its answer is judged.
+    /// What one call of this mode sends and how its answer is judged. The mode's own limit is the
+    /// floor of the call's deadline (the dictation enhancer stretches it for longer input).
     func job(vocabulary: [String], learned: LearningPromptContext = .none) -> EnhancementJob {
-        EnhancementJob(systemPrompt: systemPrompt(vocabulary: vocabulary, learned: learned), kind: kind, role: role, deadline: deadline)
+        EnhancementJob(
+            systemPrompt: systemPrompt(vocabulary: vocabulary, learned: learned),
+            kind: kind,
+            role: role,
+            deadline: deadline,
+            vocabulary: CleanupPrompt.guardVocabulary(vocabulary, learned: learned),
+            usageID: usageID
+        )
     }
 
     /// Starting point for "Dodaj tryb": a rewrite mode with the house rules already in place.

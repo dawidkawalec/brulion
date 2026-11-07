@@ -1,10 +1,23 @@
 import Foundation
+import os
 import Testing
 @testable import Captylo
 
+/// Collects the usage events an enhancer records.
+final class UsageEvents: Sendable {
+    private let events = OSAllocatedUnfairLock<[LocalUsageEvent]>(initialState: [])
+    var all: [LocalUsageEvent] { events.withLock { $0 } }
+    func record(_ event: LocalUsageEvent) { events.withLock { $0.append(event) } }
+}
+
 struct EnhancementEnhancerTests {
     private static let raw = "no więc to jest dłuższy testowy transkrypt który ma zdecydowanie więcej niż trzy słowa"
-    private static let systemPrompt = CleanupPrompt.system(template: "", vocabulary: [])
+    private static let systemPrompt = CleanupPrompt.system(template: "", vocabulary: [], kind: .cleanup)
+
+    /// A spell check that knows every word of the answer (the merge then judges by the rules alone).
+    static let knowsEverything: Enhancer.Spelling = { text in
+        Set(CorrectionMerger.tokenize(text).map { $0.core.lowercased() })
+    }
 
     /// An enhancer whose every role goes to a stub server answering with `handler`, or no route
     /// at all when `hasRoute` is false. Returns the fake provider too, to see the roles asked for.
@@ -12,19 +25,36 @@ struct EnhancementEnhancerTests {
         _ handler: @escaping StubURLProtocol.Handler,
         hasRoute: Bool = true,
         model: String = "bielik-test",
-        deadline: Duration = .seconds(3)
+        deadline: Duration = .seconds(3),
+        usage: UsageEvents? = nil
     ) -> (Enhancer, FakeAIRoutes, URL) {
         let (route, baseURL) = AIRouteFixtures.stubRoute(model: model, handler)
         let routes = FakeAIRoutes(hasRoute ? route : nil)
-        let enhancer = Enhancer(routes: routes, session: StubURLProtocol.makeSession(), deadline: deadline)
+        var recorder: Enhancer.UsageRecorder?
+        if let usage {
+            recorder = { event in usage.record(event) }
+        }
+        let enhancer = Enhancer(
+            routes: routes,
+            session: StubURLProtocol.makeSession(),
+            deadline: deadline,
+            spelling: Self.knowsEverything,
+            usage: recorder
+        )
         return (enhancer, routes, baseURL)
+    }
+
+    /// `text` as the JSON string literal `Fixtures.chat` expects.
+    private static func json(_ text: String) -> String {
+        let data = try! JSONEncoder().encode(text)
+        return String(decoding: data, as: UTF8.self)
     }
 
     // MARK: Roles
 
     @Test func eachModeAsksForItsRole() async {
         let (enhancer, routes, baseURL) = makeEnhancer { _ in
-            .json(Fixtures.chat(content: "\"\(Self.raw)\"", finish: "stop"))
+            .json(Fixtures.chat(content: Self.json(Self.raw), finish: "stop"))
         }
         defer { StubURLProtocol.unregister(baseURL) }
 
@@ -82,20 +112,25 @@ struct EnhancementEnhancerTests {
         #expect(await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt) == .skipped(.noKey))
     }
 
-    // MARK: enhance
+    // MARK: The cleanup request
 
-    @Test func returnsEnhancedTextWithTheRoutesModelAndTiming() async throws {
-        let cleaned = "Więc to jest dłuższy testowy transkrypt, który ma zdecydowanie więcej niż trzy słowa."
+    @Test func cleanupSendsTheFewShotConversationAtTemperatureZero() async throws {
+        let cleaned = "No więc to jest dłuższy testowy transkrypt, który ma zdecydowanie więcej niż trzy słowa."
         let (enhancer, _, baseURL) = makeEnhancer({ request in
             #expect(request.url?.path().hasSuffix("/chat/completions") == true)
             #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer local-token")
             let body = StubURLProtocol.body(of: request)
             #expect(body["model"] as? String == "bielik-1.5b")
             #expect(body["temperature"] as? Double == 0)
+            // Input words x 3 + 32 (F0): 14 words.
+            #expect(body["max_tokens"] as? Int == 14 * 3 + 32)
             let messages = StubURLProtocol.messages(of: request)
-            #expect(messages.map(\.role) == ["system", "user"])
-            #expect(messages.last?.content == Self.raw)
-            return .json(Fixtures.chat(content: "\"<think>hm</think>\\n\(cleaned)\"", finish: "stop"))
+            #expect(messages.map(\.role) == ["system", "user", "assistant", "user", "assistant", "user"])
+            #expect(messages.first?.content == Self.systemPrompt)
+            #expect(messages[1].content.hasPrefix("<tekst>\nyyy dobra"))
+            #expect(messages.last?.content == "<tekst>\n" + Self.raw + "\n</tekst>")
+            // The model echoes the tags and thinks first: both are stripped.
+            return .json(Fixtures.chat(content: Self.json("<think>hm</think>\n<tekst>\n\(cleaned)\n</tekst>"), finish: "stop"))
         }, model: "bielik-1.5b")
         defer { StubURLProtocol.unregister(baseURL) }
 
@@ -109,6 +144,125 @@ struct EnhancementEnhancerTests {
         #expect(model == "bielik-1.5b")
         #expect(ms >= 0 && ms < 3000)
     }
+
+    @Test func aCustomCleanupTemplateKeepsTheFewShotAndTheWrapping() async throws {
+        let mode = AIMode(name: "Mój prompt", prompt: "Popraw tylko interpunkcję.", kind: .cleanup, deadlineSeconds: 3)
+        let (enhancer, _, baseURL) = makeEnhancer { request in
+            let messages = StubURLProtocol.messages(of: request)
+            #expect(messages.first?.content == "Popraw tylko interpunkcję.")
+            #expect(messages.count == 6)
+            #expect(messages.last?.content.hasPrefix("<tekst>\n") == true)
+            return .json(Fixtures.chat(content: Self.json(Self.raw), finish: "stop"))
+        }
+        defer { StubURLProtocol.unregister(baseURL) }
+        #expect(await enhancer.enhance(Self.raw, mode: mode, vocabulary: []).text != nil)
+    }
+
+    @Test func aRewriteSendsTheBareTranscript() async throws {
+        let (enhancer, _, baseURL) = makeEnhancer { request in
+            let messages = StubURLProtocol.messages(of: request)
+            #expect(messages.map(\.role) == ["system", "user"])
+            #expect(messages.last?.content == Self.raw)
+            return .json(Fixtures.chat(content: "\"A longer English text with every idea kept and nothing else.\"", finish: "stop"))
+        }
+        defer { StubURLProtocol.unregister(baseURL) }
+        let outcome = await enhancer.enhance(Self.raw, mode: BuiltInAIModes.english, vocabulary: [])
+        #expect(outcome.text == "A longer English text with every idea kept and nothing else.")
+    }
+
+    // MARK: The guard
+
+    @Test func theGuardRevertsAnUnsafeWordAndKeepsTheSafeEdits() async {
+        let raw = "zrób mi jeszcze listę rzeczy na jutro i wyślij ją do zespołu"
+        // The small model turned the imperative into the first person: the merge puts it back.
+        let (enhancer, _, baseURL) = makeEnhancer { _ in
+            .json(Fixtures.chat(content: Self.json("Zrobię mi jeszcze listę rzeczy na jutro i wyślij ją do zespołu."), finish: "stop"))
+        }
+        defer { StubURLProtocol.unregister(baseURL) }
+        let outcome = await enhancer.enhance(raw, mode: BuiltInAIModes.cleanup, vocabulary: [])
+        guard case .enhanced(let text, _, _) = outcome else {
+            Issue.record("Expected .enhanced, got \(outcome)")
+            return
+        }
+        #expect(text.hasPrefix("Zrób mi jeszcze"))
+        #expect(text.hasSuffix("do zespołu."))
+    }
+
+    @Test func anAnswerToTheDictatedQuestionIsMergedBackToTheDictation() async {
+        let raw = "czy możesz mi powiedzieć jaka jest jutro pogoda w Krakowie bo jadę na spotkanie"
+        // The model answered the question instead of cleaning it: none of its words survive
+        // the merge, so the dictation itself is pasted.
+        let (enhancer, _, baseURL) = makeEnhancer { _ in
+            .json(Fixtures.chat(content: Self.json("Niestety nie mam dostępu do prognozy pogody, sprawdź serwis meteorologiczny."), finish: "stop"))
+        }
+        defer { StubURLProtocol.unregister(baseURL) }
+        let outcome = await enhancer.enhance(raw, mode: BuiltInAIModes.cleanup, vocabulary: [])
+        if let text = outcome.text {
+            #expect(CorrectionGuard.words(text) == CorrectionGuard.words(raw), "no word of the answer may survive: \(text)")
+        }
+    }
+
+    @Test func aRejectedAnswerPastesTheRawText() async {
+        // Fillers the model may drop, but the merged text is then under half the dictation's
+        // length: the guard rejects it and the raw text is pasted.
+        let raw = "yyy eee yyy mmm eee yyy hmm eee yyy dobra wyślij to"
+        let usage = UsageEvents()
+        let (enhancer, _, baseURL) = makeEnhancer({ _ in
+            .json(Fixtures.chat(content: Self.json("Dobra, wyślij to."), finish: "stop"))
+        }, usage: usage)
+        defer { StubURLProtocol.unregister(baseURL) }
+        let outcome = await enhancer.enhance(raw, mode: BuiltInAIModes.cleanup, vocabulary: [])
+        guard case .failed(.rejected(let rejection), _) = outcome else {
+            Issue.record("Expected a rejection, got \(outcome)")
+            return
+        }
+        #expect(rejection == .tooShort)
+        #expect(outcome.text == nil, "the raw text is pasted")
+        #expect(usage.all.contains(where: { event in
+            if case .correctionRejected(let reason, _) = event { return reason == "tooShort" }
+            return false
+        }))
+    }
+
+    @Test func theGuardLetsALearnedTermThrough() async {
+        let raw = "wrzuć to do supabejs i daj znać jak skończysz bo czekam na to"
+        let mode = BuiltInAIModes.cleanup
+        let learned = LearningPromptContext(misheard: [TermCorrection(misheard: "supabejs", correct: "Supabase")])
+        let (enhancer, _, baseURL) = makeEnhancer { _ in
+            .json(Fixtures.chat(content: Self.json("Wrzuć to do Supabase i daj znać, jak skończysz, bo czekam na to."), finish: "stop"))
+        }
+        defer { StubURLProtocol.unregister(baseURL) }
+        let job = mode.job(vocabulary: ["Szpak"], learned: learned)
+        #expect(job.vocabulary == ["Szpak", "Supabase"])
+        let outcome = await enhancer.enhance(raw, job: job)
+        #expect(outcome.text?.contains("Supabase") == true, "the learned form is a safe edit: \(outcome)")
+    }
+
+    @Test func usageCountsAcceptedCorrectionsModesAndTimeouts() async {
+        let usage = UsageEvents()
+        let (enhancer, _, baseURL) = makeEnhancer({ _ in
+            .json(Fixtures.chat(content: Self.json(Self.raw), finish: "stop"))
+        }, usage: usage)
+        defer { StubURLProtocol.unregister(baseURL) }
+        _ = await enhancer.enhance(Self.raw, mode: BuiltInAIModes.cleanup, vocabulary: [])
+        _ = await enhancer.enhance(Self.raw, mode: BuiltInAIModes.english, vocabulary: [])
+        let events = usage.all
+        #expect(events.contains(.modeUsed(id: "cleanup")))
+        #expect(events.contains(.modeUsed(id: "english")))
+        #expect(events.contains { if case .correctionAccepted = $0 { true } else { false } })
+        // A rewrite is never counted as a correction.
+        #expect(events.filter { if case .correctionAccepted = $0 { true } else { false } }.count == 1)
+
+        let slow = UsageEvents()
+        let (late, _, url2) = makeEnhancer({ _ in
+            .json(Fixtures.chat(content: "\"x\"", finish: "stop"), delay: .seconds(2))
+        }, deadline: .milliseconds(300), usage: slow)
+        defer { StubURLProtocol.unregister(url2) }
+        _ = await late.enhance(Self.raw, systemPrompt: Self.systemPrompt)
+        #expect(slow.all.contains(.timeout(.correction)))
+    }
+
+    // MARK: Failures
 
     @Test func skipsShortTranscriptsWithoutAskingForARoute() async {
         let counter = Counter()
@@ -126,7 +280,7 @@ struct EnhancementEnhancerTests {
     }
 
     @Test func failsOnTruncatedOrEmptyOutput() async {
-        let (truncated, _, url1) = makeEnhancer { _ in .json(Fixtures.chat(content: "\"\(Self.raw)\"", finish: "length")) }
+        let (truncated, _, url1) = makeEnhancer { _ in .json(Fixtures.chat(content: Self.json(Self.raw), finish: "length")) }
         defer { StubURLProtocol.unregister(url1) }
         guard case .failed(.rejected(.truncated), _) = await truncated.enhance(Self.raw, systemPrompt: Self.systemPrompt) else {
             Issue.record("Expected .failed on finish_reason length")
@@ -195,6 +349,19 @@ struct EnhancementEnhancerTests {
         #expect(counter.value == 0)
     }
 
+    @Test func noRouteAtTheDeadlineIsATimeoutNotAMissingModel() async {
+        // A local server still starting answers nil exactly when the deadline runs out.
+        let routes = FakeAIRoutes([:], delay: .milliseconds(300))
+        let usage = UsageEvents()
+        let enhancer = Enhancer(routes: routes, session: StubURLProtocol.makeSession(), deadline: .milliseconds(300), usage: { usage.record($0) })
+        let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
+        guard case .failed(.deadline, _) = outcome else {
+            Issue.record("Expected .failed(.deadline), got \(outcome)")
+            return
+        }
+        #expect(usage.all == [.timeout(.correction)])
+    }
+
     @Test func retriesOnceOnConnectionLost() async {
         let counter = Counter()
         let (enhancer, _, baseURL) = makeEnhancer { _ in
@@ -202,11 +369,11 @@ struct EnhancementEnhancerTests {
             if counter.value == 1 {
                 return .failure(.networkConnectionLost)
             }
-            return .json(Fixtures.chat(content: "\"\(Self.raw)\"", finish: "stop"))
+            return .json(Fixtures.chat(content: Self.json(Self.raw), finish: "stop"))
         }
         defer { StubURLProtocol.unregister(baseURL) }
         let outcome = await enhancer.enhance(Self.raw, systemPrompt: Self.systemPrompt)
-        #expect(outcome.text == Self.raw)
+        #expect(outcome.text?.lowercased() == Self.raw)
         #expect(counter.value == 2)
     }
 
@@ -272,25 +439,20 @@ struct EnhancementEnhancerTests {
 
     // MARK: Pure rules
 
-    @Test func maxTokensRule() {
-        // est = max(16, bytes / 3); cap = min(2048, est * 2 + 64)
-        #expect(Enhancer.maxTokens(forUTF8Count: 0) == 96)
-        #expect(Enhancer.maxTokens(forUTF8Count: 30) == 96)
-        #expect(Enhancer.maxTokens(forUTF8Count: 300) == 264)
-        #expect(Enhancer.maxTokens(forUTF8Count: 2900) == 1996)
-        #expect(Enhancer.maxTokens(forUTF8Count: 3000) == 2048)
-        #expect(Enhancer.maxTokens(forUTF8Count: 100_000) == 2048)
+    @Test func cleanupMaxTokensIsWordsTimesThreePlus32() {
+        #expect(Enhancer.maxTokens(for: "", kind: .cleanup) == 32)
+        #expect(Enhancer.maxTokens(for: "jedno dwa trzy cztery", kind: .cleanup) == 4 * 3 + 32)
+        #expect(Enhancer.maxTokens(for: Self.raw, kind: .cleanup) == 14 * 3 + 32)
+        let long = String(repeating: "słowo ", count: 1000)
+        #expect(Enhancer.maxTokens(for: long, kind: .cleanup) == 2048)
+        #expect(Enhancer.maxTokens(for: long, kind: .cleanup, cap: 8192) == 3032)
     }
 
-    @Test func maxTokensHonorsALargerFileCap() {
-        #expect(Enhancer.maxTokens(forUTF8Count: 9000, cap: 8192) == 6064)
-        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, cap: 8192) == 8192)
-    }
-
-    @Test func fileLLMSessionOutlastsTheFileDeadline() {
-        let configuration = HTTP.fileLLMSession.configuration
-        #expect(configuration.timeoutIntervalForRequest > 15)
-        #expect(configuration.timeoutIntervalForResource > 15)
+    @Test func fileLLMSessionOutlastsTheLongestLimit() {
+        for configuration in [HTTP.fileLLMSession.configuration, HTTP.llmSession.configuration] {
+            #expect(configuration.timeoutIntervalForRequest > LocalAITuning.modeCapSeconds)
+            #expect(configuration.timeoutIntervalForResource > LocalAITuning.modeCapSeconds)
+        }
     }
 
     @Test func stripsReasoningBlocks() {
@@ -302,15 +464,46 @@ struct EnhancementEnhancerTests {
         #expect(Enhancer.stripReasoning("<think>a</think><think>b</think>") == "")
     }
 
-    @Test func sanityGuardCases() {
+    @Test func sanityCheckRejectsOnlyEmptyOrCutOffAnswers() {
         let long = String(repeating: "słowo ", count: 20)
-        #expect(Enhancer.rejectionReason(raw: long, output: "", finishReason: "stop") != nil)
-        #expect(Enhancer.rejectionReason(raw: long, output: long, finishReason: "length") != nil)
-        #expect(Enhancer.rejectionReason(raw: long, output: "Tak.", finishReason: "stop") != nil)
-        #expect(Enhancer.rejectionReason(raw: long, output: long + long + long, finishReason: "stop") != nil)
-        #expect(Enhancer.rejectionReason(raw: long, output: long, finishReason: "stop") == nil)
-        #expect(Enhancer.rejectionReason(raw: long, output: String(long.prefix(60)), finishReason: nil) == nil)
-        // Short transcripts (<= 40 chars) skip the length ratio check.
-        #expect(Enhancer.rejectionReason(raw: "krótki tekst do sprawdzenia", output: "Ok", finishReason: "stop") == nil)
+        #expect(Enhancer.rejectionReason(output: "", finishReason: "stop") == .empty)
+        #expect(Enhancer.rejectionReason(output: long, finishReason: "length") == .truncated)
+        #expect(Enhancer.rejectionReason(output: long, finishReason: "stop") == nil)
+        #expect(Enhancer.rejectionReason(output: "Tak.", finishReason: nil) == nil)
+    }
+
+    @Test func guardRejectionsMapToHistoryNotes() {
+        #expect(EnhancementRejection(.lowSimilarity(0.2)) == .tooDifferent)
+        #expect(EnhancementRejection(.tooShort(ratio: 0.3)) == .tooShort)
+        #expect(EnhancementRejection(.tooLong(ratio: 2)) == .tooLong)
+        #expect(EnhancementRejection(.empty) == .empty)
+        #expect(EnhancementRejection.tooDifferent.note == "Odrzucono: zbyt duża zmiana treści")
+    }
+
+    // MARK: Deadline (PRD 5)
+
+    @Test func theAdaptiveDeadlineGrowsWithTheInputUpToTheCap() {
+        let cleanup = BuiltInAIModes.cleanup.job(vocabulary: [])
+        let words = { (count: Int) in Array(repeating: "słowo", count: count).joined(separator: " ") }
+        // Short dictation: the mode's own 3 s is the floor (1 s + 10 x 0.06 s is less).
+        #expect(Enhancer.deadline(for: cleanup, input: words(10), fallback: .seconds(3), adaptive: true) == .seconds(3))
+        // 200 words: 1 + 200 x 0.04 x 1.5 = 13 s.
+        #expect(Enhancer.deadline(for: cleanup, input: words(200), fallback: .seconds(3), adaptive: true) == .seconds(13))
+        // Capped at 15 s for cleanup, also over a user limit above it.
+        #expect(Enhancer.deadline(for: cleanup, input: words(400), fallback: .seconds(3), adaptive: true) == .seconds(15))
+        var slow = cleanup
+        slow.deadline = .seconds(20)
+        #expect(Enhancer.deadline(for: slow, input: words(10), fallback: .seconds(3), adaptive: true) == .seconds(15))
+
+        let mode = BuiltInAIModes.organize.job(vocabulary: [])
+        // A mode: 3 + 20 x 0.23 x 1.5 = 9.9 s over its own 8 s.
+        #expect(Enhancer.deadline(for: mode, input: words(20), fallback: .seconds(3), adaptive: true) == .milliseconds(9900))
+        #expect(Enhancer.deadline(for: mode, input: words(200), fallback: .seconds(3), adaptive: true) == .seconds(30))
+        // A job without its own limit takes the enhancer's (15 s off the dictation path).
+        var utility = mode
+        utility.deadline = nil
+        #expect(Enhancer.deadline(for: utility, input: words(5), fallback: .seconds(15), adaptive: true) == .seconds(15))
+        // Not adaptive: the job's limit as it is.
+        #expect(Enhancer.deadline(for: mode, input: words(200), fallback: .seconds(3), adaptive: false) == .seconds(8))
     }
 }

@@ -5,6 +5,11 @@ import Foundation
 ///
 /// Each call asks `routes` for the job's role first (`AIRole`, within the deadline): the local
 /// model server or Bielik in the cloud. No route = `.skipped(.noKey)`, the raw text stays.
+///
+/// A cleanup job (PRD 7.2) sends the few-shot conversation with the transcript in `<tekst>` tags
+/// (`CleanupPrompt.messages`) at temperature 0 with `max_tokens` = words x 3 + 32, and its answer
+/// goes through `CorrectionGuard`: the merged text is pasted, or the raw text when the guard
+/// rejects it. A rewrite job sends the system prompt and the bare transcript.
 actor Enhancer: TextEnhancing {
     /// Transcripts with this many words or fewer skip the model.
     static let minimumWords = 4
@@ -18,73 +23,137 @@ actor Enhancer: TextEnhancing {
     /// Output cap of a rewrite mode on the dictation path.
     static let rewriteTokenCap = 4096
 
+    /// The lowercased words of an answer the system spell checker accepts (`CorrectionSpelling`).
+    typealias Spelling = @Sendable (String) async -> Set<String>
+    /// Records a usage event (`LocalUsageStats`); never with any text.
+    typealias UsageRecorder = @Sendable (LocalUsageEvent) -> Void
+
     private let routes: any AIRouteProviding
     private let session: URLSession
     private let deadline: Duration
     private let tokenCap: Int
+    private let adaptsDeadline: Bool
+    private let spelling: Spelling
+    private let usage: UsageRecorder?
 
+    /// - Parameters:
+    ///   - deadline: the limit of a job that names none.
+    ///   - adaptsDeadline: stretch every limit to the local-model limit for the input
+    ///     (`LocalDeadline`, PRD 5), as the app does on the local and the cloud route alike.
+    ///   - spelling: the spell check of the guard's merge; the system dictionaries by default.
+    ///   - usage: where accepted and rejected corrections, mode uses and timeouts are counted.
     init(
         routes: any AIRouteProviding,
         session: URLSession = HTTP.llmSession,
         deadline: Duration = .seconds(3),
-        tokenCap: Int = Enhancer.defaultTokenCap
+        tokenCap: Int = Enhancer.defaultTokenCap,
+        adaptsDeadline: Bool = false,
+        spelling: @escaping Spelling = { await CorrectionSpelling.knownWords(in: $0) },
+        usage: UsageRecorder? = nil
     ) {
         self.routes = routes
         self.session = session
         self.deadline = deadline
         self.tokenCap = tokenCap
+        self.adaptsDeadline = adaptsDeadline
+        self.spelling = spelling
+        self.usage = usage
     }
 
     // MARK: TextEnhancing
 
     func enhance(_ raw: String, job: EnhancementJob) async -> EnhancementOutcome {
         guard !Self.shouldSkip(raw, kind: job.kind) else { return .skipped(.tooShort) }
-        let deadline = job.deadline ?? self.deadline
+        let deadline = Self.deadline(for: job, input: raw, fallback: self.deadline, adaptive: adaptsDeadline)
 
         // The route lookup counts against the deadline: a model server that is still starting
         // or an ACL prompt must not hold the widget.
         let clock = ContinuousClock()
         let start = clock.now
         guard let route = await routes.route(for: job.role, timeout: deadline) else {
+            // A local server still starting gives up exactly at the deadline: that is a timeout,
+            // not a missing model.
+            if clock.now - start >= deadline - .milliseconds(50) {
+                Log.enhancement.error("AI skipped: no route within the deadline")
+                usage?(.timeout(LocalRole(job.role)))
+                return .failed(.deadline(seconds: Self.seconds(deadline)), ms: Self.milliseconds(clock.now - start))
+            }
             return .skipped(.noKey)
         }
         guard clock.now - start < deadline else {
             Log.enhancement.error("AI skipped: the route took longer than the deadline")
+            usage?(.timeout(LocalRole(job.role)))
             return .failed(.deadline(seconds: Self.seconds(deadline)), ms: Self.milliseconds(clock.now - start))
         }
 
-        let maxTokens = Self.maxTokens(forUTF8Count: raw.utf8.count, kind: job.kind, cap: tokenCap)
         let request = route.client.chatRequest(
             model: route.model,
-            system: job.systemPrompt,
-            transcript: raw,
-            maxTokens: maxTokens,
+            messages: Self.messages(for: job, raw: raw),
+            maxTokens: Self.maxTokens(for: raw, kind: job.kind, cap: tokenCap),
             key: route.key
         )
+        if let usageID = job.usageID {
+            usage?(.modeUsed(id: usageID))
+        }
         let signpost = Log.signposter.beginInterval("enhance")
         defer { Log.signposter.endInterval("enhance", signpost) }
 
         do {
             let (data, http) = try await sendWithRetry(request, deadline: deadline, start: start, clock: clock)
-            let ms = Self.milliseconds(clock.now - start)
             if ChatCompletionsClient.mapStatus(http.statusCode) != nil {
                 Log.enhancement.error("AI failed: HTTP \(http.statusCode) \(HTTP.shortBody(data), privacy: .public)")
-                return .failed(.http(status: http.statusCode), ms: ms)
+                return .failed(.http(status: http.statusCode), ms: Self.milliseconds(clock.now - start))
             }
             let (content, finishReason) = try route.client.parseChat(data)
-            let text = Self.stripReasoning(content ?? "")
-            if let rejection = Self.rejectionReason(raw: raw, output: text, finishReason: finishReason, kind: job.kind) {
+            var text = Self.stripReasoning(content ?? "")
+            if job.kind == .cleanup {
+                text = CleanupPrompt.unwrap(text)
+            }
+            if let rejection = Self.rejectionReason(output: text, finishReason: finishReason) {
+                let ms = Self.milliseconds(clock.now - start)
                 Log.enhancement.notice("AI output rejected: \(rejection.errorDescription, privacy: .public)")
+                if job.kind == .cleanup {
+                    usage?(.correctionRejected(reason: rejection == .empty ? "empty" : "truncated", milliseconds: ms))
+                }
                 return .failed(.rejected(rejection), ms: ms)
             }
+            if job.kind == .cleanup {
+                return await guarded(raw: raw, output: text, job: job, model: route.model, ms: Self.milliseconds(clock.now - start))
+            }
+            let ms = Self.milliseconds(clock.now - start)
             Log.enhancement.info("AI \(job.kind.rawValue, privacy: .public) (\(job.role.rawValue, privacy: .public)) ok in \(ms) ms with \(route.model, privacy: .public), \(route.kind.rawValue, privacy: .public)")
             return .enhanced(text: text, ms: ms, model: route.model)
         } catch {
             let ms = Self.milliseconds(clock.now - start)
             let failure = Self.failure(for: error, deadline: deadline)
+            if case .deadline = failure {
+                usage?(.timeout(LocalRole(job.role)))
+            }
             Log.enhancement.error("AI failed after \(ms) ms: \(failure.errorDescription ?? "", privacy: .public)")
             return .failed(failure, ms: ms)
         }
+    }
+
+    /// A cleanup answer through `CorrectionGuard`: the merged text, or a rejection (the caller
+    /// then pastes the raw text). Counted as an accepted or rejected correction.
+    private func guarded(raw: String, output: String, job: EnhancementJob, model: String, ms: Int) async -> EnhancementOutcome {
+        let known = await spelling(output)
+        let outcome = CorrectionGuard.apply(
+            raw: raw,
+            output: output,
+            vocabulary: Set(job.vocabulary),
+            spellCheck: CorrectionSpelling.lookup(known)
+        )
+        if let rejection = outcome.rejection {
+            Log.enhancement.notice("Correction rejected by the guard: \(rejection.code, privacy: .public)")
+            usage?(.correctionRejected(reason: rejection.code, milliseconds: ms))
+            return .failed(.rejected(EnhancementRejection(rejection)), ms: ms)
+        }
+        if let merge = outcome.merge {
+            Log.enhancement.info("Correction ok in \(ms) ms with \(model, privacy: .public): \(merge.acceptedEdits) edits, \(merge.revertedWords) reverted, \(merge.droppedWords) dropped")
+        }
+        usage?(.correctionAccepted(milliseconds: ms))
+        return .enhanced(text: outcome.text, ms: ms, model: model)
     }
 
     /// Starts or warms whatever serves `role` (the model server, the cloud connection); the
@@ -125,18 +194,35 @@ actor Enhancer: TextEnhancing {
 
     // MARK: Rules (pure, unit-tested)
 
-    /// `est = max(16, utf8Count / 3)`; cleanup `min(cap, est * 2 + 64)` (brief 5.3), rewrite
+    /// What a job sends: a cleanup the few-shot conversation with the wrapped transcript
+    /// (`CleanupPrompt.messages`), a rewrite its system prompt and the bare transcript.
+    nonisolated static func messages(for job: EnhancementJob, raw: String) -> [ChatMessage] {
+        switch job.kind {
+        case .cleanup: CleanupPrompt.messages(system: job.systemPrompt, transcript: raw)
+        case .rewrite: [.system(job.systemPrompt), .user(raw)]
+        }
+    }
+
+    /// The call's limit: the job's own (or `fallback`); when `adaptive`, stretched to the
+    /// local-model limit for this input (`LocalDeadline`: cleanup or modes, PRD 5) and never past
+    /// that kind's cap (15 s cleanup, 30 s modes).
+    nonisolated static func deadline(for job: EnhancementJob, input: String, fallback: Duration, adaptive: Bool) -> Duration {
+        let fixed = job.deadline ?? fallback
+        guard adaptive else { return fixed }
+        let kind: LocalDeadline.Kind = job.kind == .cleanup ? .cleanup : .mode
+        let local = LocalDeadline.limit(for: kind, input: input)
+        let cap = Duration.milliseconds(Int((LocalDeadline.cap(kind) * 1000).rounded()))
+        return min(max(fixed, local), cap)
+    }
+
+    /// Cleanup: input words x 3 + 32 (F0), at most `cap`. Rewrite: `est = max(16, utf8Count / 3)`,
     /// `min(max(4096, cap), est * 3 + 256)` (a translation or an e-mail may grow).
-    nonisolated static func maxTokens(
-        forUTF8Count count: Int,
-        kind: AIModeKind = .cleanup,
-        cap: Int = defaultTokenCap
-    ) -> Int {
-        let estimate = max(16, count / 3)
+    nonisolated static func maxTokens(for text: String, kind: AIModeKind, cap: Int = defaultTokenCap) -> Int {
         switch kind {
         case .cleanup:
-            return min(cap, estimate * 2 + 64)
+            return min(cap, LocalDeadline.wordCount(text) * 3 + 32)
         case .rewrite:
+            let estimate = max(16, text.utf8.count / 3)
             return min(max(rewriteTokenCap, cap), estimate * 3 + 256)
         }
     }
@@ -163,25 +249,15 @@ actor Enhancer: TextEnhancing {
         return output.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// Sanity guard (gotcha 68): nil when the output is acceptable. Every kind rejects an empty
-    /// or cut-off answer; only cleanup also checks the 0.4...2.5 length ratio (raw > 40 chars),
-    /// because a rewrite may legitimately shrink (checklist) or grow (e-mail).
-    nonisolated static func rejectionReason(
-        raw: String,
-        output: String,
-        finishReason: String?,
-        kind: AIModeKind = .cleanup
-    ) -> EnhancementRejection? {
+    /// Sanity check of every answer (gotcha 68): nil when it is usable. An empty or cut-off
+    /// answer is rejected; a cleanup answer then goes through `CorrectionGuard` (merge, length
+    /// and word similarity), a rewrite may legitimately shrink (checklist) or grow (e-mail).
+    nonisolated static func rejectionReason(output: String, finishReason: String?) -> EnhancementRejection? {
         if output.isEmpty {
             return .empty
         }
         if finishReason == "length" {
             return .truncated
-        }
-        if kind == .cleanup, raw.count > 40 {
-            let ratio = Double(output.count) / Double(raw.count)
-            if ratio < 0.4 { return .tooShort }
-            if ratio > 2.5 { return .tooLong }
         }
         return nil
     }

@@ -5,29 +5,31 @@ import Foundation
 /// cleanup call under the deadline.
 enum HTTP {
     /// One session for every dictation LLM call: no cache, no waiting for connectivity.
-    /// The real deadline is enforced in Swift (`Enhancer`, the AI mode's 1...20 s), so the
-    /// timeouts only sit above the longest mode deadline: a non-streaming rewrite sends nothing
-    /// until the whole answer is ready, and a 4 s idle timeout would cut an 8 s mode short.
+    /// The real deadline is enforced in Swift (`Enhancer`: the mode's limit stretched with the
+    /// input, at most 15 s for cleanup and 30 s for modes, `LocalDeadline`), so the timeouts only
+    /// sit above the longest one: a non-streaming rewrite sends nothing until the whole answer is
+    /// ready, and a short idle timeout would cut a long mode short.
     static let llmSession: URLSession = {
         let configuration = URLSessionConfiguration.default
         configuration.urlCache = nil
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.waitsForConnectivity = false
-        configuration.timeoutIntervalForRequest = 21
-        configuration.timeoutIntervalForResource = 25
+        configuration.timeoutIntervalForRequest = 31
+        configuration.timeoutIntervalForResource = 35
         configuration.httpMaximumConnectionsPerHost = 4
         return URLSession(configuration: configuration)
     }()
 
-    /// LLM session for file transcripts: a non-streaming completion of a long transcript sends
-    /// nothing until the whole answer is ready, so the timeouts sit just above the 15 s file deadline.
+    /// LLM session for file transcripts and the other calls off the dictation path: a
+    /// non-streaming completion of a long transcript sends nothing until the whole answer is
+    /// ready, so the timeouts sit just above the longest limit (a mode on a long text, 30 s).
     static let fileLLMSession: URLSession = {
         let configuration = URLSessionConfiguration.default
         configuration.urlCache = nil
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.waitsForConnectivity = false
-        configuration.timeoutIntervalForRequest = 16
-        configuration.timeoutIntervalForResource = 20
+        configuration.timeoutIntervalForRequest = 31
+        configuration.timeoutIntervalForResource = 35
         configuration.httpMaximumConnectionsPerHost = 2
         return URLSession(configuration: configuration)
     }()

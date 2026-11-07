@@ -28,39 +28,28 @@ struct EnhancementModeRulesTests {
         return data
     }
 
-    // MARK: Sanity guard
-
-    @Test func cleanupGuardChecksTheLengthRatio() {
-        let long = String(repeating: "słowo ", count: 20)
-        #expect(Enhancer.rejectionReason(raw: long, output: "Tak.", finishReason: "stop", kind: .cleanup) == .tooShort)
-        #expect(Enhancer.rejectionReason(raw: long, output: long + long + long, finishReason: "stop", kind: .cleanup) == .tooLong)
-        #expect(Enhancer.rejectionReason(raw: long, output: "", finishReason: "stop", kind: .cleanup) == .empty)
-        #expect(Enhancer.rejectionReason(raw: long, output: long, finishReason: "length", kind: .cleanup) == .truncated)
-        #expect(Enhancer.rejectionReason(raw: long, output: long, finishReason: "stop", kind: .cleanup) == nil)
-    }
+    // MARK: Sanity check
 
     @Test func rewriteGuardOnlyRejectsEmptyOrCutOffAnswers() {
         let long = String(repeating: "słowo ", count: 20)
-        #expect(Enhancer.rejectionReason(raw: long, output: "- [ ] Zadzwoń", finishReason: "stop", kind: .rewrite) == nil)
-        #expect(Enhancer.rejectionReason(raw: long, output: String(repeating: long, count: 5), finishReason: "stop", kind: .rewrite) == nil)
-        #expect(Enhancer.rejectionReason(raw: long, output: "", finishReason: "stop", kind: .rewrite) == .empty)
-        #expect(Enhancer.rejectionReason(raw: long, output: long, finishReason: "length", kind: .rewrite) == .truncated)
+        #expect(Enhancer.rejectionReason(output: "- [ ] Zadzwoń", finishReason: "stop") == nil)
+        #expect(Enhancer.rejectionReason(output: String(repeating: long, count: 5), finishReason: "stop") == nil)
+        #expect(Enhancer.rejectionReason(output: "", finishReason: "stop") == .empty)
+        #expect(Enhancer.rejectionReason(output: long, finishReason: "length") == .truncated)
     }
 
     // MARK: Token caps
 
     @Test func rewriteTokenCap() {
         // est = max(16, bytes / 3); rewrite = min(4096, est * 3 + 256)
-        #expect(Enhancer.maxTokens(forUTF8Count: 0, kind: .rewrite) == 16 * 3 + 256)
-        #expect(Enhancer.maxTokens(forUTF8Count: 3000, kind: .rewrite) == 1000 * 3 + 256)
-        #expect(Enhancer.maxTokens(forUTF8Count: 3900, kind: .rewrite) == 4096)
-        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, kind: .rewrite) == 4096)
+        let text = { (bytes: Int) in String(repeating: "a", count: bytes) }
+        #expect(Enhancer.maxTokens(for: "", kind: .rewrite) == 16 * 3 + 256)
+        #expect(Enhancer.maxTokens(for: text(3000), kind: .rewrite) == 1000 * 3 + 256)
+        #expect(Enhancer.maxTokens(for: text(3900), kind: .rewrite) == 4096)
+        #expect(Enhancer.maxTokens(for: text(100_000), kind: .rewrite) == 4096)
         // The file cap (8192) lifts the rewrite ceiling too.
-        #expect(Enhancer.maxTokens(forUTF8Count: 6000, kind: .rewrite, cap: 8192) == 2000 * 3 + 256)
-        #expect(Enhancer.maxTokens(forUTF8Count: 100_000, kind: .rewrite, cap: 8192) == 8192)
-        // Cleanup keeps the old rule.
-        #expect(Enhancer.maxTokens(forUTF8Count: 3000, kind: .cleanup) == 2048)
-        #expect(Enhancer.maxTokens(forUTF8Count: 300, kind: .cleanup) == 264)
+        #expect(Enhancer.maxTokens(for: text(6000), kind: .rewrite, cap: 8192) == 2000 * 3 + 256)
+        #expect(Enhancer.maxTokens(for: text(100_000), kind: .rewrite, cap: 8192) == 8192)
     }
 
     // MARK: Skip rule
@@ -155,14 +144,18 @@ struct EnhancementModeRulesTests {
 
         let data = seen.withLock { $0 }
         let body = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
-        #expect(body["max_tokens"] as? Int == Enhancer.maxTokens(forUTF8Count: raw.utf8.count, kind: .rewrite))
+        #expect(body["max_tokens"] as? Int == Enhancer.maxTokens(for: raw, kind: .rewrite))
         let messages = body["messages"] as? [[String: Any]] ?? []
         #expect(messages.first?["content"] as? String == BuiltInAIModes.email.systemPrompt(vocabulary: ["Marta"]))
         #expect(messages.last?["content"] as? String == raw)
 
-        // The same answer is rejected in the strict cleanup mode.
-        let cleanup = await enhancer.enhance(raw + " i jeszcze trochę słów", mode: BuiltInAIModes.cleanup, vocabulary: [])
-        #expect(cleanup == .failed(.rejected(.tooLong), ms: cleanup.ms ?? 0))
+        // In the strict cleanup mode the merge keeps none of the added words: the dictation stays.
+        let dictated = raw + " i jeszcze trochę słów"
+        let cleanup = await enhancer.enhance(dictated, mode: BuiltInAIModes.cleanup, vocabulary: [])
+        #expect(cleanup.text != email)
+        if let text = cleanup.text {
+            #expect(CorrectionGuard.words(text) == CorrectionGuard.words(dictated))
+        }
     }
 
     @Test func rewriteModeTranslatesEvenAShortPhrase() async {

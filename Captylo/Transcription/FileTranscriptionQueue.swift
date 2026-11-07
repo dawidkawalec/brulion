@@ -252,9 +252,11 @@ final class FileTranscriptionQueue {
                     record.applyEnhancement(.skipped(.tooShort), mode: mode.name)
                 } else {
                     setStatus(.enhancing, for: id)
-                    // The file deadline (15 s) instead of the mode's: files run long.
+                    // The file deadline (15 s) instead of the mode's, stretched for a long
+                    // text on a local model (`LocalDeadline`): files run long.
                     var job = mode.job(vocabulary: enhancement.vocabulary)
-                    job.deadline = Self.enhancementDeadline
+                    job.deadline = nil
+                    job.deadline = Enhancer.deadline(for: job, input: text, fallback: Self.enhancementDeadline, adaptive: true)
                     let outcome = await Self.enhance(text, with: enhancement.enhancer, job: job)
                     record.applyEnhancement(outcome, mode: mode.name)
                     switch outcome {

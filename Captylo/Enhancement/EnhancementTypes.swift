@@ -41,17 +41,35 @@ enum EnhancementOutcome: Sendable, Equatable {
 /// What one AI call sends and how its answer is judged (built from an `AIMode`).
 struct EnhancementJob: Sendable, Equatable {
     var systemPrompt: String
+    /// `.cleanup` sends the few-shot conversation (`CleanupPrompt.messages`) and passes the
+    /// answer through `CorrectionGuard`; `.rewrite` sends the bare transcript.
     var kind: AIModeKind
     /// Which model serves the call: the small correction model or the stronger one (PRD 5-6).
     var role: AIRole
-    /// Hard deadline of the call; nil = the enhancer's own (3 s dictation, 15 s files).
+    /// The job's own limit; nil = the enhancer's. An adaptive enhancer stretches it to the
+    /// local-model limit for the input (`Enhancer.deadline(for:input:fallback:adaptive:)`).
     var deadline: Duration?
+    /// The user's terms `CorrectionGuard` lets the model spell differently (dictionary terms and
+    /// learned forms, `CleanupPrompt.guardVocabulary`); only read for `.cleanup`.
+    var vocabulary: [String]
+    /// What the usage counter calls this mode (`LocalUsageEvent.modeUsed`): a built-in key or the
+    /// mode's id, never its prompt. nil = not counted (titles, the style profile).
+    var usageID: String?
 
-    init(systemPrompt: String, kind: AIModeKind = .cleanup, role: AIRole = .features, deadline: Duration? = nil) {
+    init(
+        systemPrompt: String,
+        kind: AIModeKind = .cleanup,
+        role: AIRole = .features,
+        deadline: Duration? = nil,
+        vocabulary: [String] = [],
+        usageID: String? = nil
+    ) {
         self.systemPrompt = systemPrompt
         self.kind = kind
         self.role = role
         self.deadline = deadline
+        self.vocabulary = vocabulary
+        self.usageID = usageID
     }
 }
 
@@ -123,21 +141,34 @@ enum EnhancementFailure: LocalizedError, Sendable, Equatable {
     }
 }
 
-/// Sanity guard verdicts (gotcha 68).
+/// Sanity guard verdicts (gotcha 68). A cleanup answer also goes through `CorrectionGuard`,
+/// whose rejections map onto these (`init(_:)`).
 enum EnhancementRejection: Sendable, Equatable {
     case empty
     /// `finish_reason == "length"`.
     case truncated
-    /// Cleanup output below 0.4 x the transcript length.
+    /// Cleanup output (after the merge) under half the transcript length.
     case tooShort
-    /// Cleanup output above 2.5 x the transcript length.
+    /// Cleanup output (after the merge) over 1.5 x the transcript length.
     case tooLong
+    /// Cleanup output whose words differ too much from the transcript (`CorrectionGuard`).
+    case tooDifferent
+
+    init(_ rejection: CorrectionGuard.Rejection) {
+        switch rejection {
+        case .empty: self = .empty
+        case .tooShort: self = .tooShort
+        case .tooLong: self = .tooLong
+        case .lowSimilarity: self = .tooDifferent
+        }
+    }
 
     var errorDescription: String {
         switch self {
         case .empty: return String(localized: "Model zwrócił pustą odpowiedź.")
         case .truncated: return String(localized: "Odpowiedź modelu została ucięta.")
         case .tooShort, .tooLong: return String(localized: "Odpowiedź modelu ma podejrzaną długość.")
+        case .tooDifferent: return String(localized: "Odpowiedź modelu za bardzo różni się od dyktowania, więc zostaje oryginał.")
         }
     }
 
@@ -147,6 +178,7 @@ enum EnhancementRejection: Sendable, Equatable {
         case .truncated: return String(localized: "Odrzucono: odpowiedź ucięta")
         case .tooShort: return String(localized: "Odrzucono: wynik podejrzanie krótki")
         case .tooLong: return String(localized: "Odrzucono: wynik podejrzanie długi")
+        case .tooDifferent: return String(localized: "Odrzucono: zbyt duża zmiana treści")
         }
     }
 }

@@ -117,7 +117,7 @@ Stan Hugging Face z 7.11.2026: wszystkie modele na licencji Apache 2.0, repozyto
 | **Funkcje AI** (tryby, własne prompty, notatki, Zapytaj) | Bielik Minitron 7B v3.0 Instruct, Q4_K_M | `speakleash/Bielik-Minitron-7B-v3.0-Instruct-GGUF` / `minitron-Bielik-7B-v3.0-Instruct-GGUF.Q4_K_M.gguf` | 4,5 GB | 4.5B Q8_0 (5,06 GB), Minitron Q5_K_M (5,29 GB) |
 | **Chmura** (opcja dla słabszych Maców) | Bielik 11B v3.0 Instruct | CloudFerro Sherlock, `https://api-sherlock.cloudferro.com/openai/v1/`, klucz użytkownika | - | - |
 
-- Okno kontekstu: 32 768 tokenów (`config.json` modelu 4.5B). Dla 1.5B i Minitrona potwierdzić w F0 z metadanych GGUF.
+- Okno kontekstu (F0, `n_ctx_train` z serwera): 1.5B ma 8 192 tokeny i własny tokenizer (ok. 3,7 bajta na token po polsku), Minitron 7B ma 32 768 (ok. 2,35 bajta na token), 4.5B ma 32 768. Serwer korekty startuje z `-c 8192`, serwer funkcji AI z `-c 24576` (20 tys. tokenów wejścia i 4 tys. odpowiedzi).
 - Minitron 7B Q4_K_M jest mniejszy od 4.5B Q8_0. Do tego jest nowszy (2026) i wg karty modelu zachowuje ok. 90% jakości 11B. Dlatego jest domyślny, a F0 to weryfikuje.
 - **Poziomy według RAM** (wykrywane automatycznie, do zmiany w Ustawieniach):
   - **16 GB i więcej**: korekta i funkcje AI lokalnie (1.5B + Minitron 7B).
@@ -262,9 +262,25 @@ Gdy zabraknie czasu, tniemy od końca tej listy. Rdzeń zgłoszenia to dyktowani
 - zbiór testowy z jego historii Captylo;
 - nazwa nawiązująca do Bielika albo do ptaka kojarzonego z mową, bez "Offline" i "Lokalnie".
 
+**Wynik F0 i decyzje (7.11, M3 Pro 36 GB, llama.cpp v0.9.0, 60 dyktowań Dawida, wzorzec Captylo AI z historii)**
+- Bramka z sekcji 10 w pierwotnej postaci nie przeszła: sam 1.5B zmieniał sens w 8-15% próbek nawet na najlepszym prompcie (zmiana osoby, streszczanie, zmiana rodzaju, pętle, wklejanie przykładów).
+- Pomiary (dyktowania do 60 słów):
+  | Model | p50 | p95 | Zmieniony sens bez strażnika |
+  |---|---|---|---|
+  | 1.5B Q8_0 | 0,99 s | 1,75 s | 8-15% |
+  | 4.5B Q8_0 | 2,33 s | 4,76 s | ok. 5% |
+  | Minitron 7B Q4_K_M | 4,4 s | 11 s | ok. 10% |
+- Rozwiązanie: nowy polski prompt z dwoma przykładami i transkrypcją w znacznikach `<tekst>` oraz strażnik na poziomie słów (`CorrectionMerger`). Strażnik przepuszcza tylko interpunkcję, wielkie litery, ogonki, drobne literówki ze słownikiem pisowni macOS, terminy ze słownika i usunięte wypełniacze; resztę cofa do oryginału. Z nim sens zostaje w 60/60 próbek, a interpunkcja F1 wobec chmury rośnie z 0,82 do 0,89. Po strażniku 4.5B daje praktycznie to samo co 1.5B (WER wobec chmury 0,181 i 0,183), a jest 2,7 raza wolniejszy.
+- Decyzje (Dawid wybrał najpierw test 4.5B, wynik powyżej):
+  - korekta domyślnie na 1.5B ze strażnikiem; w Modele można wybrać do korekty 4.5B, Minitrona albo chmurę;
+  - funkcje AI na Minitronie 7B (tryby z limitem do 30 s);
+  - poprawki transkryptu spotkań na modelu korekty, zawsze przez `TranscriptFixGuard` (bez niego 1.5B psuł 62 z 306 czystych linii).
+- Nazwa: **Szpak** (7.11, po sprawdzeniu kolizji; szpak.app wolne). Identyfikatory na stałe: `Szpak.app`, bundle `pl.craftweb.szpak`, dane w `~/Library/Application Support/Szpak/`, schemat URL `szpak`.
+- Prywatne repo `dawidkawalec/captylo-bielik` założone 7.11 (zgoda Dawida); publiczne dopiero w F3, po popupie.
+
 **Do Dawida**
-1. Nazwa (kandydaci w sekcji 4) i ikona.
-2. Zgoda na publiczne repo na GitHubie (popup przed utworzeniem).
+1. Ikona Szpaka (wariant ikony Captylo w przygotowaniu).
+2. Zgoda na upublicznienie repo na GitHubie (popup przed zmianą widoczności).
 3. Czy ogłosić nową wersję użytkownikom Captylo (mail przez `tbsend`, po popupie).
 4. Odczyt liczb z produkcji Captylo.
 

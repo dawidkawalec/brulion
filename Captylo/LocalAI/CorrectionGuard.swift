@@ -1,9 +1,44 @@
 import Foundation
 
-/// Decides whether a local model's correction of a dictation may replace the raw text
-/// (PRD 7.2). A small model sometimes answers the dictated question, translates it, cuts it
-/// or adds to it; such an output is rejected and the raw text is pasted instead. Pure.
+/// Decides what replaces the raw dictation after a local model's cleanup (PRD 7.2). A small
+/// model sometimes answers the dictated question, translates it, cuts it, adds to it or
+/// changes single words; `apply` first keeps only the model's safe word edits
+/// (`CorrectionMerger`), then rejects the merged text when its length or word similarity
+/// strays too far from the raw text, and the raw text is pasted instead. Pure.
 enum CorrectionGuard {
+    /// What `apply` decided.
+    struct Outcome: Equatable, Sendable {
+        /// What to paste: the merged correction, or the raw text when it was rejected.
+        let text: String
+        /// nil when the merged correction was accepted.
+        let rejection: Rejection?
+        /// The word-level merge (nil when the model answered nothing).
+        let merge: CorrectionMerger.Merge?
+
+        var isAccepted: Bool { rejection == nil }
+    }
+
+    /// The one entry point for a cleanup answer: merge the model's safe edits into the raw
+    /// text, then check the merged text. `vocabulary` holds the user's terms (dictionary and
+    /// learned forms); `spellCheck` answers whether a word is spelled right in Polish or
+    /// English (`CorrectionSpelling.lookup`).
+    static func apply(
+        raw: String,
+        output: String,
+        vocabulary: Set<String> = [],
+        spellCheck: CorrectionMerger.SpellCheck,
+        thresholds: Thresholds = .standard
+    ) -> Outcome {
+        guard !output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return Outcome(text: raw, rejection: .empty, merge: nil)
+        }
+        let merge = CorrectionMerger.merge(raw: raw, output: output, vocabulary: vocabulary, spellCheck: spellCheck)
+        if let rejection = check(input: raw, output: merge.text, thresholds: thresholds) {
+            return Outcome(text: raw, rejection: rejection, merge: merge)
+        }
+        return Outcome(text: merge.text, rejection: nil, merge: merge)
+    }
+
     enum Rejection: Equatable, Sendable {
         case empty
         /// Output length / input length (characters) under the minimum.
@@ -68,8 +103,9 @@ enum CorrectionGuard {
             .filter { !$0.isEmpty }
     }
 
-    /// Levenshtein distance over words (insert, delete, substitute = 1), two rows of memory.
-    static func editDistance(_ a: [String], _ b: [String]) -> Int {
+    /// Levenshtein distance over words or characters (insert, delete, substitute = 1), two
+    /// rows of memory.
+    static func editDistance<Element: Equatable>(_ a: [Element], _ b: [Element]) -> Int {
         if a.isEmpty { return b.count }
         if b.isEmpty { return a.count }
         var previous = Array(0...b.count)

@@ -3,20 +3,20 @@ import Testing
 @testable import Captylo
 
 /// Runs the real llama-server with a real model. Off in `make test`; the command is in
-/// docs/local-ai.md ("Tests"): environment variables `TEST_RUNNER_CAPTYLO_LLAMA_E2E=1`,
-/// `TEST_RUNNER_CAPTYLO_LLAMA_SERVER` and `TEST_RUNNER_CAPTYLO_LLAMA_MODEL` on xcodebuild
+/// docs/local-ai.md ("Tests"): environment variables `TEST_RUNNER_SZPAK_LLAMA_E2E=1`,
+/// `TEST_RUNNER_SZPAK_LLAMA_SERVER` and `TEST_RUNNER_SZPAK_LLAMA_MODEL` on xcodebuild
 /// (it hands them to the tests without the prefix). It loads the model into memory, so take
 /// the shared heavy-work lock first. The model file is only read where it is.
 struct LocalAIEndToEndTests {
     static var environment: [String: String] { ProcessInfo.processInfo.environment }
     static var isEnabled: Bool {
-        environment["CAPTYLO_LLAMA_E2E"] == "1" && environment["CAPTYLO_LLAMA_SERVER"] != nil && environment["CAPTYLO_LLAMA_MODEL"] != nil
+        environment["SZPAK_LLAMA_E2E"] == "1" && environment["SZPAK_LLAMA_SERVER"] != nil && environment["SZPAK_LLAMA_MODEL"] != nil
     }
 
     @Test(.enabled(if: LocalAIEndToEndTests.isEnabled), .timeLimit(.minutes(3)))
     func correctsASyntheticSentence() async throws {
-        let executable = URL(fileURLWithPath: try #require(Self.environment["CAPTYLO_LLAMA_SERVER"]))
-        let model = URL(fileURLWithPath: try #require(Self.environment["CAPTYLO_LLAMA_MODEL"]))
+        let executable = URL(fileURLWithPath: try #require(Self.environment["SZPAK_LLAMA_SERVER"]))
+        let model = URL(fileURLWithPath: try #require(Self.environment["SZPAK_LLAMA_MODEL"]))
         let size = try #require(LocalModelFiles.size(of: model))
         let spec = LocalModelSpec(
             id: "e2e-model",
@@ -71,8 +71,10 @@ struct LocalAIEndToEndTests {
         let message = try #require(choices.first?["message"] as? [String: Any])
         let content = try #require(message["content"] as? String)
         #expect(!content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        let verdict = CorrectionGuard.check(input: raw, output: content)
-        print("LocalAI e2e: load \(loadTime), request \(requestTime), guard \(verdict.map(\.code) ?? "accepted")")
+        let known = await CorrectionSpelling.knownWords(in: content)
+        let outcome = CorrectionGuard.apply(raw: raw, output: content, spellCheck: CorrectionSpelling.lookup(known))
+        #expect(!outcome.text.isEmpty)
+        print("LocalAI e2e: load \(loadTime), request \(requestTime), guard \(outcome.rejection?.code ?? "accepted"), edits \(outcome.merge?.acceptedEdits ?? 0), reverted \(outcome.merge?.revertedWords ?? 0)")
 
         var unauthorized = request
         unauthorized.setValue(nil, forHTTPHeaderField: "Authorization")

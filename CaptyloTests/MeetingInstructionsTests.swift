@@ -185,6 +185,31 @@ struct MeetingInstructionsTests {
         #expect(citations.map(\.label) == ["S1 12:34", "S1", "N1", "S2 14:05", "N1"])
     }
 
+    // MARK: Citation repair
+
+    /// Forms the 7B model wrote in the trials, back in the forms the parsers read.
+    @Test func citationListsAndSpansBecomeOneBracketEach() {
+        #expect(CitationNormalizer.normalize("- Program poleceń po starcie [26:23, 27:40].") == "- Program poleceń po starcie [26:23] [27:40].")
+        #expect(CitationNormalizer.normalize("- Kasia skończyła ekran [0:00-1:45]") == "- Kasia skończyła ekran [0:00]")
+        #expect(CitationNormalizer.normalize("Tak [4:52; 1:05:10]") == "Tak [4:52] [1:05:10]")
+        #expect(CitationNormalizer.normalize("Start 15 marca [S2 41:13, 41:29]") == "Start 15 marca [S2 41:13] [S2 41:29]")
+        #expect(CitationNormalizer.normalize("Kod [N1, S1 2:29]") == "Kod [N1] [S1 2:29]")
+        #expect(CitationNormalizer.normalize("Beta [S1, 12:34, 15:00]") == "Beta [S1 12:34] [S1 15:00]")
+        #expect(CitationNormalizer.normalize("Zakres [S1 12:34-13:00]") == "Zakres [S1 12:34]")
+        let parsed = MeetingCitations.split(CitationNormalizer.normalize("Punkt [26:23, 27:40]"))
+        #expect(parsed == MeetingNotesDocument.Line(text: "Punkt", citations: [1583, 1660]))
+    }
+
+    @Test func otherBracketsStayAsTheyAre() {
+        for text in [
+            "- [ ] zadanie [1:05]", "- [x] gotowe", "[link](https://example.com)", "Plan [czas]",
+            "Jedna [12:34]", "Zła [37:60, x]", "Źródło [S1, 12:34]", "Bez nawiasów", "[S1] i [N2]",
+        ] {
+            #expect(CitationNormalizer.normalize(text) == text)
+        }
+        #expect(LibraryCitation.parse("[S1, 12:34]", meetings: [UUID()]).map(\.label) == ["S1 12:34"])
+    }
+
     // MARK: Every prompt
 
     @Test func noPromptHasALongDash() {

@@ -4,7 +4,8 @@ import Foundation
 /// meeting fits the input budget; otherwise the notes of each part, one after another (one
 /// local model serves one request at a time), then merge calls until one set of notes is left.
 /// The chat call itself is injected (`complete`), so this stays free of networking and the
-/// summarizer keeps its route, errors and timeouts.
+/// summarizer keeps its route, errors and timeouts. Every answer goes through
+/// `CitationNormalizer`, so a citation list in one bracket still plays.
 enum MeetingNotesWriter {
     /// Answer cap of the notes of a whole meeting (as `MeetingSummarizer.maxTokens`).
     static let wholeMaxTokens = 4_000
@@ -33,7 +34,7 @@ enum MeetingNotesWriter {
         switch TranscriptChunker.plan(meeting: meeting, segments: segments, system: system, closing: reminder, budget: budget) {
         case .single(let user):
             progress?(0, 1)
-            let notes = try await complete(system, user, wholeMaxTokens)
+            let notes = CitationNormalizer.normalize(try await complete(system, user, wholeMaxTokens))
             progress?(1, 1)
             return notes
 
@@ -46,7 +47,7 @@ enum MeetingNotesWriter {
             var notes: [MeetingNotesPlan.PartNotes] = []
             for part in parts {
                 try Task.checkCancellation()
-                let markdown = try await complete(system, part.user, partMaxTokens)
+                let markdown = CitationNormalizer.normalize(try await complete(system, part.user, partMaxTokens))
                 notes.append(MeetingNotesPlan.PartNotes(start: part.start, end: part.end, markdown: markdown))
                 done += 1
                 progress?(done, total)
@@ -65,7 +66,7 @@ enum MeetingNotesWriter {
                     }
                     try Task.checkCancellation()
                     let user = TranscriptChunker.mergeUser(meeting: meeting, parts: slice, closing: mergeReminder)
-                    let markdown = try await complete(mergeSystem, user, mergeMaxTokens)
+                    let markdown = CitationNormalizer.normalize(try await complete(mergeSystem, user, mergeMaxTokens))
                     merged.append(MeetingNotesPlan.PartNotes(start: first.start, end: last.end, markdown: markdown))
                     done += 1
                     progress?(done, total)

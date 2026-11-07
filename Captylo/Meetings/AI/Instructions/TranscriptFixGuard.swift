@@ -7,8 +7,9 @@ import Foundation
 /// spelling of up to three words that sound like it ("bram tek" -> "BramTech", not "kasą" ->
 /// "Kasa Plus"). Any other word change is refused: in trials Bielik 1.5B swapped correct words
 /// ("czat" -> "Czas"), split names ("Kasa" -> "Kas a"), dropped Polish letters, changed tenses
-/// and typed typos into clean lines, all within the length check.
-enum CorrectionGuard {
+/// and typed typos into clean lines, all within the length check. Dictation uses the looser
+/// `CorrectionGuard` (LocalAI), which merges a whole answer word by word instead.
+enum TranscriptFixGuard {
     /// Original words a glossary spelling may replace.
     static let maxGlossaryWords = 3
 

@@ -207,7 +207,7 @@ struct MeetingInstructionsTests {
             ("Dobrze, zrobię to jutro.", "Dobrze, zrobię to jutro."),
         ]
         for (original, fixed) in safe {
-            #expect(CorrectionGuard.isSafe(original: original, fixed: fixed, glossary: glossary), "\(fixed)")
+            #expect(TranscriptFixGuard.isSafe(original: original, fixed: fixed, glossary: glossary), "\(fixed)")
         }
     }
 
@@ -232,19 +232,19 @@ struct MeetingInstructionsTests {
             ("coś", ""),
         ]
         for (original, fixed) in unsafe {
-            #expect(!CorrectionGuard.isSafe(original: original, fixed: fixed, glossary: glossary), "\(fixed)")
+            #expect(!TranscriptFixGuard.isSafe(original: original, fixed: fixed, glossary: glossary), "\(fixed)")
         }
     }
 
     @Test func correctionGuardFoldsPolishLetters() {
-        #expect(CorrectionGuard.fold("Łódź, Żółć!") == "lodzzolc")
-        #expect(CorrectionGuard.words("  Ja: proszę -  tak? ") == ["ja", "prosze", "tak"])
-        #expect(CorrectionGuard.distance("bramtek", "bramtech") == 2)
-        #expect(CorrectionGuard.distance("", "abc") == 3)
-        #expect(CorrectionGuard.distance("kasa", "kasa") == 0)
-        #expect(CorrectionGuard.keepsPolishLetters("prosze", "proszę"))
-        #expect(!CorrectionGuard.keepsPolishLetters("rozmawiałam", "rozmawialam"))
-        #expect(!CorrectionGuard.keepsPolishLetters("zrobię", "zrobie"))
+        #expect(TranscriptFixGuard.fold("Łódź, Żółć!") == "lodzzolc")
+        #expect(TranscriptFixGuard.words("  Ja: proszę -  tak? ") == ["ja", "prosze", "tak"])
+        #expect(TranscriptFixGuard.distance("bramtek", "bramtech") == 2)
+        #expect(TranscriptFixGuard.distance("", "abc") == 3)
+        #expect(TranscriptFixGuard.distance("kasa", "kasa") == 0)
+        #expect(TranscriptFixGuard.keepsPolishLetters("prosze", "proszę"))
+        #expect(!TranscriptFixGuard.keepsPolishLetters("rozmawiałam", "rozmawialam"))
+        #expect(!TranscriptFixGuard.keepsPolishLetters("zrobię", "zrobie"))
     }
 
     // MARK: Citation repair

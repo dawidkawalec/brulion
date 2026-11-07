@@ -1,5 +1,7 @@
 # Captylo
 
+> **FORK W BUDOWIE (od 2026-11-07): Captylo na Bieliku.** To repo to kopia Captylo 1.0.17 (`9371dd7`), z której wycinamy całą naszą chmurę i przenosimy AI na lokalnego Bielika, na konkurs Bielik Awards 2026 (termin 15.11.2026). **Najpierw przeczytaj [docs/PRD.md](docs/PRD.md) i [docs/bielik-awards.md](docs/bielik-awards.md).** Tekst poniżej opisuje stan wyjściowy Captylo; w fazie F1 przepisujemy go pod fork. Gdy PRD i ten opis się rozjeżdżają, rozstrzyga PRD. Remote `captylo-local` = lokalne repo Captylo; nic nie wypychamy do `dawidkawalec/captylo`. Plane: projekt CAPTYLO, moduł "Captylo na Bieliku (Bielik Awards 2026)", pozycje CAPTYLO-98 (zrobione) i CAPTYLO-99 do 103 (fazy F0-F4); stan aktualizuj skillem `plane-sync`.
+
 Minimalist macOS dictation app: hold a hotkey, speak, the text lands at the cursor. Tagline: "Mów, a tekst pojawia się tam, gdzie piszesz." Local Whisper large-v3-turbo (WhisperKit) by default, ElevenLabs Scribe as the optional cloud engine, optional OpenRouter cleanup. It also takes meeting notes on the Mac (mic + system audio, no bot, live local transcript; AI notes and speaker labels in Pro). Clean rewrite of an older VoiceInk-based app, not a fork.
 
 **Identity**: bundle `com.captylo.app`, product `Captylo.app` (executable `Captylo`), data in `~/Library/Application Support/Captylo/`, Keychain service and log subsystem `com.captylo.app`, URL scheme `captylo`, website https://captylo.com, macOS 14.4+, arm64 only.

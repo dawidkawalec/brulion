@@ -2,23 +2,29 @@ import AppKit
 import SwiftUI
 
 /// "Modele" in two tabs (`SettingsLevel`). "Podstawowe": the speech engine (local model
-/// download, language), "Modele lokalne" (the Bielik models for the AI; their download comes
-/// with the local AI module), the "Tryby AI" list (`AIModesPanel`) and AI cleanup (master
-/// switch, where the AI runs, test call). "Zaawansowane": "Bielik w chmurze" (CloudFerro
-/// Sherlock on the user's own key, off by default). "Podstawowe" always says where the AI runs,
-/// so nothing goes to the cloud unseen.
+/// download, language), "Bielik na tym Macu" (`LocalModelsPanel`: requirements, the Bielik
+/// downloads), the "Tryby AI" list (`AIModesPanel`) and AI cleanup (master switch, where each
+/// role runs, test call). "Zaawansowane": the model per role and the idle time
+/// (`AIRoleModelsPanel`), "Bielik w chmurze" (CloudFerro Sherlock on the user's own key, off by
+/// default) and the local usage counter (`LocalAIStatsPanel`). "Podstawowe" always says where
+/// the AI runs, so nothing goes to the cloud unseen.
 @MainActor
 struct ModelsView: View {
     @Environment(AppState.self) private var appState
     @State private var level: SettingsLevel = .basic
 
     var body: some View {
-        ToolPage(subtitle: "Silnik, który zamienia mowę na tekst, i opcjonalne poprawianie przez AI.") {
+        ToolPage(subtitle: "Silnik, który zamienia mowę na tekst, i Bielik, który poprawia dyktowanie i obsługuje funkcje AI.") {
             SettingsLevelPicker(level: $level)
         } content: {
             switch level {
             case .basic: basic
             case .advanced: advanced
+            }
+        }
+        .onAppear {
+            if appState.isDesignPreview, let previewLevel = DesignPreviewData.settingsLevel() {
+                level = previewLevel
             }
         }
     }
@@ -43,14 +49,7 @@ struct ModelsView: View {
             LanguagePicker(language: $settings.language)
         }
 
-        // The local AI models (Bielik on this Mac). Their download, sizes and status come with
-        // the local AI module (Captylo/LocalAI) and replace this placeholder.
-        GlassPanel {
-            GlassSectionHeader("Modele lokalne", systemImage: "cpu")
-            ToolCaption("Bielik na tym Macu poprawi dyktowanie i obsłuży funkcje AI bez internetu. Pobieranie modeli pojawi się tutaj.")
-                .padding(.horizontal, GlassTokens.Padding.rowHorizontal)
-                .padding(.bottom, 4)
-        }
+        LocalModelsPanel(localAI: appState.localAI, routing: appState.aiRoleRouting, cloudReady: appState.isCloudAIReady)
 
         AIModesPanel(settings: settings, tester: appState.modeTester)
 
@@ -58,24 +57,35 @@ struct ModelsView: View {
             GlassSectionHeader("Poprawianie przez AI", systemImage: "sparkles")
             GlassToggleRow("Poprawiaj transkrypcję przez AI", systemImage: "wand.and.stars", isOn: $settings.aiEnabled)
             GlassRowSeparator()
-            AIRouteSummary(cloudEnabled: settings.cloudAIEnabled, cloudModel: settings.cloudAIModel, onChange: showAdvanced)
+            AIRouteSummary(
+                routing: appState.aiRoleRouting,
+                cloudReady: appState.isCloudAIReady,
+                cloudModel: settings.cloudAIModel,
+                store: appState.localAI.store,
+                onChange: showAdvanced
+            )
             TestButtonRow(enhancer: appState.enhancer)
         }
     }
 
     @ViewBuilder
     private var advanced: some View {
-        CloudBielikSection(keyStore: appState.keyStore, settings: appState.settings)
+        AIRoleModelsPanel(settings: appState.settings, localAI: appState.localAI, cloudReady: appState.isCloudAIReady)
+        CloudBielikSection(keyStore: appState.keyStore, settings: appState.settings, onKeyChange: appState.cloudKeyDidChange)
+        LocalAIStatsPanel(usage: appState.localAI.usage)
     }
 }
 
 // MARK: - Where the AI runs
 
-/// "Podstawowe", AI cleanup: where the text goes, with "Zmień" opening "Zaawansowane".
+/// "Podstawowe", AI cleanup: where each role runs (a model on this Mac, or the cloud), with
+/// "Zmień" opening "Zaawansowane".
 @MainActor
 private struct AIRouteSummary: View {
-    let cloudEnabled: Bool
+    let routing: AIRoleRouting
+    let cloudReady: Bool
     let cloudModel: String
+    let store: LocalAIModelStore
     let onChange: () -> Void
 
     var body: some View {
@@ -86,10 +96,24 @@ private struct AIRouteSummary: View {
     }
 
     private var subtitle: Text {
-        if cloudEnabled {
-            return Text("Bielik w chmurze CloudFerro (\(CloudAIRouteProvider.model(cloudModel))), na Twój klucz")
+        Text(verbatim: line(.correction)) + Text(verbatim: "\n") + Text(verbatim: line(.features))
+    }
+
+    /// "Korekta dyktowania: Bielik 1.5B na tym Macu" (or "nie pobrano", or the cloud).
+    private func line(_ role: AIRole) -> String {
+        let name = LocalAIText.roleName(role)
+        switch routing.effectiveChoice(for: role, cloudReady: cloudReady) {
+        case .cloud:
+            let model = CloudAIRouteProvider.model(cloudModel)
+            return cloudReady
+                ? String(localized: "\(name): Bielik w chmurze CloudFerro (\(model)), na Twój klucz")
+                : String(localized: "\(name): Bielik w chmurze, wyłączony (bez AI)")
+        case .local(let id):
+            let model = LocalAIText.title(.local(id))
+            return store.isInstalled(id)
+                ? String(localized: "\(name): \(model) na tym Macu")
+                : String(localized: "\(name): \(model), jeszcze nie pobrany (bez AI)")
         }
-        return Text("Na tym Macu, gdy pobierzesz model lokalny")
     }
 }
 
@@ -104,6 +128,8 @@ private struct CloudBielikSection: View {
 
     let keyStore: KeyStore
     @Bindable var settings: AppSettings
+    /// The key was saved or removed (where the AI features run on 8 GB depends on it).
+    let onKeyChange: () -> Void
 
     @State private var key = ""
     @State private var isSaved = false
@@ -152,6 +178,7 @@ private struct CloudBielikSection: View {
         do {
             try keyStore.set(key.trimmingCharacters(in: .whitespacesAndNewlines), account: KeyStore.Account.cloudFerroSherlock)
             isSaved = true
+            onKeyChange()
             status = (String(localized: "Klucz zapisany w pęku kluczy."), .success)
         } catch {
             status = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)
@@ -163,6 +190,7 @@ private struct CloudBielikSection: View {
             try keyStore.delete(account: KeyStore.Account.cloudFerroSherlock)
             key = ""
             isSaved = false
+            onKeyChange()
             status = (String(localized: "Klucz usunięty."), .success)
         } catch {
             status = ((error as? LocalizedError)?.errorDescription ?? error.localizedDescription, .error)

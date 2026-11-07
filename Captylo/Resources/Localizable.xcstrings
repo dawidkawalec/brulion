@@ -431,16 +431,6 @@
         }
       }
     },
-    "%@ / %@ za 1M": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ / %2$@ per 1M"
-          }
-        }
-      }
-    },
     "%@ mln": {
       "localizations": {
         "en": {
@@ -713,56 +703,6 @@
         }
       }
     },
-    "Aktualizacje": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Updates"
-          }
-        }
-      }
-    },
-    "Aktualizacje będą dostępne w wersji publicznej.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Updates will be available in the public version."
-          }
-        }
-      }
-    },
-    "Sprawdź aktualizacje…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check for Updates…"
-          }
-        }
-      }
-    },
-    "Sprawdź teraz": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check now"
-          }
-        }
-      }
-    },
-    "Sprawdzaj automatycznie": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check automatically"
-          }
-        }
-      }
-    },
     "Anulowano.": {
       "localizations": {
         "en": {
@@ -843,16 +783,6 @@
         }
       }
     },
-    "Brak klucza AI": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No AI key"
-          }
-        }
-      }
-    },
     "Błąd AI %@": {
       "localizations": {
         "en": {
@@ -869,21 +799,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Network error"
-          }
-        }
-      }
-    },
-    "Brak dostępu do AI. Przejdź na Pro albo dodaj własny klucz w Modele > Zaawansowane.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No access to AI. Upgrade to Pro or add your own key in Models > Advanced." } }
-      }
-    },
-    "Brak modeli pasujących do zapytania.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No models match the search."
           }
         }
       }
@@ -968,16 +883,6 @@
         }
       }
     },
-    "Błąd serwera (%lld).": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Server error (%lld)."
-          }
-        }
-      }
-    },
     "Błąd sieci: %@": {
       "localizations": {
         "en": {
@@ -1004,16 +909,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Captylo, recording"
-          }
-        }
-      }
-    },
-    "Chmura nie odpowiedziała, użyto modelu lokalnego.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The cloud did not respond, the local model was used."
           }
         }
       }
@@ -2163,16 +2058,6 @@
         }
       }
     },
-    "Chmura": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cloud"
-          }
-        }
-      }
-    },
     "Folder modelu jest współdzielony z poprzednią aplikacją do dyktowania. Po usunięciu ona również straci model i będzie musiała pobrać go ponownie.": {
       "localizations": {
         "en": {
@@ -2343,16 +2228,6 @@
         }
       }
     },
-    "Klucz API chmury": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cloud API key"
-          }
-        }
-      }
-    },
     "Klucz API do AI": {
       "localizations": {
         "en": {
@@ -2363,32 +2238,12 @@
         }
       }
     },
-    "Klucz jest zapisany w pęku kluczy.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The key is saved in the keychain."
-          }
-        }
-      }
-    },
     "Klucz zapisany w pęku kluczy.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Key saved in the keychain."
-          }
-        }
-      }
-    },
-    "Klucz zapisany, ale model %@ nie jest już dostępny. Wybierz inny.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Key saved, but the model %@ is no longer available. Pick another one."
           }
         }
       }
@@ -2509,16 +2364,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "The list is empty, fillers are not removed."
-          }
-        }
-      }
-    },
-    "Lista modeli nie jest jeszcze pobrana.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The model list has not been downloaded yet."
           }
         }
       }
@@ -2803,16 +2648,6 @@
         }
       }
     },
-    "Nagranie jest za duże, aby wysłać je do chmury.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The recording is too large to send to the cloud."
-          }
-        }
-      }
-    },
     "Nagrany czas": {
       "localizations": {
         "en": {
@@ -3073,16 +2908,6 @@
         }
       }
     },
-    "Model niedostępny": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Model unavailable"
-          }
-        }
-      }
-    },
     "Ten format nie jest obsługiwany przez macOS na tym komputerze.": {
       "localizations": {
         "en": {
@@ -3113,32 +2938,12 @@
         }
       }
     },
-    "Nieprawidłowa odpowiedź serwera.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invalid server response."
-          }
-        }
-      }
-    },
     "Nieprawidłowy klawisz modyfikatora.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Invalid modifier key."
-          }
-        }
-      }
-    },
-    "Nieprawidłowy klucz API": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invalid API key"
           }
         }
       }
@@ -3189,26 +2994,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "OK"
-          }
-        }
-      }
-    },
-    "OK, %lld ms": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK, %lld ms"
-          }
-        }
-      }
-    },
-    "OK, klucz działa.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK, the key works."
           }
         }
       }
@@ -3279,16 +3064,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Play"
-          }
-        }
-      }
-    },
-    "Odśwież listę modeli": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Refresh the model list"
           }
         }
       }
@@ -3717,16 +3492,6 @@
         }
       }
     },
-    "Polecany": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recommended"
-          }
-        }
-      }
-    },
     "Pominięto nieobsługiwane pliki: %@": {
       "localizations": {
         "en": {
@@ -3807,16 +3572,6 @@
         }
       }
     },
-    "Potrzebny, gdy chmura nie odpowie, i do podglądu na żywo podczas nagrywania.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Needed when the cloud does not respond, and for the live preview while recording."
-          }
-        }
-      }
-    },
     "Prawy ⇧": {
       "localizations": {
         "en": {
@@ -3873,26 +3628,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Go to Models"
-          }
-        }
-      }
-    },
-    "Przekroczono czas oczekiwania na odpowiedź serwera.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The server took too long to respond."
-          }
-        }
-      }
-    },
-    "Przekroczono limit zapytań. Spróbuj ponownie za chwilę.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rate limit reached. Try again in a moment."
           }
         }
       }
@@ -4027,26 +3762,6 @@
         }
       }
     },
-    "Rozwinięte": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expanded"
-          }
-        }
-      }
-    },
-    "Zwinięte": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Collapsed"
-          }
-        }
-      }
-    },
     "Prędkość odtwarzania": {
       "localizations": {
         "en": {
@@ -4063,26 +3778,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dashboard"
-          }
-        }
-      }
-    },
-    "Pęk kluczy nie odpowiedział na czas": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The keychain did not respond in time"
-          }
-        }
-      }
-    },
-    "Pęk kluczy nie odpowiedział na czas.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The keychain did not respond in time."
           }
         }
       }
@@ -4117,16 +3812,6 @@
         }
       }
     },
-    "Serwer zwrócił pustą transkrypcję.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The server returned an empty transcript."
-          }
-        }
-      }
-    },
     "Sesje": {
       "localizations": {
         "en": {
@@ -4143,16 +3828,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shift with a character key cannot be a shortcut."
-          }
-        }
-      }
-    },
-    "Silnik": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Engine"
           }
         }
       }
@@ -4293,16 +3968,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "File drop zone"
-          }
-        }
-      }
-    },
-    "Szukaj modelu (np. gemini, haiku)": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search models (e.g. gemini, haiku)"
           }
         }
       }
@@ -4467,16 +4132,6 @@
         }
       }
     },
-    "Transkrybuj w chmurze zamiast lokalnie": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Transcribe in the cloud instead of locally"
-          }
-        }
-      }
-    },
     "Transkrybuję": {
       "localizations": {
         "en": {
@@ -4533,16 +4188,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "File transcription"
-          }
-        }
-      }
-    },
-    "Transkrypcja w chmurze wysyła nagranie na serwer. Gdy chmura zawiedzie, Captylo wraca do modelu lokalnego.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cloud transcription sends the recording to a server. When the cloud fails, Captylo falls back to the local model."
           }
         }
       }
@@ -4853,16 +4498,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Heard"
-          }
-        }
-      }
-    },
-    "Użyj chmury": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use the cloud"
           }
         }
       }
@@ -5813,32 +5448,12 @@
         }
       }
     },
-    "sk-or-...": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "sk-or-..."
-          }
-        }
-      }
-    },
     "wav, mp3, m4a, aiff, aac, flac, caf, mp4, mov": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "wav, mp3, m4a, aiff, aac, flac, caf, mp4, mov"
-          }
-        }
-      }
-    },
-    "xi-...": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "xi-..."
           }
         }
       }
@@ -5879,76 +5494,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "“%@” is already in the dictionary."
-          }
-        }
-      }
-    },
-    "Captylo Pro": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Captylo Pro"
-          }
-        }
-      }
-    },
-    "Postaw kawę twórcy": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Buy the maker a coffee"
-          }
-        }
-      }
-    },
-    "Notatki AI ze spotkań, podpisy mówców i Zapytaj. Do tego chmura i AI bez kluczy.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "AI meeting notes, speaker labels and Ask. Plus the cloud and AI with no keys."
-          }
-        }
-      }
-    },
-    "Captylo jest darmowe i takie zostanie. Jeśli oszczędza Ci czas, postaw kawę za 20 zł.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Captylo is free and will stay free. If it saves you time, buy a coffee for 20 zł."
-          }
-        }
-      }
-    },
-    "Zobacz Pro": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "See Pro"
-          }
-        }
-      }
-    },
-    "Postaw kawę": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Buy a coffee"
-          }
-        }
-      }
-    },
-    "Ukryj na dwa tygodnie": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hide for two weeks"
           }
         }
       }
@@ -6443,21 +5988,6 @@
         "en": { "stringUnit": { "state": "translated", "value": "Mark as not done" } }
       }
     },
-    "Notatki AI są w Captylo Pro": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "AI notes are part of Captylo Pro" } }
-      }
-    },
-    "Podsumowanie, decyzje i zadania z każdego spotkania, w Twoim szablonie. Rozpoznawanie, kto mówi.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Summary, decisions and tasks from every meeting, in your template. Knows who is speaking." } }
-      }
-    },
-    "Włącz Tryb Pro (dev) w Ustawieniach": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Turn on Pro mode (dev) in Settings" } }
-      }
-    },
     "Wykrywaj spotkania": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "Detect meetings" } }
@@ -6488,24 +6018,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Audio files only; transcripts and notes stay." } }
       }
     },
-    "Tryb Pro (dev)": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Pro mode (dev)" } }
-      }
-    },
-    "Tylko w wersji deweloperskiej: włącza bez konta notatki AI, rozpoznawanie mówców, transkrypt z chmury i poprawki AI.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Development builds only: turns on AI notes, speaker labels, the cloud transcript and AI fixes without an account." } }
-      }
-    },
     "AI poprawia transkrypt...": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "AI is fixing the transcript..." } }
-      }
-    },
-    "Dokładniejszy transkrypt z chmury": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "More accurate transcript from the cloud" } }
       }
     },
     "Pliki audio znikną z tego Maca. Transkrypt i notatki zostaną, ale spotkania nie da się już odsłuchać.": {
@@ -6553,34 +6068,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Shortcut %@" } }
       }
     },
-    "Transkrybuj ponownie w chmurze": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Transcribe again in the cloud" } }
-      }
-    },
-    "Transkrybuję w chmurze...": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Transcribing in the cloud..." } }
-      }
-    },
     "Transkrypt z Maca": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "Transcript from this Mac" } }
-      }
-    },
-    "Transkrypt z chmury": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Transcript from the cloud" } }
-      }
-    },
-    "Transkrypt z chmury i poprawki AI są w Captylo Pro.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The cloud transcript and AI fixes are part of Captylo Pro." } }
-      }
-    },
-    "Transkrypt z chmury: %@": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Cloud transcript: %@" } }
       }
     },
     "Usunąć nagranie?": {
@@ -6873,16 +6363,6 @@
         "en": { "stringUnit": { "state": "translated", "value": "There is too little conversation in this meeting to answer." } }
       }
     },
-    "Zapytaj jest w Captylo Pro": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Ask is part of Captylo Pro" } }
-      }
-    },
-    "Zadaj pytanie o spotkanie i dostań krótką odpowiedź z odnośnikami do momentów rozmowy.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Ask a question about a meeting and get a short answer that links to the moments of the conversation." } }
-      }
-    },
     "Pytania": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "Questions" } }
@@ -6901,16 +6381,6 @@
     "Zapytaj wszystkie spotkania": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "Ask all meetings" } }
-      }
-    },
-    "Zapytaj wszystkie spotkania jest w Captylo Pro": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Ask all meetings is part of Captylo Pro" } }
-      }
-    },
-    "Zadaj jedno pytanie o wszystkie spotkania i dostań krótką odpowiedź ze źródłami i odnośnikami do momentów rozmowy.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Ask one question about all your meetings and get a short answer with its sources and links to the moments of the conversation." } }
       }
     },
     "Odpowiedź z Twoich spotkań, ze źródłami i odnośnikami do momentów rozmowy. Pytania znikają po zamknięciu Captylo.": {
@@ -7043,109 +6513,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "recording now" } }
       }
     },
-    "Konto Captylo": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Captylo account" } }
-      }
-    },
-    "Zaloguj się, żeby używać Captylo Pro: chmury i AI bez własnych kluczy. Nowe konto dostaje 7 dni Pro za darmo, bez karty.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Sign in to use Captylo Pro: the cloud and AI with no keys of your own. A new account gets 7 days of Pro for free, no card needed." } }
-      }
-    },
-    "Adres e-mail": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "E-mail address" } }
-      }
-    },
-    "Wyślij kod": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Send code" } }
-      }
-    },
-    "Wysłałem kod na %@. Sprawdź pocztę (także spam).": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "I sent a code to %@. Check your inbox (and spam)." } }
-      }
-    },
-    "Kod z e-maila": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Code from the e-mail" } }
-      }
-    },
-    "Zaloguj": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Sign in" } }
-      }
-    },
     "Wróć": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "Back" } }
-      }
-    },
-    "Wyślij ponownie": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Send again" } }
-      }
-    },
-    "Plan Free": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Free plan" } }
-      }
-    },
-    "Plan Pro": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Pro plan" } }
-      }
-    },
-    "Pro: chmura i AI bez kluczy, notatki AI ze spotkań, rozpoznawanie mówców, Zapytaj.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Pro: the cloud and AI with no keys, AI meeting notes, speaker labels, Ask." } }
-      }
-    },
-    "Rocznie, 329 zł": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Yearly, $84" } }
-      }
-    },
-    "Miesięcznie, 35 zł": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Monthly, $9" } }
-      }
-    },
-    "Odnawia się %@": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Renews on %@" } }
-      }
-    },
-    "Wygasa %@": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Expires on %@" } }
-      }
-    },
-    "Chmura: %@ z %@ w tym miesiącu": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Cloud: %1$@ of %2$@ this month" } }
-      }
-    },
-    "AI: %lld%% limitu": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "AI: %lld%% of the limit" } }
-      }
-    },
-    "Nie mogę sprawdzić subskrypcji. Pro wróci po połączeniu z internetem.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "I can't check the subscription. Pro comes back once you are online." } }
-      }
-    },
-    "Zarządzaj subskrypcją": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Manage subscription" } }
-      }
-    },
-    "Konto i faktury w przeglądarce": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Account and invoices in the browser" } }
       }
     },
     "Model lokalny jeszcze się przygotowuje (jednorazowo, do kilku minut). Spróbuj ponownie za chwilę.": {
@@ -7153,119 +6523,14 @@
         "en": { "stringUnit": { "state": "translated", "value": "The local model is still being prepared (once, up to a few minutes). Try again in a moment." } }
       }
     },
-    "Model lokalny jeszcze się przygotowuje, tym razem użyto chmury.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The local model is still being prepared, so the cloud handled this one." } }
-      }
-    },
-    "Model lokalny jeszcze się przygotowuje. Jeśli to możliwe, tym razem użyję chmury.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The local model is still being prepared. If possible, the cloud will handle this one." } }
-      }
-    },
     "Na dysku zostało mniej niż 1 GB. Zwolnij miejsce, inaczej nagrania i model mogą przestać działać.": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "Less than 1 GB is left on the disk. Free up space, or recordings and the model may stop working." } }
       }
     },
-    "Wyloguj": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Sign out" } }
-      }
-    },
-    "To nie wygląda na adres e-mail.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "That does not look like an e-mail address." } }
-      }
-    },
-    "Ten kod nie pasuje albo wygasł.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "This code does not match or has expired." } }
-      }
-    },
-    "Zaloguj się ponownie.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Please sign in again." } }
-      }
-    },
-    "Masz już Pro.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "You already have Pro." } }
-      }
-    },
-    "Poprzednia płatność wciąż czeka. Zaktualizuj kartę zamiast kupować drugi raz.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The last payment is still pending. Update your card instead of buying again." } }
-      }
-    },
-    "Płatność nie przeszła. Zaktualizuj kartę.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The payment did not go through. Update your card." } }
-      }
-    },
-    "To konto nie ma jeszcze subskrypcji.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "This account has no subscription yet." } }
-      }
-    },
-    "Nie udało się wysłać kodu. Spróbuj za chwilę.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The code could not be sent. Try again in a moment." } }
-      }
-    },
     "Brak połączenia z internetem.": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "No internet connection." } }
-      }
-    },
-    "Serwer Captylo nie odpowiada. Spróbuj za chwilę.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The Captylo server is not answering. Try again in a moment." } }
-      }
-    },
-    "Nie udało się odczytać sesji z pęku kluczy. Spróbuj ponownie.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Could not read the session from the keychain. Try again." } }
-      }
-    },
-    "Limit chmury w tym miesiącu jest wyczerpany.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "This month's cloud limit is used up." } }
-      }
-    },
-    "Brak dostępu do chmury. Dodaj klucz albo włącz Pro w Ustawieniach.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No cloud access. Add a key or turn on Pro in Settings." } }
-      }
-    },
-    "Limit chmury w tym miesiącu jest wyczerpany. Captylo użyje modelu lokalnego.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "This month's cloud limit is used up. Captylo will use the local model." } }
-      }
-    },
-    "Chmura nie jest dostępna bez klucza albo Pro, użyto modelu lokalnego.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The cloud needs a key or Pro, so the local model was used." } }
-      }
-    },
-    "Limit AI w tym miesiącu jest wyczerpany.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "This month's AI limit is used up." } }
-      }
-    },
-    "Limit AI wyczerpany": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "AI limit used up" } }
-      }
-    },
-    "Brak dostępu do AI spotkań. Włącz Captylo Pro.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No access to the meeting AI. Turn on Captylo Pro." } }
-      }
-    },
-    "Captylo Pro: chmura i Captylo AI działają bez kluczy.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Captylo Pro: the cloud and Captylo AI work without keys." } }
       }
     },
     "Podstawowe": {
@@ -7288,189 +6553,14 @@
         "en": { "stringUnit": { "state": "translated", "value": "Learning is turned off in the Basic tab." } }
       }
     },
-    "Transkrypcja w chmurze": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Cloud transcription" } }
-      }
-    },
-    "Chmura Captylo": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Captylo Cloud" } }
-      }
-    },
-    "Chmura Captylo, w ramach Pro": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Captylo Cloud, part of Pro" } }
-      }
-    },
-    "Twój klucz API chmury": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Your cloud API key" } }
-      }
-    },
-    "Chmura działa w Pro albo z własnym kluczem.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The cloud works with Pro or with your own key." } }
-      }
-    },
-    "Nagrania idą do transkrypcji przez Captylo. Gdy chmura nie odpowie, Captylo użyje modelu lokalnego, jeśli jest pobrany.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Recordings are transcribed through Captylo. When the cloud does not respond, Captylo uses the local model if it is downloaded." } }
-      }
-    },
-    "Nagrania idą z Twojego Maca prosto do dostawcy chmury. Gdy chmura nie odpowie, Captylo użyje modelu lokalnego, jeśli jest pobrany.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Recordings go from your Mac straight to the cloud provider. When the cloud does not respond, Captylo uses the local model if it is downloaded." } }
-      }
-    },
-    "Do tego czasu Captylo przepisuje nagrania na Macu, modelem lokalnym.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Until then Captylo transcribes recordings on your Mac with the local model." } }
-      }
-    },
-    "Dodaj klucz": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Add key" } }
-      }
-    },
-    "%@, nasz model w ramach Pro": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@, our model, part of Pro" } }
-      }
-    },
-    "%@, przez Twój klucz API do AI": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%@, through your AI API key" } }
-      }
-    },
-    "Poprawianie przez AI działa w Pro albo z własnym kluczem.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "AI cleanup works with Pro or with your own key." } }
-      }
-    },
-    "Klucz i model AI": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "AI key and model" } }
-      }
-    },
-    "Własne klucze są opcjonalne. Z kluczem nagrania i tekst idą z Twojego Maca prosto do dostawcy, a klucz zostaje w pęku kluczy macOS.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Your own keys are optional. With a key, recordings and text go from your Mac straight to the provider, and the key stays in the macOS Keychain." } }
-      }
-    },
-    "Teraz dyktujesz lokalnie. Chmurę włączysz w zakładce Podstawowe, w Silniku mowy.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "You are dictating locally now. Turn on the cloud in the Basic tab, under Speech engine." } }
-      }
-    },
-    "W ramach Pro, bez klucza": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Part of Pro, no key needed" } }
-      }
-    },
-    "Własny klucz": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Your own key" } }
-      }
-    },
-    "Prosto do dostawcy, z Twojego Maca": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Straight to the provider, from your Mac" } }
-      }
-    },
-    "Najpierw zapisz klucz poniżej": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Save a key below first" } }
-      }
-    },
-    "Z własnym kluczem wybierzesz poniżej inny model niż Captylo AI.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "With your own key you can pick a model other than Captylo AI below." } }
-      }
-    },
-    "Nasz model, w ramach Pro, bez klucza": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Our model, included in Pro, no key needed" } }
-      }
-    },
     "bez zmian": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "unchanged" } }
       }
     },
-    "w Pro": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "in Pro" } }
-      }
-    },
-    "Inny model wybierzesz, gdy zapiszesz własny klucz API do AI.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Save your own AI API key to pick another model." } }
-      }
-    },
-    "Masz plan Free. Pro daje chmurę i AI bez kluczy.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "You are on the Free plan. Pro gives you the cloud and AI without keys." } }
-      }
-    },
-    "Zaloguj się, a nowe konto dostanie 7 dni Pro za darmo, bez karty.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Sign in and a new account gets 7 days of Pro for free, no card needed." } }
-      }
-    },
-    "Pro na próbę do %@: chmura i Captylo AI działają bez kluczy.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Pro trial until %@: the cloud and Captylo AI work without keys." } }
-      }
-    },
-    "Okres próbny Pro się skończył. Pro daje chmurę i AI bez kluczy.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Your Pro trial has ended. Pro gives you the cloud and AI with no keys." } }
-      }
-    },
-    "Okres próbny Pro się skończył.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Your Pro trial has ended." } }
-      }
-    },
-    "Kup Pro": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Buy Pro" } }
-      }
-    },
-    "Pro na próbę": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Pro trial" } }
-      }
-    },
-    "Pro na próbę do %@. Potem wracasz do Free, chyba że wybierzesz Pro.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Pro trial until %@. After that you are back on Free unless you choose Pro." } }
-      }
-    },
-    "Aktywne": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Active" } }
-      }
-    },
     "Offline": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "Offline" } }
-      }
-    },
-    "Przejdź na Pro": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Upgrade to Pro" } }
-      }
-    },
-    "Z własnym kluczem wybierzesz powyżej, czy chmura działa przez Captylo, czy przez Twój klucz.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "With your own key you can choose above whether the cloud runs through Captylo or through your key." } }
-      }
-    },
-    "Captylo AI": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Captylo AI" } }
       }
     },
     "Usuń klucz": {
@@ -7486,46 +6576,6 @@
     "Klucz usunięty.": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "Key removed." } }
-      }
-    },
-    "Klucz usunięty. Działa Captylo AI.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Key removed. Captylo AI is on." } }
-      }
-    },
-    "Transkrypcja w chmurze przejdzie na Captylo w ramach Pro.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Cloud transcription will go through Captylo as part of Pro." } }
-      }
-    },
-    "Bez klucza Captylo przepisze nagrania na Macu, dopóki nie dodasz klucza albo nie przejdziesz na Pro.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Without a key, Captylo transcribes on your Mac until you add a key or switch to Pro." } }
-      }
-    },
-    "Klucz usunięty. Działa Chmura Captylo.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Key removed. Captylo Cloud is on." } }
-      }
-    },
-    "Poprawianie przez AI przejdzie na Captylo AI w ramach Pro.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "AI cleanup will run on Captylo AI as part of Pro." } }
-      }
-    },
-    "Bez klucza poprawianie przez AI nie zadziała, dopóki nie dodasz klucza albo nie przejdziesz na Pro.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Without a key, AI cleanup will not work until you add a key or switch to Pro." } }
-      }
-    },
-    "Chmura działa w Captylo Pro: zalogujesz się w Ustawieniach po zakończeniu. Własny klucz dodasz później w Modele > Zaawansowane.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The cloud works with Captylo Pro: you will sign in in Settings when you are done. You can add your own key later in Models > Advanced." } }
-      }
-    },
-    "Po spotkaniu wysyła nagranie do chmury i zastępuje nim transkrypt z Maca. W Pro działa bez własnego klucza.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "After a meeting, sends the recording to the cloud and replaces the transcript from your Mac with it. With Pro it works without a key of your own." } }
       }
     },
     "Cofnięte wcześniej, więc się tego nie uczę": {
@@ -7728,34 +6778,99 @@
         "en": { "stringUnit": { "state": "translated", "value": "“Fix” needs the Accessibility permission." } }
       }
     },
-    "7 dni Pro za darmo": {
+    "AI jest niedostępne: pobierz model lokalny w Modele albo włącz Bielika w chmurze w Modele > Zaawansowane.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "7 days of Pro free" } }
+        "en": { "stringUnit": { "state": "translated", "value": "AI is unavailable: download a local model in Models or turn on Bielik in the cloud in Models > Advanced." } }
       }
     },
-    "Nowe konto, bez karty. Po 7 dniach wracasz do Free.": {
+    "Brak modelu AI": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "New account, no card. After 7 days you are back on Free." } }
+        "en": { "stringUnit": { "state": "translated", "value": "No AI model" } }
       }
     },
-    "Spotkanie zapisane na tym Macu": {
+    "Model lokalny jeszcze się przygotowuje, ten tekst może pojawić się później niż zwykle.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Meeting saved on this Mac" } }
+        "en": { "stringUnit": { "state": "translated", "value": "The local model is still being prepared, this text may arrive later than usual." } }
       }
     },
-    "W Captylo Pro miałoby notatki AI z decyzjami i zadaniami, podpisy mówców i Zapytaj o to, co padło w rozmowie.": {
+    "Modele lokalne": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "With Captylo Pro it would have AI notes with decisions and tasks, speaker labels and Ask about what was said." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Local models" } }
       }
     },
-    "Wypróbuj Pro 7 dni za darmo": {
+    "Bielik na tym Macu poprawi dyktowanie i obsłuży funkcje AI bez internetu. Pobieranie modeli pojawi się tutaj.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Try Pro free for 7 days" } }
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik on this Mac will clean up your dictation and run the AI features offline. Model downloads will appear here." } }
       }
     },
-    "Zobacz przykład": {
+    "Gdzie działa AI": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "See an example" } }
+        "en": { "stringUnit": { "state": "translated", "value": "Where the AI runs" } }
+      }
+    },
+    "Na tym Macu, gdy pobierzesz model lokalny": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "On this Mac, once you download a local model" } }
+      }
+    },
+    "Bielik w chmurze CloudFerro (%@), na Twój klucz": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the CloudFerro cloud (%@), on your key" } }
+      }
+    },
+    "OK, %@, %lld ms": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "OK, %1$@, %2$lld ms" } }
+      }
+    },
+    "Bielik w chmurze": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the cloud" } }
+      }
+    },
+    "Dla Maców, na których model lokalny działa za wolno. Gdy to włączysz, tekst do poprawienia i pytania o spotkania idą z Twojego Maca prosto do polskiej chmury CloudFerro (Bielik 11B) i nigdzie indziej. Klucz zostaje w pęku kluczy macOS.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "For Macs where the local model is too slow. With this on, the text to clean up and your questions about meetings go from your Mac straight to CloudFerro's Polish cloud (Bielik 11B) and nowhere else. The key stays in the macOS Keychain." } }
+      }
+    },
+    "Używaj Bielika w chmurze": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Use Bielik in the cloud" } }
+      }
+    },
+    "Bez zapisanego klucza AI działa tylko na tym Macu.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Without a saved key, the AI runs only on this Mac." } }
+      }
+    },
+    "Klucz CloudFerro Sherlock": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "CloudFerro Sherlock key" } }
+      }
+    },
+    "Klucz API": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "API key" } }
+      }
+    },
+    "Bez klucza Bielik w chmurze nie zadziała, AI zostanie na tym Macu.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Without a key, Bielik in the cloud will not work and the AI stays on this Mac." } }
+      }
+    },
+    "Nazwa modelu w CloudFerro Sherlock": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The model name in CloudFerro Sherlock" } }
+      }
+    },
+    "Testuj połączenie": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Test connection" } }
+      }
+    },
+    "OK, Bielik w chmurze odpowiada (%lld ms).": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "OK, Bielik in the cloud answers (%lld ms)." } }
       }
     }
   },

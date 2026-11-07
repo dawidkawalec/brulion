@@ -7,7 +7,7 @@
 - `@Model` classes never cross actors; pass value structs (`DictationRecord`) or `PersistentIdentifier`.
 - Shared mutable state on hot paths uses `OSAllocatedUnfairLock`; no `Synchronization` module (macOS 15 only), no `DispatchSemaphore` on the cooperative pool.
 - Synchronous blocking calls (Core ML load, `AsrModels.loadLocal`) run on a dedicated `DispatchQueue` bridged with `withCheckedThrowingContinuation`.
-- `os.Logger(subsystem: "com.captylo.app", category: ...)` through `Log`; `OSSignposter` around the hot path. No `print` except the debug CLI output.
+- `os.Logger(subsystem: AppIdentity.bundleID, category: ...)` through `Log`; `OSSignposter` around the hot path. No `print` except the debug CLI output.
 - Errors are typed enums conforming to `LocalizedError` with Polish `errorDescription`. Never store an error message in a transcript field.
 - Regex work uses `NSRegularExpression` with `escapedTemplate(for:)` for replacements (the old Swift Regex path lost `$` and `\`).
 - One file per type, folder = module. File names match the primary type.

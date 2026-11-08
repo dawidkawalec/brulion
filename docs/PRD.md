@@ -229,7 +229,7 @@ Gdy zabraknie czasu, tniemy od końca tej listy. Rdzeń zgłoszenia to dyktowani
 | Ryzyko | Co robimy |
 |---|---|
 | 1.5B psuje sens albo tłumaczy | strażnik z 7.2 i przejście na 4.5B |
-| helper `llama-server` nie przechodzi notaryzacji | MLX Swift w procesie aplikacji |
+| helper `llama-server` nie przechodzi notaryzacji | zamknięte 8.11: aplikacja i DMG 0.9.0 przyjęte przez Apple (sekcja 12); MLX niepotrzebny |
 | za mało pamięci na 8 GB | poziomy z sekcji 6, zwalnianie modelu po bezczynności, opcja chmury |
 | spotkanie przekracza 32 tys. tokenów | dzielenie na części i scalenie |
 | 8 dni to mało czasu | kolejność cięcia z sekcji 10; agenci pracują równolegle na osobnych modułach |
@@ -286,6 +286,10 @@ Gdy zabraknie czasu, tniemy od końca tej listy. Rdzeń zgłoszenia to dyktowani
 - Własny znak: szpak śpiewający na gałązce (płaski, kanciasty jak sygnet Bielika, ale nie orzeł Bielika). Ikona: ciemny brąz z ptakiem w rhubarb. Z jednej geometrii (`scripts/make-szpak-brand.swift`) powstają ikona, symbol w onboardingu i sidebarze, ikony paska menu oraz favicony w `docs/brand/`.
 - Fonty: Geologica (nagłówki, liczby, wordmark, jak na bielik.ai) i Inter (tekst UI). Manrope odpada.
 - Szczegóły i tokeny: [docs/design/dusk-glass.md](design/dusk-glass.md), zasada 7.
+
+**Notaryzacja (8.11, wybór Dawida: DMG przed tekstami zgłoszenia)**
+- `scripts/release.sh 0.9.0 --allow-branch` z gałęzi `bielik-cloud` (build 116): podpis Developer ID (CRAFTWEB, RA8ASXBMDZ) od środka, razem z helperem `llama-server`; notaryzacja aplikacji i DMG: Accepted, staple OK, Gatekeeper: "accepted source=Notarized Developer ID", aplikacja z DMG startuje.
+- To DMG do testu na czystym Macu (kryterium 1), nie publiczne wydanie: `main` to wciąż Captylo 1.0.17, a wydanie idzie na GitHub dopiero po zgodzie Dawida (popup), z gałęzi wybranej przy upublicznieniu repo.
 
 **Do Dawida**
 1. ~~Ikona Szpaka~~: rozstrzygnięte 8.11 (własny znak w barwach Bielika, wyżej).

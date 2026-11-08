@@ -107,12 +107,14 @@ else
 fi
 
 if dry; then
-  # Local look only, no request to Apple: notarytool keeps saved profiles as a generic
-  # password item named after the profile. The real run asks notarytool itself.
+  # Local look only, no request to Apple. Older notarytool kept saved profiles as a generic
+  # password item named after the profile; newer versions keep them where `security` cannot
+  # see them (a working profile was missed here on 2026-11-08), so a miss is only a hint. The
+  # real run asks notarytool itself and stops if the profile does not work.
   if security find-generic-password -a "com.apple.gke.notary.tool.saved-creds.$NOTARY_PROFILE" >/dev/null 2>&1; then
     note "Notary profile \"$NOTARY_PROFILE\": looks present in the Keychain (not checked against Apple in a dry run)"
   else
-    note "DRY RUN, a real release would stop here: no notarytool profile \"$NOTARY_PROFILE\" found in the Keychain (xcrun notarytool store-credentials $NOTARY_PROFILE ..., docs/release.md)"
+    note "Notary profile \"$NOTARY_PROFILE\": not visible to \`security\` (newer notarytool hides it); check with: xcrun notarytool history --keychain-profile $NOTARY_PROFILE"
   fi
 elif xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
   note "Notary profile \"$NOTARY_PROFILE\": works"

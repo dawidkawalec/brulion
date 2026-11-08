@@ -62,11 +62,12 @@ struct LocalAICatalogTests {
 
     @Test func approximateRAMUsesTheF0Plan() {
         #expect(LocalModelCatalog.bielik15B.approximateRAMBytes == 2_300_000_000)
-        // Minitron at the features context (-c 24576): an estimate until measured.
-        #expect(LocalModelCatalog.bielikMinitron7B.approximateRAMBytes == 7_500_000_000)
-        // 1.5B + Minitron still fit the 16 GB budget together.
+        // Minitron at the features context (-c 24576), measured in the app (F3, 7.11).
+        #expect(LocalModelCatalog.bielikMinitron7B.approximateRAMBytes == 8_450_000_000)
+        // On 16 GB each fits the budget alone, the two together do not (run one at a time).
         let budget = HardwareProfile(physicalMemoryBytes: 16 * 1024 * 1024 * 1024).memoryBudgetBytes
-        #expect(LocalModelCatalog.bielik15B.approximateRAMBytes + LocalModelCatalog.bielikMinitron7B.approximateRAMBytes <= budget)
+        #expect(LocalModelCatalog.bielikMinitron7B.approximateRAMBytes <= budget)
+        #expect(LocalModelCatalog.bielik15B.approximateRAMBytes + LocalModelCatalog.bielikMinitron7B.approximateRAMBytes > budget)
         for spec in LocalModelCatalog.all {
             #expect(LocalAITuning.measuredPeakRAM[spec.id] != nil, "\(spec.id) has a planned memory")
             #expect(spec.approximateRAMBytes > spec.bytes)

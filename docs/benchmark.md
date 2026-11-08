@@ -127,7 +127,7 @@ Po zakończeniu spotkania wszystko liczy się w tle, bez limitu czasu i z paskie
 - **RSS** obejmuje zmapowany plik modelu, który macOS może zwolnić bez swapu. **Footprint** to pamięć robocza: KV cache i bufory Metal.
 - **Wymagania:** pełna lokalna AI to Mac z Apple Silicon i co najmniej 16 GB RAM oraz ok. 7,2 GB wolnego miejsca (6,2 GB modeli plus 1 GB zapasu przy pobieraniu). Poniżej 16 GB działa tryb eksperymentalny: korekta lokalnie, a funkcje AI na 1.5B albo na Bieliku w chmurze, na kluczu użytkownika do CloudFerro Sherlock. Nie testowaliśmy go na Macu z 8 GB, więc w zgłoszeniu go nie obiecujemy.
 - **Modele w pamięci:** serwer modelu zwalnia pamięć po 10 minutach bezczynności (do zmiany w ustawieniach) i kończy się razem z aplikacją. Przy żadnym z pomiarów `llama-server` nie został w tle.
-- **Do decyzji:** plan pamięci zakłada dla Minitrona 7,5 GB, a zmierzyliśmy 8,45 GB. Przy zmierzonej wartości 1.5B i Minitron nie zmieszczą się naraz w budżecie Maca z 16 GB (60% RAM). Na takim Macu serwis przełączałby wtedy modele przy każdej zmianie między korektą a trybem AI.
+- **Mac z 16 GB (decyzja 8.11):** plan pamięci przyjmuje zmierzone 8,45 GB dla Minitrona. 1.5B i Minitron razem (10,75 GB) nie mieszczą się w budżecie Maca z 16 GB (60% RAM, 10,3 GB), więc na takim Macu modele działają po kolei: gdy startuje Minitron, serwis zatrzymuje 1.5B, a następne dyktowanie czeka ok. 1-2 s na jego ponowne wczytanie. Od 24 GB oba modele zostają w pamięci.
 
 ## 5. Zero sieci
 

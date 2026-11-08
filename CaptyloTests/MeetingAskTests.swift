@@ -249,6 +249,130 @@ struct MeetingAskTests {
         #expect(calls.withLock { $0 } == 0)
     }
 
+    // MARK: Long meetings (MeetingAskExcerpts)
+
+    private static let filler = "Rozmawiamy o pogodzie, o kawie w biurze i o tym, kto wraca z urlopu w przyszłym tygodniu, nic więcej."
+    private static let budgetLine = "Na kampanię w LinkedIn dajemy pięć tysięcy złotych, budżet zatwierdzony."
+
+    /// `count` filler lines a minute apart with `budgetLine` in the middle: far over the budget.
+    private static func longSegments(meetingID: UUID, count: Int = 1_200) -> [MeetingSegmentRecord] {
+        (0..<count).map { index in
+            MeetingSegmentRecord(
+                meetingID: meetingID, track: index.isMultiple(of: 2) ? .me : .them,
+                start: Double(index) * 6, end: Double(index) * 6 + 5,
+                text: index == count / 2 ? budgetLine : filler
+            )
+        }
+    }
+
+    @Test func rankedHitsPutTheLinesWithMostQuestionWordsFirst() throws {
+        let id = UUID()
+        let lines = ["Budżet na reklamy rośnie.", "Kawa się skończyła.", "Reklamy w LinkedIn i budżet.", "Sam budżet."]
+        let segments = lines.enumerated().map { index, text in
+            MeetingSegmentRecord(meetingID: id, track: .them, start: Double(index), end: Double(index) + 1, text: text)
+        }
+        let terms = try #require(LibraryAskRetrieval.terms("Jaki budżet na reklamy w LinkedIn?"))
+        let ranked = MeetingAskExcerpts.rankedHits(terms: terms, in: segments)
+        #expect(ranked.map(\.text) == ["Reklamy w LinkedIn i budżet.", "Budżet na reklamy rośnie.", "Sam budżet."])
+        #expect(MeetingAskExcerpts.rankedHits(terms: [], in: segments).isEmpty)
+    }
+
+    @Test func runsKeepEachHitsNeighborsAndTheClosingLines() {
+        let id = UUID()
+        let segments = (0..<40).map {
+            MeetingSegmentRecord(meetingID: id, track: .me, start: Double($0), end: Double($0) + 1, text: "linia \($0)")
+        }
+        let runs = MeetingAskExcerpts.runs(hits: [segments[5], segments[6]], in: segments)
+        #expect(runs.map { $0.map(\.start) } == [[4, 5, 6, 7], (28...39).map(Double.init)])
+        // A hit next to the closing lines joins them into one run.
+        let joined = MeetingAskExcerpts.runs(hits: [segments[27]], in: segments)
+        #expect(joined.map { $0.map(\.start) } == [(26...39).map(Double.init)])
+        #expect(MeetingAskExcerpts.runs(hits: [], in: []).isEmpty)
+    }
+
+    @Test func aLongMeetingAsksOnTheAINotesAndTheLinesAboutTheQuestion() throws {
+        var meeting = MeetingRecord(title: "Planowanie kampanii", status: .completed, duration: 7_200)
+        meeting.summary = "- Budżet kampanii LinkedIn: 5 tys. zł [1:00:00]"
+        let segments = Self.longSegments(meetingID: meeting.id)
+        let system = MeetingPrompts.askSystem()
+        let closing = MeetingPrompts.askReminder()
+        let whole = TranscriptChunker.appending(
+            closing, to: MeetingAskPrompt.user(meeting: meeting, segments: segments, question: "Jaki budżet na LinkedIn?", history: [])
+        )
+        #expect(!TranscriptChunker.fits(system: system, user: whole))
+
+        let plan = MeetingAskExcerpts.plan(
+            question: "Jaki budżet na LinkedIn?", meeting: meeting, segments: segments,
+            history: [], system: system, closing: closing
+        )
+        guard case .excerpts(let user, let hits, let total) = plan else {
+            Issue.record("expected excerpts, got \(plan)")
+            return
+        }
+        #expect(hits == 1 && total == 1)
+        #expect(TranscriptChunker.fits(system: system, user: user))
+        #expect(user.contains("<ai_notes>\n- Budżet kampanii LinkedIn: 5 tys. zł [1:00:00]\n</ai_notes>"))
+        #expect(user.contains("<excerpts>\n"))
+        #expect(!user.contains("<transcript>"))
+        #expect(user.contains("[1:00:00] Ja: \(Self.budgetLine)"))
+        // The hit, its two neighbors and the closing lines, nothing else of the meeting.
+        let sent = user.components(separatedBy: "\n").filter { $0.hasPrefix("[") }
+        #expect(sent.count == 3 + MeetingAskExcerpts.closingLines)
+        #expect(user.contains("\n...\n"))
+        #expect(user.hasSuffix(closing))
+    }
+
+    @Test func aLongMeetingWithNothingToGoOnOrTooBigForAnyCallIsNotPlanned() {
+        var meeting = MeetingRecord(title: "Planowanie kampanii", status: .completed, duration: 7_200)
+        let segments = Self.longSegments(meetingID: meeting.id)
+        let system = MeetingPrompts.askSystem()
+        let closing = MeetingPrompts.askReminder()
+        // No AI notes and no line with the question's words.
+        #expect(MeetingAskExcerpts.plan(
+            question: "Kto prowadzi rekrutację?", meeting: meeting, segments: segments,
+            history: [], system: system, closing: closing
+        ) == .nothingToGoOn)
+        // With AI notes a question without hits still goes, on the notes and the closing lines.
+        meeting.summary = "- Rekrutację prowadzi Ewa [10:00]"
+        guard case .excerpts(_, 0, 0) = MeetingAskExcerpts.plan(
+            question: "Kto prowadzi rekrutację?", meeting: meeting, segments: segments,
+            history: [], system: system, closing: closing
+        ) else {
+            Issue.record("expected excerpts without hits")
+            return
+        }
+        // Not even the header and the closing lines fit a tiny budget.
+        #expect(MeetingAskExcerpts.plan(
+            question: "Kto prowadzi rekrutację?", meeting: meeting, segments: segments,
+            history: [], system: system, closing: closing, budget: 100
+        ) == .tooLong)
+    }
+
+    @Test func theAskerSendsExcerptsForAMeetingTooLongForOneCall() async throws {
+        let database = Database(modelContainer: try Store.makeInMemoryContainer())
+        var meeting = MeetingRecord(title: "Planowanie kampanii", status: .completed, duration: 7_200)
+        meeting.summary = "- Budżet kampanii LinkedIn: 5 tys. zł [1:00:00]"
+        try await database.createMeeting(meeting)
+        for segment in Self.longSegments(meetingID: meeting.id) {
+            try await database.appendSegment(segment)
+        }
+        let seen = OSAllocatedUnfairLock(initialState: Data())
+        let (asker, baseURL) = Self.asker(Fixture(database: database, meetingID: meeting.id)) { request in
+            let data = Self.rawBody(of: request)
+            seen.withLock { $0 = data }
+            return .json(Self.chat("Pięć tysięcy złotych [1:00:00]."))
+        }
+        defer { StubURLProtocol.unregister(baseURL) }
+
+        let asked = try #require(await asker.ask(meetingID: meeting.id, question: "Jaki budżet na LinkedIn?"))
+        #expect(asked.error == nil)
+        #expect(asked.answer == "Pięć tysięcy złotych [1:00:00].")
+        let messages = Self.messages(Self.json(seen.withLock { $0 }))
+        #expect(messages.last?.contains("<excerpts>") == true)
+        #expect(messages.last?.contains("<transcript>") == false)
+        #expect(messages.last?.contains(Self.budgetLine) == true)
+    }
+
     @Test func longQuestionsAreCut() async throws {
         let fixture = try await Self.fixture()
         let (asker, baseURL) = Self.asker(fixture) { _ in .json(Self.chat(Self.answer)) }

@@ -291,9 +291,14 @@ Gdy zabraknie czasu, tniemy od końca tej listy. Rdzeń zgłoszenia to dyktowani
 - `scripts/release.sh 0.9.0 --allow-branch` z gałęzi `bielik-cloud` (build 116): podpis Developer ID (CRAFTWEB, RA8ASXBMDZ) od środka, razem z helperem `llama-server`; notaryzacja aplikacji i DMG: Accepted, staple OK, Gatekeeper: "accepted source=Notarized Developer ID", aplikacja z DMG startuje.
 - To DMG do testu na czystym Macu (kryterium 1), nie publiczne wydanie: `main` to wciąż Captylo 1.0.17, a wydanie idzie na GitHub dopiero po zgodzie Dawida (popup), z gałęzi wybranej przy upublicznieniu repo.
 
+**Domknięcie F2 i F3 (Dawid, 8.11, "zostaje tylko F4")**
+- Zapytaj o spotkanie dłuższe niż ok. 45 min: zamiast odmowy idą notatki AI i fragmenty pod pytanie (linie ze słowami pytania z sąsiadami i końcówka spotkania), tyle, ile mieści się w budżecie, jedno wywołanie (`MeetingAskExcerpts`). Odmowa zostaje tylko, gdy nie ma notatek AI ani pasującej linii albo gdy nawet notatki się nie mieszczą.
+- Mac z 16 GB: plan pamięci przyjmuje zmierzone 8,45 GB dla Minitrona. 1.5B i Minitron działają tam po kolei (serwis zatrzymuje 1.5B, gdy startuje Minitron, następne dyktowanie czeka ok. 1-2 s); budżet 60% RAM bez zmian. Od 24 GB oba zostają w pamięci.
+- Wydanie: `main` przejmuje Szpaka, repo publiczne, release v0.9.0 z notaryzowanym DMG z `main` (każdy krok na remote po popupie). Test na czystym Macu robi Dawid na DMG z GitHuba.
+
 **Do Dawida**
 1. ~~Ikona Szpaka~~: rozstrzygnięte 8.11 (własny znak w barwach Bielika, wyżej).
-2. Zgoda na upublicznienie repo na GitHubie (popup przed zmianą widoczności).
+2. Zgoda na upublicznienie repo na GitHubie (popup przed zmianą widoczności; kierunek ustalony 8.11, wyżej).
 3. Czy ogłosić nową wersję użytkownikom Captylo (mail przez `tbsend`, po popupie).
 4. Odczyt liczb z produkcji Captylo.
 

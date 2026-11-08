@@ -25,14 +25,14 @@ enum LocalAITuning {
     // MARK: Memory
 
     /// Planned memory of llama-server per model id: the mapped model file plus the working
-    /// memory. 1.5B measured in F0 at -c 8192 (1.70 GB + 0.45-0.6 GB). Minitron measured at
-    /// -c 8192 (4.50 GB + 1.7-2.1 GB); at the features context (-c 24576) the KV cache grows, so
-    /// it is an ESTIMATE of 7.5 GB until measured. The 4.5B is an ESTIMATE (5.06 GB + 2.4 GB at
-    /// -c 24576), not measured. A model used for correction only runs at -c 8192 and needs
-    /// less, so these are the upper bounds.
+    /// memory. 1.5B measured in F0 at -c 8192 (1.70 GB + 0.45-0.6 GB). Minitron measured in the
+    /// app at the features context -c 24576 (F3, 7.11: RSS 8.3-8.45 GB, of which the mapped
+    /// 4.50 GB file macOS can drop; the peak is taken as the plan). The 4.5B is an ESTIMATE
+    /// (5.06 GB + 2.4 GB at -c 24576), not measured. A model used for correction only runs at
+    /// -c 8192 and needs less, so these are the upper bounds.
     static let measuredPeakRAM: [String: Int64] = [
         "bielik-1.5b-v3-q8": 2_300_000_000,
-        "bielik-minitron-7b-v3-q4km": 7_500_000_000,
+        "bielik-minitron-7b-v3-q4km": 8_450_000_000,
         "bielik-4.5b-v3-q8": 7_500_000_000,
     ]
     /// Peak memory as a multiple of the file size for a model without a measurement (tests,
@@ -44,8 +44,11 @@ enum LocalAITuning {
     }
 
     /// Share of the physical memory all llama-server processes may use together, per tier.
-    /// 16 GB x 0.6 = 10.3 GB fits 1.5B + Minitron (8.9 GB) next to Whisper; 8 GB x 0.45 =
-    /// 3.9 GB fits the 1.5B (2.3 GB) alone, so a bigger model runs one at a time.
+    /// 16 GB x 0.6 = 10.3 GB holds either model, but not 1.5B + Minitron (10.75 GB): on a 16 GB
+    /// Mac the service stops the 1.5B while Minitron runs and starts it again for the next
+    /// dictation (about 1-2 s). Dawid, 8.11: models one at a time there, rather than a bigger
+    /// budget (swap) or a smaller context (more meeting parts). From 24 GB (14.4 GB) both stay
+    /// loaded. 8 GB x 0.45 = 3.9 GB fits the 1.5B (2.3 GB) alone.
     static let standardMemoryBudgetFraction = 0.6
     static let experimentalMemoryBudgetFraction = 0.45
     /// On the experimental tier a model whose peak memory exceeds this share of the physical

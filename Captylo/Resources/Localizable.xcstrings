@@ -7133,6 +7133,11 @@
         "en": { "stringUnit": { "state": "translated", "value": "Not used now" } }
       }
     },
+    "To spotkanie jest długie, a pytanie nie pasuje do żadnej linii transkryptu i nie ma jeszcze notatek AI. Zapytaj konkretniej, np. o temat, osobę albo kwotę.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This meeting is long, the question matches no line of the transcript and there are no AI notes yet. Ask more specifically, for example about a topic, a person or an amount." } }
+      }
+    },
     "To spotkanie jest za długie, żeby zapytać o nie naraz. Zajrzyj do notatek AI albo zapytaj wszystkie spotkania.": {
       "localizations": {
         "en": { "stringUnit": { "state": "translated", "value": "This meeting is too long to ask about in one go. Look at the AI notes or ask all meetings." } }

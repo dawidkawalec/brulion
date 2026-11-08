@@ -152,6 +152,7 @@ enum MeetingPrompts {
         - "Tytuł", "Data", "Uczestnicy": nagłówek spotkania.
         - <user_notes>: notatki użytkownika z czasem zapisu.
         - <transcript>: linie "[czas] Mówca: tekst". "Ja" to użytkownik, który nagrywał, "Rozmówcy" to druga strona rozmowy.
+        - Przy bardzo długim spotkaniu zamiast <transcript> dostajesz <ai_notes> (notatki AI z czasami) i <excerpts> (wybrane linie transkryptu w tym samym formacie, fragmenty rozdziela "..."). Czasy z obu wolno cytować.
         - <previous_questions>: wcześniejsze pytania i odpowiedzi, przydatne przy pytaniach typu "a kto to zrobi?".
         - <question>: pytanie, na które odpowiadasz.
 

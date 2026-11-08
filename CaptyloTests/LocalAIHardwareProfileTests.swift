@@ -51,12 +51,16 @@ struct LocalAIHardwareProfileTests {
         }
     }
 
-    @Test func memoryBudgetFitsOneModelOnEightAndTwoOnSixteen() {
+    /// 8 GB holds the 1.5B; 16 GB holds Minitron but not both (one at a time, Dawid 8.11);
+    /// 24 GB keeps both loaded.
+    @Test func memoryBudgetRunsModelsOneAtATimeUpToSixteen() {
         let small = profile(8).memoryBudgetBytes
         let pair = LocalModelCatalog.bielik15B.approximateRAMBytes + LocalModelCatalog.bielikMinitron7B.approximateRAMBytes
         #expect(LocalModelCatalog.bielik15B.approximateRAMBytes <= small)
         #expect(pair > small)
-        #expect(pair <= profile(16).memoryBudgetBytes)
+        #expect(LocalModelCatalog.bielikMinitron7B.approximateRAMBytes <= profile(16).memoryBudgetBytes)
+        #expect(pair > profile(16).memoryBudgetBytes)
+        #expect(pair <= profile(24).memoryBudgetBytes)
     }
 
     @Test func requirementsCountTheDownloadsAndTheMargin() {

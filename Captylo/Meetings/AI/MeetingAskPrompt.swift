@@ -16,6 +16,38 @@ enum MeetingAskPrompt {
     /// Title, date, participants, the user's notes (line times when there are any), every
     /// non-echo segment in time order, the last `historyLimit` answered questions, the question.
     static func user(meeting: MeetingRecord, segments: [MeetingSegmentRecord], question: String, history: [MeetingQuestion]) -> String {
+        let transcript = segments
+            .filter { !$0.isEcho }
+            .sorted { $0.start < $1.start }
+            .map { line($0, of: meeting) }
+            .joined(separator: "\n")
+        let parts = [
+            header(meeting),
+            "<user_notes>\n\(notes(meeting))\n</user_notes>",
+            "<transcript>\n\(transcript)\n</transcript>",
+        ] + tail(question: question, history: history)
+        return parts.joined(separator: "\n")
+    }
+
+    /// The same for a meeting too long for one call (`MeetingAskExcerpts`): the AI notes
+    /// (`summary`) when there are any, the user's notes and the picked transcript runs in
+    /// `<excerpts>` (runs separated by "...", like `LibraryAskPrompt`) instead of `<transcript>`.
+    static func excerptUser(meeting: MeetingRecord, runs: [[MeetingSegmentRecord]], question: String, history: [MeetingQuestion]) -> String {
+        var parts = [header(meeting)]
+        let summary = (meeting.summary ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !summary.isEmpty {
+            parts.append("<ai_notes>\n\(summary)\n</ai_notes>")
+        }
+        parts.append("<user_notes>\n\(notes(meeting))\n</user_notes>")
+        let excerpts = runs.filter { !$0.isEmpty }
+            .map { run in run.map { line($0, of: meeting) }.joined(separator: "\n") }
+            .joined(separator: "\n...\n")
+        parts.append("<excerpts>\n\(excerpts)\n</excerpts>")
+        return (parts + tail(question: question, history: history)).joined(separator: "\n")
+    }
+
+    /// "Tytuł", "Data" and, when there are any, "Uczestnicy".
+    private static func header(_ meeting: MeetingRecord) -> String {
         var header = "Tytuł: \(meeting.title)\nData: \(promptDate(meeting.createdAt))"
         let participants = meeting.participants
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -23,16 +55,17 @@ enum MeetingAskPrompt {
         if !participants.isEmpty {
             header += "\nUczestnicy: " + participants.joined(separator: ", ")
         }
-        let transcript = segments
-            .filter { !$0.isEcho }
-            .sorted { $0.start < $1.start }
-            .map { "\(MeetingTime.stamp($0.start)) \(meeting.promptLabel(for: $0)): \($0.text)" }
-            .joined(separator: "\n")
-        var parts = [
-            header,
-            "<user_notes>\n\(notes(meeting))\n</user_notes>",
-            "<transcript>\n\(transcript)\n</transcript>",
-        ]
+        return header
+    }
+
+    /// A transcript line as the prompt shows it: "[12:34] Mówca: tekst".
+    private static func line(_ segment: MeetingSegmentRecord, of meeting: MeetingRecord) -> String {
+        "\(MeetingTime.stamp(segment.start)) \(meeting.promptLabel(for: segment)): \(segment.text)"
+    }
+
+    /// The last `historyLimit` answered questions (when there are any) and the question.
+    private static func tail(question: String, history: [MeetingQuestion]) -> [String] {
+        var parts: [String] = []
         let previous = history.filter(\.hasAnswer).suffix(historyLimit)
         if !previous.isEmpty {
             let exchanges = previous
@@ -41,7 +74,7 @@ enum MeetingAskPrompt {
             parts.append("<previous_questions>\n\(exchanges)\n</previous_questions>")
         }
         parts.append("<question>\n\(question.trimmingCharacters(in: .whitespacesAndNewlines))\n</question>")
-        return parts.joined(separator: "\n")
+        return parts
     }
 
     /// "2 października 2026 14:00": always Polish and with the year (the prompt is Polish).

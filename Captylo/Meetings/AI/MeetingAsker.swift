@@ -3,7 +3,8 @@ import os
 
 /// "Zapytaj" about one meeting: one non-streaming call with the whole transcript and the
 /// user's notes (`MeetingAskPrompt`), on `HTTP.meetingLLMSession` and the stronger model
-/// (`MeetingAITask.ask`), like the AI notes. The question and its answer, or the Polish reason it failed,
+/// (`MeetingAITask.ask`), like the AI notes. A meeting too long for one call sends its AI notes
+/// and the lines about the question instead (`MeetingAskExcerpts`). The question and its answer, or the Polish reason it failed,
 /// go onto the meeting row in one `modifyMeeting` step, newest last, the newest
 /// `maxStoredQuestions` kept. Never logs the question or the answer.
 actor MeetingAsker {
@@ -24,8 +25,14 @@ actor MeetingAsker {
         String(localized: "W tym spotkaniu jest za mało rozmowy, żeby odpowiedzieć.")
     }
 
+    /// Not even the AI notes, the user's notes and the closing lines fit one call.
     static var tooLongMessage: String {
         String(localized: "To spotkanie jest za długie, żeby zapytać o nie naraz. Zajrzyj do notatek AI albo zapytaj wszystkie spotkania.")
+    }
+
+    /// A long meeting without AI notes and a question that matches no transcript line.
+    static var nothingToGoOnMessage: String {
+        String(localized: "To spotkanie jest długie, a pytanie nie pasuje do żadnej linii transkryptu i nie ma jeszcze notatek AI. Zapytaj konkretniej, np. o temat, osobę albo kwotę.")
     }
 
     private let database: Database
@@ -91,12 +98,27 @@ actor MeetingAsker {
         guard words >= Self.minimumWords else { throw AskError(message: Self.nothingToAskMessage) }
 
         let system = MeetingAIInstructions.system(for: .ask)
-        let user = TranscriptChunker.appending(
-            MeetingPrompts.askReminder(),
+        let closing = MeetingPrompts.askReminder()
+        var user = TranscriptChunker.appending(
+            closing,
             to: MeetingAskPrompt.user(meeting: meeting, segments: spoken, question: question, history: meeting.questions)
         )
-        // One call reads the whole meeting: over the input budget it would not fit the model.
-        guard TranscriptChunker.fits(system: system, user: user) else { throw AskError(message: Self.tooLongMessage) }
+        // Over the input budget the whole meeting would not fit the model: the AI notes and the
+        // lines about the question go instead (Dawid, 8.11).
+        if !TranscriptChunker.fits(system: system, user: user) {
+            switch MeetingAskExcerpts.plan(
+                question: question, meeting: meeting, segments: spoken,
+                history: meeting.questions, system: system, closing: closing
+            ) {
+            case .excerpts(let excerpted, let hits, let total):
+                Log.enhancement.info("Meeting ask on excerpts: \(hits) of \(total) hit lines")
+                user = excerpted
+            case .tooLong:
+                throw AskError(message: Self.tooLongMessage)
+            case .nothingToGoOn:
+                throw AskError(message: Self.nothingToGoOnMessage)
+            }
+        }
         let started = ContinuousClock.now
         let reply = try await chat.complete(task: .ask, system: system, user: user, maxTokens: Self.maxTokens)
         if reply.finishReason == "length" {

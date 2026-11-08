@@ -290,7 +290,8 @@ final class MeetingSearchIndex: MeetingIndexing, @unchecked Sendable {
         readyFlag.withLock { $0 = ready }
     }
 
-    private func onQueue<T: Sendable>(_ work: @escaping @Sendable () -> T) async -> T {
+    /// `@concurrent` on purpose (both bridges): see "Queue bridges" in docs/coding-standards.md.
+    @concurrent private func onQueue<T: Sendable>(_ work: @escaping @Sendable () -> T) async -> T {
         await withCheckedContinuation { continuation in
             queue.async {
                 continuation.resume(returning: work())
@@ -298,7 +299,7 @@ final class MeetingSearchIndex: MeetingIndexing, @unchecked Sendable {
         }
     }
 
-    private func withConnection<T: Sendable>(_ work: @escaping @Sendable (SQLiteConnection) throws -> T) async throws -> T {
+    @concurrent private func withConnection<T: Sendable>(_ work: @escaping @Sendable (SQLiteConnection) throws -> T) async throws -> T {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 guard let connection = self.openIfNeeded() else {

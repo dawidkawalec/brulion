@@ -117,7 +117,8 @@ enum AudioDecoder {
         return (samples, duration)
     }
 
-    private static func onQueue<T: Sendable>(_ work: @escaping @Sendable () throws -> T) async throws -> T {
+    /// `@concurrent` on purpose: see "Queue bridges" in docs/coding-standards.md.
+    @concurrent private static func onQueue<T: Sendable>(_ work: @escaping @Sendable () throws -> T) async throws -> T {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 do {

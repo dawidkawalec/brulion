@@ -5,7 +5,8 @@ import os
 /// that gives up on a loading model pastes the raw text, while the model keeps loading for
 /// the next one. Also returns nil at once when the waiting task is cancelled.
 enum LocalAITimeout {
-    static func value<T: Sendable>(of task: Task<T, Error>, within timeout: Duration) async -> T? {
+    /// `@concurrent` on purpose: see "Queue bridges" in docs/coding-standards.md.
+    @concurrent static func value<T: Sendable>(of task: Task<T, Error>, within timeout: Duration) async -> T? {
         let gate = ResumeGate<T?>()
         let timer = Task {
             try? await Task.sleep(for: timeout)

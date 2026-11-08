@@ -312,7 +312,8 @@ final class EditWatcher: PasteWatching {
     /// Runs `work` on a background thread and returns its result, or nil when `deadline` passes
     /// first. The late call keeps running on its own thread (AX has its own 0.5 s timeout per
     /// request) and its result is dropped; the caller is never held past the deadline.
-    nonisolated static func offMain<T: Sendable>(deadline: Duration, _ work: @escaping @Sendable () -> T) async -> T? {
+    /// `@concurrent` on purpose: see "Queue bridges" in docs/coding-standards.md.
+    @concurrent nonisolated static func offMain<T: Sendable>(deadline: Duration, _ work: @escaping @Sendable () -> T) async -> T? {
         let resumed = OSAllocatedUnfairLock(initialState: false)
         return await withCheckedContinuation { (continuation: CheckedContinuation<T?, Never>) in
             let resumeOnce: @Sendable (T?) -> Void = { value in

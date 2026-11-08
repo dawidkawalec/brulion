@@ -375,7 +375,8 @@ final class AudioCapture: AudioCapturing, @unchecked Sendable {
 
     // MARK: Queue bridge
 
-    private func onQueue<T: Sendable>(_ body: @escaping @Sendable () throws -> T) async throws -> T {
+    /// `@concurrent` on purpose: see "Queue bridges" in docs/coding-standards.md.
+    @concurrent private func onQueue<T: Sendable>(_ body: @escaping @Sendable () throws -> T) async throws -> T {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 do {

@@ -145,8 +145,9 @@ final class KeyStore: Sendable {
     }
 
     /// Runs `work` on the Keychain queue; with a `timeout`, stops waiting and returns `timedOut`
-    /// (the work still finishes and fills the cache for the next call).
-    private func onKeychainQueue<T: Sendable>(
+    /// (the work still finishes and fills the cache for the next call). `@concurrent` on purpose:
+    /// see "Queue bridges" in docs/coding-standards.md.
+    @concurrent private func onKeychainQueue<T: Sendable>(
         timeout: Duration?,
         timedOut: T,
         _ work: @escaping @Sendable () -> T

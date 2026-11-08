@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="512" height="512">
+  <title>Szpak</title>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4B4B3F"/>
+      <stop offset="0.55" stop-color="#38382E"/>
+      <stop offset="1" stop-color="#24241D"/>
+    </linearGradient>
+    <radialGradient id="ember" cx="0.62" cy="0.76" r="0.6">
+      <stop offset="0" stop-color="#F66953" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#F66953" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bird" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF8167"/>
+      <stop offset="1" stop-color="#EC553E"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="230" fill="url(#tile)"/>
+  <rect width="1024" height="1024" rx="230" fill="url(#ember)"/>
+  <path transform="matrix(0.9164556962025316 0 0 0.9164556962025316 32.69367088607595 15.161392740718384)" d="M718 322L902 302L748 392C772 430 775 500 742 560C690 740 450 800 352 742L196 856L128 792L300 628C370 540 440 420 492 338C540 214 655 196 705 262L918 168ZM504.1 733.8C504.7 727.8 510.2 723.4 516.2 724.1C522.2 724.7 526.6 730.2 525.9 736.2L510.9 873.2C510.3 879.2 504.8 883.6 498.8 882.9C492.8 882.3 488.4 876.8 489.1 870.8L504.1 733.8ZM574 714.1C574.5 708 579.9 703.5 585.9 704C592 704.5 596.5 709.9 596 715.9L583 872.9C582.5 879 577.1 883.5 571.1 883C565 882.5 560.5 877.1 561 871.1L574 714.1ZM330.7 901C321.3 901.4 313.4 894.1 313 884.7C312.6 875.3 319.9 867.4 329.3 867L849.3 845C858.7 844.6 866.6 851.9 867 861.3C867.4 870.7 860.1 878.6 850.7 879L330.7 901ZM666 296C666 279.4 652.6 266 636 266C619.4 266 606 279.4 606 296C606 312.6 619.4 326 636 326C652.6 326 666 312.6 666 296ZM560 418C520 560 390 660 246 724C408 679 538 579 560 418Z" fill="url(#bird)"/>
+</svg>

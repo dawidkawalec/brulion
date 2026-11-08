@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 # Renders the living "Zmierzch" window background (Captylo/Resources/Video/dusk-loop.mp4) from our
-# own blurred dusk photo (docs/design/backdrops/dusk-wallpaper.jpg). No stock footage.
+# own blurred dusk photo (docs/design/backdrops/dusk-wallpaper.jpg). No stock footage. Next to the
+# video it writes the poster, the same photo with the same grade
+# (Captylo/Resources/Assets.xcassets/DuskWallpaper.imageset/dusk-wallpaper.jpg), shown until the
+# first frame is ready and when the video cannot play.
 #
 #   scripts/make-dusk-video.sh [out.mp4]
+#
+# Grade: the photo's lilac sky does not belong to Szpak, so its luminance is mapped onto the
+# Bielik palette (a gradient map): shadows to ink and Bielik brown, the sky to clay and rhubarb,
+# the brightest light to apricot. The source photo stays untouched.
 #
 # Every motion is a whole number of cycles per loop, so the frame after the last one is the
 # first one again and AVPlayerLooper plays it without a seam:
@@ -24,6 +31,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/docs/design/backdrops/dusk-wallpaper.jpg"
 OUT="${1:-$ROOT/Captylo/Resources/Video/dusk-loop.mp4}"
+POSTER="${POSTER:-$ROOT/Captylo/Resources/Assets.xcassets/DuskWallpaper.imageset/dusk-wallpaper.jpg}"
 FFMPEG="${FFMPEG:-$(command -v /opt/homebrew/bin/ffmpeg || command -v ffmpeg)}"
 LOOP="${LOOP:-24}"
 FPS="${FPS:-30}"
@@ -57,7 +65,14 @@ channel() { # $1 plane function (r/g/b), $2 glow strength in 8-bit levels
     echo "$GEOM;clip($1(ld(1)+ld(4),ld(2)+ld(7))*ld(8)+$2*257*ld(5)*ld(6),0,65535)"
 }
 
-GRAPH="scale=${WW}:${WH}:force_original_aspect_ratio=increase:flags=lanczos,crop=${WW}:${WH},\
+# Bielik grade (see the header): grey first, then one curve per channel from luminance to colour.
+# Stops: 0 ink #0F0F0C, 0.25 Bielik brown-deep, 0.45 umber, 0.62 clay, 0.76 rhubarb, 0.88 apricot.
+GRADE="hue=s=0,\
+curves=r='0/0.06 0.25/0.16 0.45/0.27 0.62/0.47 0.76/0.72 0.88/0.92 1/1':\
+g='0/0.06 0.25/0.16 0.45/0.235 0.62/0.30 0.76/0.39 0.88/0.56 1/0.82':\
+b='0/0.047 0.25/0.13 0.45/0.19 0.62/0.235 0.76/0.30 0.88/0.43 1/0.70'"
+
+GRAPH="$GRADE,scale=${WW}:${WH}:force_original_aspect_ratio=increase:flags=lanczos,crop=${WW}:${WH},\
 format=gbrp16le,\
 geq=r='$(channel r 18)':g='$(channel g 9)':b='$(channel b 1)',\
 scale=${OW}:${OH}:flags=lanczos,format=yuv420p10le"
@@ -70,7 +85,11 @@ if [[ -n "${STILL:-}" ]]; then
     exit 0
 fi
 
-mkdir -p "$(dirname "$OUT")"
+mkdir -p "$(dirname "$OUT")" "$(dirname "$POSTER")"
+# Poster: the graded photo at its own size, no motion (the video's first frame is the same image).
+"$FFMPEG" -hide_banner -loglevel error -y -i "$SRC" -vf "$GRADE" -q:v 3 "$POSTER"
+echo "$POSTER"
+
 "$FFMPEG" -hide_banner -loglevel error -stats -y \
     -loop 1 -framerate "$FPS" -i "$SRC" \
     -vf "$GRAPH" \

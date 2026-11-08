@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Tiny tag next to the chevron of a collapsed history row: violet "AI" when the row has an AI version, amber
+/// Tiny tag next to the chevron of a collapsed history row: Ember "AI" when the row has an AI version, amber
 /// "AI ✕" when a mode ran and produced nothing (the tooltip says why), nothing when AI was off.
 @MainActor
 struct HistoryAIChip: View {

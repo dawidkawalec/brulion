@@ -7,13 +7,15 @@ import SwiftUI
 enum WindowBackgroundStyle: String, CaseIterable, Sendable {
     /// Slow animated brand gradient (mesh gradient on macOS 15+, drifting glows on macOS 14).
     case aurora
-    /// "Zmierzch": the blurred dusk lake as a calm living video loop over its photo, under a night
-    /// scrim. Raw value kept from when it was the still photo ("Zdjęcie").
+    /// "Zmierzch": the blurred dusk lake, graded to the Bielik palette, as a calm living video loop
+    /// over its photo, under a night scrim. Raw value kept from when it was the still photo ("Zdjęcie").
     case dusk
-    /// "Ciemny": the animated grain gradient in Deep Tide's Abyss, Petrol and Glacier
-    /// (`GrainientBackdrop`, `GlassTokens.Grainient.dark`). Raw value kept from Brand Direction 01.
+    /// "Ciemny": the animated grain gradient in ink, Bielik brown and a rhubarb ember
+    /// (`GrainientBackdrop`, `GlassTokens.Grainient.dark`). Raw value kept from Captylo, so the
+    /// stored choice survives.
     case captylo
-    /// "Jasny": the same gradient in Fog, Petrol and Glacier (`GlassTokens.Grainient.light`).
+    /// "Jasny": the same gradient in warm stone, soft brown and light rhubarb
+    /// (`GlassTokens.Grainient.light`).
     case captyloLight
 
     /// The owner's pick (Brand Direction 01). Only an explicit choice is stored, so everyone who
@@ -54,7 +56,7 @@ struct WindowTone: Equatable, Sendable {
     /// Black wash over the window background. The per-style scrims (`GlassTokens.Scrim`) are
     /// tuned for the default; other values shift every style by the difference.
     var backgroundDim: Int
-    /// Abyss wash inside every frosted panel.
+    /// Ink wash inside every frosted panel.
     var panelSmoke: Int
 
     static let standard = WindowTone(backgroundDim: 10, panelSmoke: 20)

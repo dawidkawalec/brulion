@@ -45,7 +45,7 @@ struct GlassBadge: View {
         }
         .overlay {
             if tone == .success {
-                // A lit green edge over a lighter fill: reads as "ready", not as a muted teal chip.
+                // A lit green edge over a lighter fill: reads as "ready", not as a muted chip.
                 Capsule().strokeBorder(GlassColor.success.opacity(0.6), lineWidth: 1)
             } else {
                 Capsule().strokeBorder(GlassColor.rim(top: 0.4, bottom: 0.08), lineWidth: 1)

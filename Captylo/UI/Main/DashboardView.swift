@@ -91,7 +91,7 @@ struct DashboardView: View {
 
 // MARK: - Hero
 
-/// "Zaoszczędzony czas" as one big Manrope number with its unit, the words/sessions line and
+/// "Zaoszczędzony czas" as one big Geologica number with its unit, the words/sessions line and
 /// three small figures (streak, words today, words per minute), white type straight on the
 /// window background with a soft shadow. Before the first minute saved: the call to action.
 @MainActor
@@ -113,7 +113,7 @@ private struct SavedTimeHero: View {
                         .tracking(-4)
                         .contentTransition(.numericText())
                     Text(verbatim: parts.unit)
-                        .font(GlassFont.face(.manropeBold, 34))
+                        .font(GlassFont.face(.geologicaBold, 34))
                         .foregroundStyle(GlassColor.textSecondary)
                 }
                 .foregroundStyle(GlassColor.textPrimary)
@@ -122,7 +122,7 @@ private struct SavedTimeHero: View {
                 .padding(.top, 2)
             } else {
                 Text(Stats.timeSavedText(seconds: snapshot.timeSavedSeconds))
-                    .font(GlassFont.face(.manropeSemiBold, 22))
+                    .font(GlassFont.face(.geologicaSemiBold, 22))
                     .foregroundStyle(GlassColor.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 8)
@@ -152,7 +152,7 @@ private struct SavedTimeHero: View {
     }
 }
 
-/// A figure under the big number: Manrope value over an Inter caption.
+/// A figure under the big number: Geologica value over an Inter caption.
 @MainActor
 private struct InlineFigure: View {
     let value: String
@@ -174,7 +174,7 @@ private struct InlineFigure: View {
 // MARK: - Activity
 
 /// "Aktywność": the last five calendar weeks as a Monday-first grid of day tiles, coloured by
-/// that day's words (faint white for a few, Fog for a normal day, Glacier for the busiest), the
+/// that day's words (faint white for a few, Sand for a normal day, Rhubarb for the busiest), the
 /// day number in the corner and a ring around today. Hovering a day lifts it and shows its words,
 /// sessions and recorded time under the grid.
 @MainActor
@@ -314,13 +314,13 @@ private struct ActivityCell: View {
             .accessibilityLabel(Text(verbatim: tooltip))
     }
 
-    /// The same steps as the approved lab page: empty, a few words, Fog, Glacier.
+    /// The same steps as the approved lab page: empty, a few words, Sand, Rhubarb.
     private var fill: Color {
         guard day.words > 0 else { return Color.white.opacity(0.07) }
         switch intensity {
         case ..<0.3: return Color.white.opacity(0.12 + intensity * 0.6)
-        case ..<0.6: return VTColor.fog.opacity(0.45 + intensity * 0.5)
-        default: return VTColor.glacier.opacity(min(0.55 + intensity * 0.4, 0.95))
+        case ..<0.6: return VTColor.sand.opacity(0.45 + intensity * 0.5)
+        default: return VTColor.rhubarb.opacity(min(0.55 + intensity * 0.4, 0.95))
         }
     }
 

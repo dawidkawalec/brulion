@@ -109,10 +109,10 @@ struct OrbButton: View {
 
     private var recordDot: some View {
         Circle()
-            .fill(VTColor.recordRed)
+            .fill(VTColor.record)
             .frame(width: RecorderMetrics.recordDot(for: size), height: RecorderMetrics.recordDot(for: size))
             // Flat red with a soft glow, no bead highlight (mockup 01).
-            .shadow(color: VTColor.recordRed.opacity(0.8), radius: 6 * scale)
+            .shadow(color: VTColor.record.opacity(0.8), radius: 6 * scale)
             .scaleEffect(pulsing && !reduceMotion ? 1.18 : 1)
             .onAppear {
                 guard !reduceMotion else { return }

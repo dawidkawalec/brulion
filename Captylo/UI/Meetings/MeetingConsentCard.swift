@@ -3,7 +3,7 @@ import SwiftUI
 /// Shown once per recording start while "Przypominaj o poinformowaniu uczestników" is on:
 /// "Nagrywasz spotkanie. Poinformuj uczestników." with "Skopiuj informację" (the Polish and
 /// English sentence of `MeetingConsent.disclosure`), "Nie pokazuj więcej" (turns the reminder
-/// off) and a close button. A raised card with the Tide tint: it sits on the details panel.
+/// off) and a close button. A raised card with the Ember tint: it sits on the details panel.
 @MainActor
 struct MeetingConsentCard: View {
     let onCopy: () -> Void

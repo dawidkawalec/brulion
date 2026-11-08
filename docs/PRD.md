@@ -25,7 +25,7 @@ Konkurs, kryteria i lista rzeczy do zgłoszenia: [bielik-awards.md](bielik-award
 5. Liczby do zgłoszenia: jakość, czas i pamięć na naszych nagraniach oraz porównanie z obecnym Captylo.
 6. Publiczne wydanie przed 13.11: repo na GitHubie (GPLv3) i podpisany, notaryzowany DMG.
 
-**Nie-cele**: konto, płatności i plany; przekaźnik; transkrypcja w chmurze; automatyczne aktualizacje (Sparkle); iOS i Windows; nowe funkcje poza AI; zmiany wyglądu poza ekranem modeli, onboardingiem i usuniętymi kartami.
+**Nie-cele**: konto, płatności i plany; przekaźnik; transkrypcja w chmurze; automatyczne aktualizacje (Sparkle); iOS i Windows; nowe funkcje poza AI; zmiany wyglądu poza ekranem modeli, onboardingiem, usuniętymi kartami i przejściem na barwy Bielika (8.11).
 
 **Anty-cele** (porażka, nawet jeśli wszystko "działa"):
 - korekta zmienia sens, dopisuje treść, tłumaczy albo odpowiada na pytanie z dyktowania, zamiast je wyczyścić;
@@ -74,7 +74,7 @@ Ok. 49 tys. linii Swifta, 127 plików testów. Mapa poniżej pochodzi z `rg`. Wy
   - produkt `<Nazwa>.app`, dane w `~/Library/Application Support/<Nazwa>/`;
   - Keychain i subsystem logów jak bundle, schemat URL `<nazwa>`.
 - Domyślny skrót inny niż w Captylo, bo dwie aplikacje z tym samym skrótem się gryzą.
-- Ikona: wariant ikony Captylo (np. inny kolor tła), bez logo Bielika.
+- Ikona i wygląd: własny znak Szpaka (szpak śpiewający na gałązce) w barwach strony bielik.ai, bez logo Bielika i SpeakLeash (decyzja 8.11 w sekcji 12, zastąpiła wariant ikony Captylo).
 - Licencja GPLv3 dziedziczona po Captylo. `NOTICE.md` uzupełnione o llama.cpp (MIT) i modele Bielik (Apache 2.0; aplikacja je pobiera, nie dołącza do instalatora).
 
 ## 5. Architektura AI
@@ -281,8 +281,14 @@ Gdy zabraknie czasu, tniemy od końca tej listy. Rdzeń zgłoszenia to dyktowani
 - Nazwa: **Szpak** (7.11, po sprawdzeniu kolizji; szpak.app wolne). Identyfikatory na stałe: `Szpak.app`, bundle `pl.craftweb.szpak`, dane w `~/Library/Application Support/Szpak/`, schemat URL `szpak`.
 - Prywatne repo `dawidkawalec/captylo-bielik` założone 7.11 (zgoda Dawida); publiczne dopiero w F3, po popupie.
 
+**Wygląd w barwach Bielika (Dawid, 8.11)**
+- Cała aplikacja przechodzi z kolorów Captylo (Deep Tide) na paletę strony bielik.ai: oliwkowy brąz, rhubarb #F66953, ciepła biel. Tło "Ciemny" to brąz z żarem rhubarb, akcent i przełączniki w odcieniu ember, nagrywanie karmazynowe.
+- Własny znak: szpak śpiewający na gałązce (płaski, kanciasty jak sygnet Bielika, ale nie orzeł Bielika). Ikona: ciemny brąz z ptakiem w rhubarb. Z jednej geometrii (`scripts/make-szpak-brand.swift`) powstają ikona, symbol w onboardingu i sidebarze, ikony paska menu oraz favicony w `docs/brand/`.
+- Fonty: Geologica (nagłówki, liczby, wordmark, jak na bielik.ai) i Inter (tekst UI). Manrope odpada.
+- Szczegóły i tokeny: [docs/design/dusk-glass.md](design/dusk-glass.md), zasada 7.
+
 **Do Dawida**
-1. Ikona Szpaka (wariant ikony Captylo w przygotowaniu).
+1. ~~Ikona Szpaka~~: rozstrzygnięte 8.11 (własny znak w barwach Bielika, wyżej).
 2. Zgoda na upublicznienie repo na GitHubie (popup przed zmianą widoczności).
 3. Czy ogłosić nową wersję użytkownikom Captylo (mail przez `tbsend`, po popupie).
 4. Odczyt liczb z produkcji Captylo.

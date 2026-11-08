@@ -28,15 +28,15 @@ struct TrendChart: View {
         date.formatted(Date.FormatStyle(locale: Stats.locale).day().month(.abbreviated))
     }
 
-    // Dusk Glass: luminous white bars fading into the brand violet, a white area and line for the
+    // Dusk Glass: luminous white bars fading into the Ember accent, a white area and line for the
     // running sum, hairline white grid and white axis labels (docs/design/dusk-glass.md, Pulpit).
     private static let barFill = LinearGradient(
-        colors: [Color.white.opacity(0.92), Color.white.opacity(0.5), VTColor.brandViolet.opacity(0.3)],
+        colors: [Color.white.opacity(0.92), Color.white.opacity(0.5), VTColor.ember.opacity(0.3)],
         startPoint: .top,
         endPoint: .bottom
     )
     private static let areaFill = LinearGradient(
-        colors: [Color.white.opacity(0.38), VTColor.brandViolet.opacity(0.18), VTColor.brandViolet.opacity(0.02)],
+        colors: [Color.white.opacity(0.38), VTColor.ember.opacity(0.18), VTColor.ember.opacity(0.02)],
         startPoint: .top,
         endPoint: .bottom
     )

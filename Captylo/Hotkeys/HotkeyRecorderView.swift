@@ -39,7 +39,7 @@ struct HotkeyRecorderView: View {
                     }
                 }
                 // Neutral: the screen's one accent is its primary action ("Dalej" in onboarding);
-                // the keycap itself turns violet while it listens.
+                // the keycap itself turns Ember while it listens.
                 .buttonStyle(.glass(.neutral, size: .small, shape: .capsule))
                 presetsMenu
             }
@@ -64,7 +64,7 @@ struct HotkeyRecorderView: View {
 
     // MARK: Pieces
 
-    /// The shortcut as a glass capsule, as tall as the buttons next to it; violet with a soft
+    /// The shortcut as a glass capsule, as tall as the buttons next to it; Ember with a soft
     /// glow while it listens for a new combo.
     private var shortcutBadge: some View {
         Text(badgeText)

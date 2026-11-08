@@ -19,7 +19,7 @@ struct OnboardingProgressTrack: View {
                 Capsule()
                     .fill(
                         LinearGradient(
-                            colors: [VTColor.brandViolet, VTColor.brandPink, VTColor.brandOrange],
+                            colors: [VTColor.ember, VTColor.rhubarb, VTColor.rhubarbLight],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -30,7 +30,7 @@ struct OnboardingProgressTrack: View {
                             .fill(LinearGradient(colors: [Color.white.opacity(0.45), Color.clear], startPoint: .top, endPoint: .center))
                     }
                     .frame(width: width)
-                    .shadow(color: VTColor.brandPink.opacity(0.7), radius: 6)
+                    .shadow(color: VTColor.rhubarb.opacity(0.6), radius: 6)
                     .opacity(clamped > 0 ? 1 : 0)
                     .animation(reduceMotion ? nil : GlassMotion.spring, value: clamped)
             }

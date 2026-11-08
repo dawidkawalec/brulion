@@ -3,7 +3,7 @@ import SwiftUI
 /// The meetings of Spotkania, newest first, on one glass panel with hairlines between the rows
 /// (like the Historia day panels): title, date and app, length, and a badge while a meeting
 /// records, is being processed or was cut short ("Przerwane"). A click or the arrow keys select;
-/// the selection is the Tide fill of the Historia rows.
+/// the selection is the Ember fill of the Historia rows.
 ///
 /// While searching, a row matched in its transcript or notes shows up to two hit lines
 /// (`MeetingSearchHitsView`) under the meta line; a click on one selects the meeting and hands

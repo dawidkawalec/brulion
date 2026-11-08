@@ -61,7 +61,7 @@ struct LibraryAskPanel: View {
 
     private var header: some View {
         HStack(alignment: .top, spacing: 14) {
-            GlassIconBadge(systemImage: "bubble.left.and.text.bubble.right", size: 34, tint: VTColor.brandViolet)
+            GlassIconBadge(systemImage: "bubble.left.and.text.bubble.right", size: 34, tint: VTColor.ember)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text("Zapytaj wszystkie spotkania")

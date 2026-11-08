@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Header at the top of a step panel: violet glass icon badge, white title and one explanatory
+/// Header at the top of a step panel: Ember glass icon badge, white title and one explanatory
 /// sentence in secondary white, optional trailing content (the keycap of the Wypróbuj step).
 @MainActor
 struct OnboardingHeader<Trailing: View>: View {
@@ -18,7 +18,7 @@ struct OnboardingHeader<Trailing: View>: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
-            GlassIconBadge(systemImage: symbol, size: 48, tint: VTColor.brandViolet)
+            GlassIconBadge(systemImage: symbol, size: 48, tint: VTColor.ember)
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: title)
                     .font(GlassFont.pageTitle)

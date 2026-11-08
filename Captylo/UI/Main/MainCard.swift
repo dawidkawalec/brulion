@@ -136,11 +136,11 @@ struct WordChip: View {
         .padding(.vertical, VTSpacing.xs + 2)
         .background(
             Capsule(style: .continuous)
-                .fill(VTColor.brandViolet.opacity(0.12))
+                .fill(VTColor.ember.opacity(0.12))
         )
         .overlay(
             Capsule(style: .continuous)
-                .stroke(VTColor.brandViolet.opacity(0.25), lineWidth: 1)
+                .stroke(VTColor.ember.opacity(0.25), lineWidth: 1)
         )
     }
 }

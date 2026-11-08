@@ -112,8 +112,8 @@ enum GlassTokens {
             }
         }
 
-        /// Black wash over the light Grainient: its Fog and Glacier fields are bright, so white
-        /// type needs a little help everywhere.
+        /// Black wash over the light Grainient: its stone and light rhubarb fields are bright, so
+        /// white type needs a little help everywhere.
         static func grainientLight(_ role: WindowBackdropRole) -> Double {
             switch role {
             case .window, .onboarding: return 0.16
@@ -135,10 +135,10 @@ enum GlassTokens {
             var colorBalance: Double
         }
 
-        /// Deep Tide with the owner's parameters: Abyss, Petrol, Glacier (the lab's "Ciemny").
-        static let dark = Palette(color1: 0x10272C, color2: 0x214A52, color3: 0x9FE6DC, contrast: 1.5, gamma: 1.0, colorBalance: 0)
-        /// Lighter: Fog, Petrol, Glacier (the lab's "Jasny").
-        static let light = Palette(color1: 0xB7CCCB, color2: 0x214A52, color3: 0x9FE6DC, contrast: 1.15, gamma: 1.05, colorBalance: 0)
+        /// Bielik with the owner's motion: deep ink, Bielik's brown and a rhubarb ember ("Ciemny").
+        static let dark = Palette(color1: 0x1D1D17, color2: 0x424237, color3: 0xC46D58, contrast: 1.5, gamma: 1.0, colorBalance: 0)
+        /// Lighter: warm stone, Bielik's soft brown and the light rhubarb ("Jasny").
+        static let light = Palette(color1: 0xC9BFB2, color2: 0x575748, color3: 0xFF9B88, contrast: 1.15, gamma: 1.05, colorBalance: 0)
 
         static let timeSpeed = 1.05
         static let warpStrength = 1.0
@@ -177,35 +177,36 @@ enum GlassTokens {
 // MARK: - Colors
 
 enum GlassColor {
-    static let textPrimary = Color.white.opacity(0.95)
-    static let textSecondary = Color.white.opacity(0.70)
-    static let textTertiary = Color.white.opacity(0.50)
-    static let icon = Color.white.opacity(0.88)
+    /// Type in Bielik's warm paper white (#FFF9F5), not cold white.
+    static let textPrimary = VTColor.paper.opacity(0.95)
+    static let textSecondary = VTColor.paper.opacity(0.70)
+    static let textTertiary = VTColor.paper.opacity(0.50)
+    static let icon = VTColor.paper.opacity(0.88)
     static let separator = Color.white.opacity(GlassTokens.Opacity.separator)
 
-    /// Switches in the brand accent (Tide).
-    static let toggle = VTColor.tide
-    /// "Zakończ" and everything that means "recording": Record red, the only place it is used.
+    /// Switches in the brand accent (Ember).
+    static let toggle = VTColor.ember
+    /// "Zakończ" and everything that means "recording": Record crimson, the only place it is used.
     static let destructive = VTColor.record
-    static let destructiveDeep = Color(hex: 0xE05E62)
-    /// Accent actions: Tide glass over Petrol.
-    static let accent = VTColor.tide
-    static let accentDeep = VTColor.petrol
+    static let destructiveDeep = Color(hex: 0xD23A58)
+    /// Accent actions: Ember glass over Bielik's deep rhubarb.
+    static let accent = VTColor.ember
+    static let accentDeep = VTColor.rhubarbDeep
     static let success = Color(hex: 0x4CD68A)
-    /// Warnings stay warm (Deep Tide has no warm tone), distinct from Record red.
+    /// Warnings in amber, between the rhubarb accent and the green.
     static let warning = Color(hex: 0xF2C48D)
-    /// Brand light on the gradient: activity highlights, the latest trend bar.
-    static let highlight = VTColor.glacier
-    /// Speaker chips of a meeting transcript: "Ja" in Tide, the other side in Glacier tints, one
+    /// Brand light on the brown: activity highlights, the latest trend bar.
+    static let highlight = VTColor.rhubarb
+    /// Speaker chips of a meeting transcript: "Ja" in Ember, the other side in warm tints, one
     /// per `MeetingTranscriptLines.tintSlot` (as many as `MeetingTranscriptLines.tintCount`).
-    static let speakerMe = VTColor.tide
-    static let speakerTints: [Color] = [VTColor.glacier, VTColor.fog, Color(hex: 0x6FC7BE), VTColor.salt]
+    static let speakerMe = VTColor.ember
+    static let speakerTints: [Color] = [VTColor.rhubarbLight, VTColor.sand, Color(hex: 0xC9C39B), VTColor.paper]
 
-    /// Solid Abyss surfaces when Reduce Transparency is on (no gradient bleeding through).
-    static let solidPanel = Color(hex: 0x1C3A40)
-    static let solidCard = Color(hex: 0x163136)
-    /// Window background behind the backdrop (seen only while it loads / on resize): Abyss.
-    static let night = VTColor.abyss
+    /// Solid brown surfaces when Reduce Transparency is on (no gradient bleeding through).
+    static let solidPanel = Color(hex: 0x3A3A30)
+    static let solidCard = Color(hex: 0x313128)
+    /// Window background behind the backdrop (seen only while it loads / on resize): Ink.
+    static let night = VTColor.ink
 
     /// Rim stroke: luminous top edge fading toward the bottom.
     static func rim(top: Double = GlassTokens.Opacity.rimTop, bottom: Double = GlassTokens.Opacity.rimBottom) -> LinearGradient {
@@ -219,14 +220,15 @@ enum GlassColor {
 
 // MARK: - Typography
 
-/// Brand Direction 01 type: Manrope for titles, numbers and the wordmark, Inter for UI and body
-/// (both bundled in Resources/Fonts, SIL OFL, registered through `ATSApplicationFontsPath`).
-/// If a face is missing, `Font.custom` falls back to the system font at the same size.
+/// Bielik type: Geologica (the display face of bielik.ai) for titles, numbers and the wordmark,
+/// Inter for UI and body (both bundled in Resources/Fonts, SIL OFL, registered through
+/// `ATSApplicationFontsPath`; Geologica as static instances of the variable font, roman, no
+/// sharpness). If a face is missing, `Font.custom` falls back to the system font at the same size.
 enum GlassFont {
     enum Face: String {
-        case manropeSemiBold = "Manrope-SemiBold"
-        case manropeBold = "Manrope-Bold"
-        case manropeExtraBold = "Manrope-ExtraBold"
+        case geologicaSemiBold = "Geologica-SemiBold"
+        case geologicaBold = "Geologica-Bold"
+        case geologicaExtraBold = "Geologica-ExtraBold"
         case interRegular = "Inter-Regular"
         case interMedium = "Inter-Medium"
         case interSemiBold = "Inter-SemiBold"
@@ -246,19 +248,19 @@ enum GlassFont {
         }
     }
 
-    /// Manrope for titles and headlines (semibold below bold, bold, extrabold above).
+    /// Geologica for titles and headlines (semibold below bold, bold, extrabold above).
     static func display(_ size: CGFloat, _ weight: Font.Weight = .semibold) -> Font {
         switch weight {
-        case .bold: return face(.manropeBold, size)
-        case .heavy, .black: return face(.manropeExtraBold, size)
-        default: return face(.manropeSemiBold, size)
+        case .bold: return face(.geologicaBold, size)
+        case .heavy, .black: return face(.geologicaExtraBold, size)
+        default: return face(.geologicaSemiBold, size)
         }
     }
 
     /// Screen title ("Pulpit").
-    static var pageTitle: Font { face(.manropeSemiBold, 26) }
+    static var pageTitle: Font { face(.geologicaSemiBold, 26) }
     /// Section title next to a line icon ("Aktywność").
-    static var sectionTitle: Font { face(.manropeSemiBold, 15) }
+    static var sectionTitle: Font { face(.geologicaSemiBold, 15) }
     static var rowTitle: Font { face(.interRegular, 14) }
     static var rowSubtitle: Font { face(.interRegular, 12) }
     static var rowValue: Font { face(.interRegular, 13) }
@@ -269,14 +271,14 @@ enum GlassFont {
     static var badge: Font { face(.interSemiBold, 11) }
     static var segment: Font { face(.interMedium, 13) }
 
-    /// Stat values: Manrope Bold with tabular digits.
+    /// Stat values: Geologica Bold with tabular digits.
     static func number(_ size: CGFloat = 34) -> Font {
-        face(.manropeBold, size).monospacedDigit()
+        face(.geologicaBold, size).monospacedDigit()
     }
 
     /// The Pulpit hero number ("166").
     static func hero(_ size: CGFloat) -> Font {
-        face(.manropeExtraBold, size).monospacedDigit()
+        face(.geologicaExtraBold, size).monospacedDigit()
     }
 }
 

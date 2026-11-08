@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// A `[S1 12:34]` citation of a "Zapytaj wszystkie spotkania" answer as a button ("S1 12:34"):
-/// tertiary like a transcript stamp, Glacier with an arrow on hover. The click opens that
+/// tertiary like a transcript stamp, Rhubarb with an arrow on hover. The click opens that
 /// meeting's transcript at that moment.
 @MainActor
 struct LibraryCitationButton: View {

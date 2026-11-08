@@ -97,7 +97,7 @@ targets:
         NSSupportsAutomaticTermination: false
         NSSupportsSuddenTermination: false
         ITSAppUsesNonExemptEncryption: false
-        # Bundled Manrope + Inter (Resources/Fonts, SIL OFL), registered at launch.
+        # Bundled Geologica + Inter (Resources/Fonts, SIL OFL), registered at launch.
         ATSApplicationFontsPath: "."
         CFBundleDocumentTypes:
           - CFBundleTypeName: Audio

@@ -23,7 +23,7 @@ enum GlassSurfaceKind: Sendable {
 @MainActor
 struct GlassSurface<S: InsettableShape>: ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    /// "Przydymienie paneli": the Abyss wash over every frosted panel.
+    /// "Przydymienie paneli": the Ink wash over every frosted panel.
     @Environment(\.windowTone) private var tone
 
     var shape: S
@@ -82,11 +82,11 @@ struct GlassSurface<S: InsettableShape>: ViewModifier {
             Color.clear
                 .glassEffect(tint.map { Glass.clear.tint($0) } ?? .clear, in: shape)
                 .overlay { shape.fill(Color.white.opacity(wash)).allowsHitTesting(false) }
-                .overlay { shape.fill(VTColor.abyss.opacity(tone.smokeOpacity)).allowsHitTesting(false) }
+                .overlay { shape.fill(VTColor.ink.opacity(tone.smokeOpacity)).allowsHitTesting(false) }
         } else {
             shape.fill(.ultraThinMaterial)
                 .overlay { shape.fill(Color.white.opacity(kind == .clear ? GlassTokens.Opacity.glassTintClear : GlassTokens.Opacity.fallbackFill)) }
-                .overlay { shape.fill(VTColor.abyss.opacity(tone.smokeOpacity)) }
+                .overlay { shape.fill(VTColor.ink.opacity(tone.smokeOpacity)) }
                 .overlay { tint.map { shape.fill($0.opacity(0.25)) } }
         }
     }

@@ -2,8 +2,8 @@ import SwiftUI
 
 /// Buttons of the Dusk Glass language (mockup 03):
 /// - `.neutral`: translucent white glass with a white label ("Pauza"),
-/// - `.destructive`: red tinted glass with a soft red glow ("Zakończ"),
-/// - `.accent`: brand violet glass for the primary action of a screen ("Dalej", "Pobierz").
+/// - `.destructive`: Record crimson glass with a soft red glow ("Zakończ"),
+/// - `.accent`: Ember glass for the primary action of a screen ("Dalej", "Pobierz").
 /// Plain translucent fills on every macOS version (buttons sit on panels, and glass on glass
 /// muddies); press = slight scale and brighter fill.
 struct GlassButtonStyle: ButtonStyle {
@@ -102,7 +102,7 @@ private struct GlassButtonBody: View {
     }
 
     private func tinted(top: Color, bottom: Color, boost: Double) -> some View {
-        // "Zakończ" is a bright coral in mockup 03, nearly opaque; the violet accent stays glassier.
+        // "Zakończ" is bright and nearly opaque, as in mockup 03; the Ember accent stays glassier.
         let base = style.kind == .destructive ? 0.92 : 0.82
         let alpha = min((reduceTransparency ? 1 : base) + boost, 1)
         return shape

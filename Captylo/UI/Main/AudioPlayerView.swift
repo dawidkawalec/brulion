@@ -1,7 +1,7 @@
 import AVFoundation
 import SwiftUI
 
-/// Inline player of a history recording as a glass capsule: violet play / pause disc, a white
+/// Inline player of a history recording as a glass capsule: Ember play / pause disc, a white
 /// scrubber, the clock and a 1x / 1.5x / 2x rate cycle. `AVAudioPlayer` stays on the main actor;
 /// progress is polled while playing.
 @MainActor

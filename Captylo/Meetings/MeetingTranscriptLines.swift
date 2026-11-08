@@ -86,8 +86,8 @@ enum MeetingTranscriptLines {
     /// Number of speaker tints besides "Ja".
     static let tintCount = 4
 
-    /// Which tint the speaker chip of a line wears: nil for "Ja" (the Tide accent), else one of
-    /// `tintCount` Glacier tints, stable per speaker label ("Mówca 2" keeps its tint after a rename).
+    /// Which tint the speaker chip of a line wears: nil for "Ja" (the Ember accent), else one of
+    /// `tintCount` warm tints, stable per speaker label ("Mówca 2" keeps its tint after a rename).
     static func tintSlot(track: MeetingTrack, speaker: String?) -> Int? {
         guard track == .them else { return nil }
         guard let speaker else { return 0 }

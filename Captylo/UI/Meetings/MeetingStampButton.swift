@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// `[12:34]` as a button (the transcript lines, the AI notes citations): tertiary like a plain
-/// stamp, Glacier with a play glyph on hover.
+/// stamp, Rhubarb with a play glyph on hover.
 @MainActor
 struct MeetingStampButton: View {
     let stamp: String

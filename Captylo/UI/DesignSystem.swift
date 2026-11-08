@@ -5,53 +5,50 @@ import SwiftUI
 // MARK: - Colors
 
 enum VTColor {
-    // Deep Tide (the owner's pick over Brand Direction 01's Iris, branding/direction-01):
-    // Abyss and Petrol as the depth, Glacier as the light, Fog as haze, Salt as white,
+    // Bielik palette (the bielik.ai design system, docs/design/dusk-glass.md principle 7): Ink and
+    // Bark (Bielik's brown) as the depth, Rhubarb as the light, Sand as haze, Paper as white,
     // Record only for recording.
-    static let abyss = Color(hex: 0x10272C)
-    static let petrol = Color(hex: 0x214A52)
-    static let glacier = Color(hex: 0x9FE6DC)
-    static let fog = Color(hex: 0xB7CCCB)
-    static let salt = Color(hex: 0xF2F7F4)
-    static let record = Color(hex: 0xF27878)
-    /// Glacier is too light to carry white type, so accent fills (buttons, switches) use this
-    /// deeper teal between Petrol and Glacier.
-    static let tide = Color(hex: 0x2F8F88)
-
-    // Older role names, now mapped onto Deep Tide so every view follows it.
-    static let brandViolet = tide
-    static let brandPink = fog
-    static let brandOrange = glacier
-    static let recordRed = record
-    static let brandNight = abyss
-    static let brandIndigo = petrol
+    static let ink = Color(hex: 0x25251E)
+    static let bark = Color(hex: 0x424237)
+    static let rhubarb = Color(hex: 0xF66953)
+    /// Bielik's "accent on dark": the light rhubarb for tints on the brown.
+    static let rhubarbLight = Color(hex: 0xFF9B88)
+    static let rhubarbDeep = Color(hex: 0xB8371E)
+    static let sand = Color(hex: 0xE9DCD3)
+    static let paper = Color(hex: 0xFFF9F5)
+    /// Live recording only: a crimson that leans pink, so it never reads as the orange-leaning
+    /// Ember of the accent buttons.
+    static let record = Color(hex: 0xEF4F6B)
+    /// Rhubarb is too light to carry white type, so accent fills (buttons, switches) use this
+    /// deeper, slightly more orange rhubarb that keeps white type legible.
+    static let ember = Color(hex: 0xDD5536)
 
     /// 0.5 pt stroke around glass surfaces.
     static let glassStroke = Color.white.opacity(0.35)
-    static let textOnGlass = Color.white.opacity(0.95)
-    static let textOnGlassSecondary = Color.white.opacity(0.7)
+    static let textOnGlass = paper.opacity(0.95)
+    static let textOnGlassSecondary = paper.opacity(0.7)
     /// Extra tint when white text fails contrast over bright wallpapers.
     static let glassContrastTint = Color.black.opacity(0.12)
-    /// Opaque surface used when Reduce Transparency is on.
-    static let glassSolidFallback = Color(red: 0.11, green: 0.11, blue: 0.13)
+    /// Opaque surface used when Reduce Transparency is on (warm, like Bielik's brown-deep).
+    static let glassSolidFallback = Color(hex: 0x2B2B24)
 
-    /// Brand gradient: Abyss (top) -> Petrol -> Tide -> Glacier (bottom).
+    /// Brand gradient: Ink (top) -> Bark -> Ember -> Rhubarb (bottom).
     static var brandGradient: LinearGradient {
         LinearGradient(
             stops: [
-                .init(color: abyss, location: 0),
-                .init(color: petrol, location: 0.4),
-                .init(color: tide, location: 0.75),
-                .init(color: glacier, location: 1),
+                .init(color: ink, location: 0),
+                .init(color: bark, location: 0.4),
+                .init(color: ember, location: 0.75),
+                .init(color: rhubarb, location: 1),
             ],
             startPoint: .top,
             endPoint: .bottom
         )
     }
 
-    /// Waveform bar gradient: white on top, Fog at the bottom.
+    /// Waveform bar gradient: white on top, Sand at the bottom.
     static var waveformGradient: LinearGradient {
-        LinearGradient(colors: [.white, brandPink], startPoint: .top, endPoint: .bottom)
+        LinearGradient(colors: [.white, sand], startPoint: .top, endPoint: .bottom)
     }
 }
 
@@ -109,14 +106,14 @@ enum VTSize {
 
 // MARK: - Typography
 
-/// Widget type, on the Brand Direction 01 faces (`GlassFont`).
+/// Widget type, on the Dusk Glass faces (`GlassFont`: Geologica + Inter).
 enum VTFont {
-    static var timer: Font { GlassFont.face(.manropeSemiBold, 20).monospacedDigit() }
+    static var timer: Font { GlassFont.face(.geologicaSemiBold, 20).monospacedDigit() }
     static var status: Font { GlassFont.face(.interRegular, 12) }
     static var cardHeader: Font { GlassFont.face(.interSemiBold, 12) }
     static var cardText: Font { GlassFont.face(.interRegular, 13) }
     static var drawerRow: Font { GlassFont.face(.interRegular, 13) }
-    static var wordmark: Font { GlassFont.face(.manropeExtraBold, 34) }
+    static var wordmark: Font { GlassFont.face(.geologicaBold, 34) }
 }
 
 // MARK: - Motion

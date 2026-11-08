@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The transcript of one meeting (`MeetingTranscriptLines`): per line the `[mm:ss]` stamp, the
-/// speaker chip ("Ja" in Tide, the other side in Glacier tints, stable per label) and the text;
+/// speaker chip ("Ja" in Ember, the other side in warm tints, stable per label) and the text;
 /// consecutive segments of one speaker read as one line, the mic's echo is hidden, and a capture
 /// gap shows as a thin "przerwa w nagraniu" separator at its time. While the meeting records,
 /// the grey lines still being transcribed follow at the bottom. Lays out rows only: the details
@@ -11,7 +11,7 @@ import SwiftUI
 /// plain text). With `onRename` a click on a "Mówca N" chip opens a field for the speaker's name.
 ///
 /// Every line carries its id (`MeetingTranscriptLines.Line.id`) for a `ScrollViewReader`, and
-/// the line holding `highlightedSegmentID` (a search hit the details jumped to) gets a Tide
+/// the line holding `highlightedSegmentID` (a search hit the details jumped to) gets an Ember
 /// background that fades when the id goes back to nil.
 @MainActor
 struct MeetingTranscriptView: View {
@@ -143,7 +143,7 @@ struct MeetingTranscriptView: View {
     }
 }
 
-/// Who speaks, as a small capsule: Tide for "Ja", a Glacier tint per speaker for the other side.
+/// Who speaks, as a small capsule: Ember for "Ja", a warm tint per speaker for the other side.
 /// With `rename` ("Mówca N") a click opens a popover with the "Imię" field.
 @MainActor
 private struct MeetingSpeakerChip: View {

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// "Ikona" of the mode editor: a grid of glass tiles, the chosen one lit in brand violet.
+/// "Ikona" of the mode editor: a grid of glass tiles, the chosen one lit in Ember.
 @MainActor
 struct AIModeSymbolGrid: View {
     @Binding var selection: String

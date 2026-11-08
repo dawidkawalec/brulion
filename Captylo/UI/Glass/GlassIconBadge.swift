@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Rounded glass square holding an SF Symbol: section and tile icons, onboarding step icons.
-/// `tint` colors the square (brand violet, peach...) while the glyph stays white.
+/// `tint` colors the square (Ember, Rhubarb...) while the glyph stays white.
 @MainActor
 struct GlassIconBadge: View {
     var systemImage: String

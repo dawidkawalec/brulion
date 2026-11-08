@@ -2,9 +2,9 @@
 
 Szpak is a fork of Captylo 1.0.17 by CRAFTWEB Sp. z o.o. Based on Captylo, Copyright (c) 2026 Dawid Kawalec. The source code is licensed under the GNU General Public License v3.0 (see [LICENSE](LICENSE)), except for the parts listed below, which keep their own terms.
 
-## Not covered by the GPL: the Captylo brand
+## Not covered by the GPL: the brands
 
-The name "Captylo", the logo, the wordmark, the app and menu bar icons and the other brand artwork are not licensed under the GPL or any other open licence. All rights reserved. This covers the icon sets in `Captylo/Resources/`, including the Szpak app icon, a recoloured variant of the Captylo icon (`scripts/make-szpak-icon.swift`), and `docs/og.jpg`. Szpak uses them with the permission of Captylo's owner. You may show them to refer to Captylo or Szpak, but any other fork or product must use its own name and icons.
+The names "Captylo" and "Szpak", their logos, wordmarks, app and menu bar icons and other brand artwork are not licensed under the GPL or any other open licence. All rights reserved. For Szpak this covers the mark (a starling singing on a twig), the icon sets in `Captylo/Resources/` and the files in `docs/brand/`, all drawn for Szpak by `scripts/make-szpak-brand.swift` (the script itself is GPL code like the rest). Szpak no longer ships any Captylo artwork. You may show the Szpak mark to refer to Szpak, but any other fork or product must use its own name and icons. The colours follow the public design system of bielik.ai; the Szpak mark is not the Bielik or SpeakLeash logo and implies no endorsement by SpeakLeash.
 
 The "Zmierzch" background video made from our own photo (`Captylo/Resources/Video/`) is not licensed for reuse either.
 
@@ -29,7 +29,7 @@ Files: `Captylo/UI/Glass/Grainient.metal`, the shader in `docs/design/lab/brand/
 | [Silero VAD](https://github.com/snakers4/silero-vad) by Silero Team, [Core ML conversion](https://huggingface.co/FluidInference/silero-vad-coreml) by FluidInference | detecting speech in meetings, downloaded on first use (not bundled) | MIT |
 | [pyannote speaker-diarization-community-1](https://huggingface.co/pyannote/speaker-diarization-community-1) by pyannote (segmentation, WeSpeaker speaker embedding, PLDA parameters by BUT Speech@FIT), modified [Core ML conversion](https://huggingface.co/FluidInference/speaker-diarization-coreml) by FluidInference | speaker labels in meetings (macOS 15+), downloaded on first use (not bundled) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | [Inter](https://rsms.me/inter/) by Rasmus Andersson | UI typeface, app and site | SIL Open Font License 1.1 (`OFL-Inter.txt`) |
-| [Manrope](https://github.com/sharanda/manrope) by Mikhail Sharanda | display typeface, app and site | SIL Open Font License 1.1 (`OFL-Manrope.txt`) |
+| [Geologica](https://github.com/monokromskriftforlag/geologisk) by Monokrom Skriftforlag (the Geologisk Project Authors), static SemiBold, Bold and ExtraBold instances of the Google Fonts variable font | display typeface, app and site | SIL Open Font License 1.1 (`OFL-Geologica.txt`) |
 | [llama.cpp](https://github.com/ggml-org/llama.cpp) by the ggml authors, with ggml (tag v0.9.0, commit `cd959bae99ff4bed22bef2604f45241c09bbb8c8`) | the local AI's model server, bundled as the `llama-server` helper in `Contents/MacOS` (built from source by `scripts/build-llama-server.sh`, see [docs/local-ai.md](docs/local-ai.md)) | MIT; the vendored parts compiled into the helper (cpp-httplib, nlohmann/json, stb_image, miniaudio, the hash libraries) keep their MIT or public-domain terms (llama.cpp's `vendor/` and `licenses/`) |
 | [Bielik](https://huggingface.co/speakleash) v3.0 Instruct models by SpeakLeash / ACK Cyfronet AGH: Bielik 1.5B (Q8_0), Bielik Minitron 7B (Q4_K_M), Bielik 4.5B (Q8_0), GGUF | the local AI models, downloaded at runtime from SpeakLeash's Hugging Face repositories at pinned revisions (not bundled) | Apache License 2.0 |
 
@@ -40,3 +40,4 @@ Szpak is a fork of Captylo 1.0.17 (commit `9371dd7`) with Captylo's cloud servic
 ## Other assets
 
 - The sound cues in the app are synthesized for Captylo.
+- The Szpak mark, icons and `docs/brand/` files: see "Not covered by the GPL: the brands" above.

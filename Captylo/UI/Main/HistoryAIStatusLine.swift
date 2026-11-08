@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Status line of an expanded history row: violet sparkles and "AI: E-mail · model · 812 ms" when
+/// Status line of an expanded history row: Ember sparkles and "AI: E-mail · model · 812 ms" when
 /// AI produced text, an amber warning and "AI pominięte: <note>" when it did not, a quiet "Bez AI"
 /// when it was off. White type on glass, like `ToolStatusLine`.
 @MainActor
@@ -16,7 +16,7 @@ struct HistoryAIStatusLine: View {
             Image(systemName: symbol)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(iconColor)
-                // Brand violet is dark on the warm glass; lift it to a readable lilac.
+                // Ember is dark on the glass; lift it to a readable light rhubarb.
                 .brightness(status == .none ? 0 : 0.3)
                 .accessibilityHidden(true)
             Text(verbatim: status.line)

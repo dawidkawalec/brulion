@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// "Zmierzch": the blurred sunset over the lake, alive. The seamless video loop made from our own
-/// photo (`DuskVideoView`, `scripts/make-dusk-video.sh`) plays over the photo (asset
-/// `DuskWallpaper`, source copy in `docs/design/backdrops/`), which is its poster until the first
+/// "Zmierzch": the blurred sunset over the lake, alive, graded to the Bielik palette. The seamless
+/// video loop made from our own photo (`DuskVideoView`, `scripts/make-dusk-video.sh`) plays over
+/// the graded photo (asset `DuskWallpaper`, written by the same script from the ungraded source in
+/// `docs/design/backdrops/`), which is its poster until the first
 /// frame is ready and the fallback when the video cannot play. Both sit under a night-tinted
 /// scrim so white text stays legible, and an optional soft vignette. `scrim` 0 shows the raw
 /// image, 1 is heavy.
@@ -35,7 +36,7 @@ struct DuskPhotoBackdrop: View {
                     .frame(width: proxy.size.width, height: proxy.size.height)
 
                 // Night-tinted wash, heavier at the top (page titles, subtitles and the
-                // onboarding step labels sit on the bright lilac sky there) and at the bottom.
+                // onboarding step labels sit on the bright rhubarb sky there) and at the bottom.
                 LinearGradient(
                     stops: [
                         .init(color: GlassColor.night.opacity(min(1.6 * scrim, 0.9)), location: 0),

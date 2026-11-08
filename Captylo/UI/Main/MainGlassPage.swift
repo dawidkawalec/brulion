@@ -3,7 +3,7 @@ import SwiftUI
 /// Layout of the Dusk Glass main window: the floating sidebar, the content column gutters and the
 /// readable max width shared by the page header, the banners and the pages.
 enum MainShellMetrics {
-    /// Width of the sidebar attached to the left window edge, the Abyss wash over its frosted
+    /// Width of the sidebar attached to the left window edge, the Ink wash over its frosted
     /// glass (the lab's sidebar tint, added to the user's panel smoke from `WindowTone`) and the
     /// white hairline on its right edge.
     static let sidebarWidth: CGFloat = 228

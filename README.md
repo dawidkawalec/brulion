@@ -141,7 +141,7 @@ Szpak is free software under the [GNU General Public License v3.0](LICENSE), lik
 
 - The Bielik models are made by SpeakLeash and released under Apache 2.0. They are downloaded from Hugging Face on first use, not bundled.
 - llama.cpp is MIT.
-- Szpak's icon is a variant of the Captylo icon, used with the permission of Captylo's owner. The Captylo name and logo are not licensed for other products.
+- Szpak's mark and icon (a starling singing on a twig, in the colours of the Bielik site) are drawn for Szpak (`scripts/make-szpak-brand.swift`, files in `docs/brand/`). They are not the Bielik or SpeakLeash logo. Like the Captylo name and logo, the Szpak name and mark are not licensed for other products (NOTICE.md).
 
 [NOTICE.md](NOTICE.md) lists every third-party component with its licence.
 

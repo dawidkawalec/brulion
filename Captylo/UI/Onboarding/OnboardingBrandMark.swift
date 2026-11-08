@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// The white symbol of the app icon, drawn from the vector asset `BrandSymbol`. It is the mark
-/// of Captylo's icon (Brand Direction 01: the heavy round C with the diagonal cut), kept because
-/// the Szpak icon is a recoloured variant of that icon (docs/PRD.md section 4).
+/// The mark of the app icon, drawn from the vector asset `BrandSymbol`: the rhubarb starling
+/// singing on a twig (`scripts/make-szpak-brand.swift`, docs/design/dusk-glass.md principle 7).
 @MainActor
 struct OnboardingBrandMark: View {
     var body: some View {

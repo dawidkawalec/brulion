@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// The frosted glass orb of the welcome screen (the recorder orb of mockup 01, scaled up): a clear
-/// glass bubble with a bright rim and an inner highlight, a warm glow behind it and the white
-/// Captylo symbol inside.
+/// glass bubble with a bright rim and an inner highlight, a rhubarb ember behind it and the
+/// Szpak mark inside.
 @MainActor
 struct OnboardingOrb: View {
     var size: CGFloat = 132
@@ -52,12 +52,12 @@ struct OnboardingOrb: View {
             .allowsHitTesting(false)
     }
 
-    /// Warm sunset glow bleeding out around the orb.
+    /// Rhubarb ember bleeding out around the orb.
     private var glow: some View {
         Circle()
             .fill(
                 RadialGradient(
-                    colors: [VTColor.brandPink.opacity(0.45), VTColor.brandViolet.opacity(0.18), Color.clear],
+                    colors: [VTColor.rhubarb.opacity(0.40), VTColor.ember.opacity(0.16), Color.clear],
                     center: .center,
                     startRadius: size * 0.3,
                     endRadius: size * 0.95

@@ -64,7 +64,7 @@ private struct GrainientMetalView: NSViewRepresentable {
         view.colorPixelFormat = .bgra8Unorm
         // Tag the output as sRGB, so the hex colours land on screen as they do in the browser.
         (view.layer as? CAMetalLayer)?.colorspace = CGColorSpace(name: CGColorSpace.sRGB)
-        view.clearColor = MTLClearColor(red: 0.13, green: 0.14, blue: 0.19, alpha: 1)
+        view.clearColor = MTLClearColor(red: 0.145, green: 0.145, blue: 0.118, alpha: 1)
         view.enableSetNeedsDisplay = false
         view.preferredFramesPerSecond = GlassTokens.Grainient.framesPerSecond
         view.isPaused = !isAnimating

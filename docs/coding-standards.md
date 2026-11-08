@@ -14,7 +14,7 @@
 
 ## SwiftUI / AppKit
 
-- Design tokens live in `UI/Glass/GlassTokens.swift` (Dusk Glass in Deep Tide: radii, paddings, opacities, scrims, Grainient uniforms, `GlassColor`, `GlassFont` on Manrope + Inter, `GlassMotion`) and `UI/DesignSystem.swift` (brand colors, widget sizes, `vtGlass(in:)`). No ad-hoc hex colors, materials or `glassEffect` in views: use `glassSurface` and the components in `UI/Glass/` ([docs/design/dusk-glass.md](design/dusk-glass.md)).
+- Design tokens live in `UI/Glass/GlassTokens.swift` (Dusk Glass in the Bielik palette: radii, paddings, opacities, scrims, Grainient uniforms, `GlassColor`, `GlassFont` on Geologica + Inter, `GlassMotion`) and `UI/DesignSystem.swift` (brand colors, widget sizes, `vtGlass(in:)`). No ad-hoc hex colors, materials or `glassEffect` in views: use `glassSurface` and the components in `UI/Glass/` ([docs/design/dusk-glass.md](design/dusk-glass.md)).
 - Check UI changes with `scripts/snap.sh <target> <out.png>` (design preview, fake data) and compare with the mockups in `docs/design/`.
 - Views observe `@Observable` models; the waveform pulls the level inside `TimelineView` instead of observing a 60 Hz property.
 - Panels never activate the app: `orderFrontRegardless()`, never `NSApp.activate` or `makeKey` from the widget.

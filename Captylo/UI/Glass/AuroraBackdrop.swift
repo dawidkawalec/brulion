@@ -1,9 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// "Gradient": a slow animated dusk sky in the brand palette (night, navy, indigo, violet,
-/// orchid, rose, peach, horizon glow), dark enough for white type, under a light scrim and a
-/// vignette.
+/// "Gradient": a slow animated warm dusk in the Bielik palette (night, bark, olive, umber, clay,
+/// rhubarb, apricot, glow), dark enough for white type, under a light scrim and a vignette.
 ///
 /// Three compositions of the sky (`AuroraSky`: a 4 x 4 `MeshGradient` on macOS 15+, soft
 /// drifting glows on macOS 14) are rendered once into small bitmaps, then Core Animation
@@ -223,18 +222,21 @@ final class AuroraLayerHostView: NSView {
 
 // MARK: - Palette
 
-/// Brand colours of the aurora (`branding/palette.json`), as RGB for mixing.
+/// Colours of the warm dusk, from Bielik's browns up to its rhubarb, as RGB for mixing.
 enum AuroraPalette {
     typealias RGB = SIMD3<Double>
 
-    static let night = RGB(20, 22, 46) / 255
-    static let duskNavy = RGB(35, 40, 90) / 255
-    static let indigo = RGB(58, 57, 147) / 255
-    static let violet = RGB(111, 107, 216) / 255
-    static let orchid = RGB(162, 119, 204) / 255
-    static let rose = RGB(224, 132, 159) / 255
-    static let peach = RGB(245, 154, 100) / 255
-    static let horizonGlow = RGB(255, 180, 106) / 255
+    static let night = RGB(28, 27, 22) / 255
+    /// Bielik brown-deep.
+    static let bark = RGB(47, 47, 38) / 255
+    /// Bielik brown, a little lifted.
+    static let olive = RGB(76, 76, 62) / 255
+    static let umber = RGB(112, 88, 70) / 255
+    static let clay = RGB(166, 98, 78) / 255
+    /// Bielik rhubarb, slightly deeper.
+    static let rhubarb = RGB(229, 101, 79) / 255
+    static let apricot = RGB(246, 141, 108) / 255
+    static let glow = RGB(255, 180, 143) / 255
 
     /// `color` pulled toward night: 0 = night, 1 = the full colour.
     static func dim(_ color: RGB, _ amount: Double) -> RGB {
@@ -269,20 +271,20 @@ private struct AuroraMesh: View {
 
     private typealias P = AuroraPalette
 
-    /// Two dusk skies the mesh mixes between, rows top to bottom: night above, violet in the
-    /// middle, a dimmed warm horizon low in the window, glows moving from right to left.
+    /// Two dusk skies the mesh mixes between, rows top to bottom: night above, olive and umber in
+    /// the middle, a dimmed rhubarb horizon low in the window, glows moving from right to left.
     private static let skyA: [P.RGB] = [
-        P.night, P.duskNavy, P.night, P.night,
-        P.duskNavy, P.dim(P.indigo, 0.85), P.dim(P.violet, 0.6), P.night,
-        P.dim(P.indigo, 0.5), P.dim(P.orchid, 0.55), P.dim(P.indigo, 0.7), P.dim(P.rose, 0.6),
-        P.night, P.dim(P.rose, 0.65), P.dim(P.peach, 0.62), P.dim(P.orchid, 0.45),
+        P.night, P.bark, P.night, P.night,
+        P.bark, P.dim(P.olive, 0.85), P.dim(P.umber, 0.6), P.night,
+        P.dim(P.olive, 0.5), P.dim(P.clay, 0.55), P.dim(P.olive, 0.7), P.dim(P.rhubarb, 0.6),
+        P.night, P.dim(P.rhubarb, 0.65), P.dim(P.apricot, 0.62), P.dim(P.clay, 0.45),
     ]
 
     private static let skyB: [P.RGB] = [
-        P.night, P.night, P.duskNavy, P.night,
-        P.dim(P.indigo, 0.6), P.dim(P.violet, 0.6), P.dim(P.indigo, 0.8), P.duskNavy,
-        P.dim(P.rose, 0.6), P.dim(P.indigo, 0.6), P.dim(P.orchid, 0.6), P.dim(P.indigo, 0.45),
-        P.dim(P.horizonGlow, 0.55), P.dim(P.orchid, 0.5), P.dim(P.rose, 0.6), P.night,
+        P.night, P.night, P.bark, P.night,
+        P.dim(P.olive, 0.6), P.dim(P.umber, 0.6), P.dim(P.olive, 0.8), P.bark,
+        P.dim(P.rhubarb, 0.6), P.dim(P.olive, 0.6), P.dim(P.clay, 0.6), P.dim(P.olive, 0.45),
+        P.dim(P.glow, 0.55), P.dim(P.clay, 0.5), P.dim(P.rhubarb, 0.6), P.night,
     ]
 
     var body: some View {
@@ -352,10 +354,10 @@ private struct AuroraGlows: View {
     }
 
     private static let glows: [Glow] = [
-        Glow(color: P.indigo, opacity: 0.85, center: CGPoint(x: 0.25, y: 0.35), drift: CGSize(width: 0.12, height: 0.08), size: 1.1, turns: 1, offset: 0),
-        Glow(color: P.violet, opacity: 0.45, center: CGPoint(x: 0.75, y: 0.45), drift: CGSize(width: 0.10, height: 0.10), size: 0.9, turns: 1, offset: 2.1),
-        Glow(color: P.rose, opacity: 0.38, center: CGPoint(x: 0.3, y: 0.95), drift: CGSize(width: 0.14, height: 0.05), size: 0.9, turns: 1, offset: 4.2),
-        Glow(color: P.peach, opacity: 0.30, center: CGPoint(x: 0.8, y: 1.0), drift: CGSize(width: 0.10, height: 0.05), size: 0.8, turns: 2, offset: 1.0),
+        Glow(color: P.olive, opacity: 0.85, center: CGPoint(x: 0.25, y: 0.35), drift: CGSize(width: 0.12, height: 0.08), size: 1.1, turns: 1, offset: 0),
+        Glow(color: P.umber, opacity: 0.45, center: CGPoint(x: 0.75, y: 0.45), drift: CGSize(width: 0.10, height: 0.10), size: 0.9, turns: 1, offset: 2.1),
+        Glow(color: P.rhubarb, opacity: 0.38, center: CGPoint(x: 0.3, y: 0.95), drift: CGSize(width: 0.14, height: 0.05), size: 0.9, turns: 1, offset: 4.2),
+        Glow(color: P.apricot, opacity: 0.30, center: CGPoint(x: 0.8, y: 1.0), drift: CGSize(width: 0.10, height: 0.05), size: 0.8, turns: 2, offset: 1.0),
     ]
 
     var body: some View {
@@ -364,7 +366,7 @@ private struct AuroraGlows: View {
             let extent = max(size.width, size.height)
             ZStack {
                 LinearGradient(
-                    colors: [P.color(P.night), P.color(P.duskNavy)],
+                    colors: [P.color(P.night), P.color(P.bark)],
                     startPoint: .top,
                     endPoint: .bottom
                 )

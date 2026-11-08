@@ -87,9 +87,9 @@ struct GlassGallery: View {
 
     private var tiles: some View {
         HStack(spacing: 14) {
-            GlassStatTile("Słowa", value: "4 812", systemImage: "text.word.spacing", tint: VTColor.brandViolet)
-            GlassStatTile("Sesje", value: "42", systemImage: "waveform", tint: VTColor.brandPink)
-            GlassStatTile("Nagrany czas", value: "1:07:32", systemImage: "clock", tint: VTColor.brandOrange)
+            GlassStatTile("Słowa", value: "4 812", systemImage: "text.word.spacing", tint: VTColor.ember)
+            GlassStatTile("Sesje", value: "42", systemImage: "waveform", tint: VTColor.sand)
+            GlassStatTile("Nagrany czas", value: "1:07:32", systemImage: "clock", tint: VTColor.rhubarb)
         }
     }
 
@@ -131,8 +131,8 @@ struct GlassGallery: View {
                 GlassBadge(title: Text(verbatim: "Błąd"), tone: .danger)
                 Spacer(minLength: 0)
                 GlassIconBadge(systemImage: "cpu")
-                GlassIconBadge(systemImage: "keyboard", tint: VTColor.brandViolet)
-                GlassIconBadge(systemImage: "sparkles", tint: VTColor.brandOrange)
+                GlassIconBadge(systemImage: "keyboard", tint: VTColor.ember)
+                GlassIconBadge(systemImage: "sparkles", tint: VTColor.rhubarb)
             }
         }
     }

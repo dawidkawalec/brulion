@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Sidebar of the main window (docs/design/dusk-glass.md, "Main window"), attached to the left
-/// edge from top to bottom (Brand Direction 01, the owner's pick #38): an Abyss-tinted frosted
+/// edge from top to bottom (Brand Direction 01, the owner's pick #38): an Ink-tinted frosted
 /// column with a hairline on its right, the "szpak" wordmark on top, the seven sections as white
 /// icon + label rows with a brighter glass pill under the selection that slides between them,
 /// the version at the bottom.
@@ -56,7 +56,7 @@ struct MainSidebar: View {
     // MARK: Brand
 
     private var brand: some View {
-        BrandWordmark(height: 28)
+        BrandWordmark(height: 28, showsMark: true)
             .accessibilityAddTraits(.isHeader)
     }
 
@@ -146,9 +146,9 @@ private struct SidebarItemLabel: View {
     }
 }
 
-/// The sidebar column: frosted glass over the window background, washed with Abyss so white type
+/// The sidebar column: frosted glass over the window background, washed with Ink so white type
 /// holds over the brightest part of the gradient (a little more than the panels' smoke), and a
-/// hairline along its right edge. Reduce Transparency: solid Abyss.
+/// hairline along its right edge. Reduce Transparency: the solid brown panel.
 @MainActor
 private struct SidebarBackdrop: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -160,7 +160,7 @@ private struct SidebarBackdrop: View {
                 GlassColor.solidPanel
             } else {
                 Rectangle().fill(.ultraThinMaterial)
-                VTColor.abyss.opacity(MainShellMetrics.sidebarInkWash + tone.smokeOpacity)
+                VTColor.ink.opacity(MainShellMetrics.sidebarInkWash + tone.smokeOpacity)
             }
             Rectangle()
                 .fill(Color.white.opacity(MainShellMetrics.sidebarHairline))

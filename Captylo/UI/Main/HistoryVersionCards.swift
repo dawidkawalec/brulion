@@ -55,7 +55,7 @@ struct HistoryVersionCards: View {
 }
 
 /// One version: small header (icon, title, copy) over the selectable text. The AI card carries a
-/// faint violet rim so the two read apart at a glance. `text == nil` = the AI run in progress.
+/// faint Ember rim so the two read apart at a glance. `text == nil` = the AI run in progress.
 @MainActor
 private struct HistoryVersionCard: View {
     let title: Text
@@ -71,7 +71,7 @@ private struct HistoryVersionCard: View {
                 Image(systemName: systemImage)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(isAI ? GlassColor.accent : GlassColor.textSecondary)
-                    // Brand violet is dark on the warm glass; lift it to a readable lilac.
+                    // Ember is dark on the glass; lift it to a readable light rhubarb.
                     .brightness(isAI ? 0.3 : 0)
                     .accessibilityHidden(true)
                 title

@@ -74,7 +74,7 @@ For the privacy screen ("Prywatność", PRD 7.6): the local AI contacts the netw
 | standard | 16 GB RAM and more | Bielik 1.5B Q8_0 | Bielik Minitron 7B Q4_K_M | 6.2 GB | 7.2 GB | 60 % of RAM (10.3 GB on 16 GB: both models, 9.8 GB) |
 | experimental | under 16 GB | Bielik 1.5B Q8_0 | Bielik 1.5B (or the cloud Bielik when the user set it up) | 1.7 GB | 2.7 GB | 45 % of RAM (3.9 GB on 8 GB), one server at a time |
 
-Planned memory per model (mapped file plus working memory): 1.5B 2.3 GB at -c 8192 (measured); Minitron 7.5 GB and 4.5B 7.5 GB at the features context -c 24576 (estimates: Minitron measured 6.6 GB at -c 8192, the KV cache grows with the context; the 4.5B not measured). On the experimental tier a model over 35 % of the RAM (Minitron, 4.5B) is allowed with a memory warning (`HardwareProfile.needsMemoryWarning`).
+Planned memory per model (mapped file plus working memory): 1.5B 2.3 GB at -c 8192 (measured); Minitron 7.5 GB and 4.5B 7.5 GB at the features context -c 24576 (estimates: Minitron measured 6.6 GB at -c 8192, the KV cache grows with the context; the 4.5B not measured). F3 measured Minitron in the app at -c 24576: 8.3-8.45 GB RSS (the 4.50 GB mapped file plus 4.0-4.4 GB physical footprint of KV cache and Metal buffers), and the 1.5B 2.0 GB RSS. The plan value stays 7.5 GB for now: at 8.5 GB the 1.5B and Minitron no longer fit the 16 GB budget together (0.6 x 16 GiB = 10.3 GB) and the service would swap the two servers on every switch between cleanup and a mode; whether to accept that, raise the budget or lower Minitron's context is the owner's call (see docs/benchmark.md). On the experimental tier a model over 35 % of the RAM (Minitron, 4.5B) is allowed with a memory warning (`HardwareProfile.needsMemoryWarning`).
 
 ## Measured numbers
 
@@ -94,7 +94,7 @@ F0, 2026-11-07, M3 Pro 36 GB, llama-server v0.9.0, -c 8192, -ngl 99, temperature
 | `correctionContext`, `featuresContext` | 8192, 24576 (server `-c`). Bielik 1.5B was trained on 8192 tokens (never more); Minitron 7B on 32768; 24576 = the meeting code's 20k-token input budget (`TranscriptChunker.defaultInputBudget`) plus a 4k answer. A model serving both roles runs with the larger |
 | `measuredPeakRAM` | 1.5B 2.3 GB, Minitron 7.5 GB, 4.5B 7.5 GB (both estimates at -c 24576); `ramFactor` 1.3 only for models without a value |
 | deadline cleanup | 1.0 s + words x 0.04 s x 1.5, cap 15 s |
-| deadline modes | 3.0 s + words x 0.23 s x 1.5, cap 30 s |
+| deadline modes | 10.0 s + words x 0.23 s x 1.5, cap 30 s (F3: a mode's answer can be much longer than the dictation; with 3.0 s, 9 of 36 short dictations hit the limit) |
 | `guardMinimumSimilarity` | 0.5 (on the merged text) |
 | memory budget, warning | 0.6 / 0.45 of RAM per tier, warning above 0.35 on the experimental tier |
 

@@ -1,72 +1,107 @@
-# Captylo
+# Szpak
 
-**Mów, a tekst pojawia się tam, gdzie piszesz.** Speak, and the text appears wherever you type.
+**Mów, a Bielik poprawi tekst na Twoim Macu.** Speak, and the text appears wherever you type, with all of the AI running on Bielik on your own Mac.
 
-Captylo is a minimalist, open source dictation app for macOS. Hold a hotkey, speak, let go: the text is pasted at the cursor in any app. Polish first, English and 23 other European languages too. Website: [captylo.com](https://captylo.com).
+Szpak is an open source dictation and meeting-notes app for macOS. Its whole language layer runs on **Bielik**, the Polish open language model by [SpeakLeash](https://speakleash.org), locally through llama.cpp. You need no account, no subscription and no server of ours. Speech recognition and AI stay on the Mac. If you want, the AI features can run on Bielik 11B in the Polish cloud instead (CloudFerro Sherlock, with your own key).
 
-![Captylo](docs/og.jpg)
+Szpak is a fork of [Captylo](https://captylo.com) 1.0.17, made for [Bielik Awards 2026](docs/bielik-awards.md) (category c, small language models under 10B parameters).
 
-## Features
+## How it works on Bielik
 
-- One hotkey, two ways to use it: a short tap starts and stops dictation, holding it records push-to-talk (default Right Option, Fn, Right Command or a custom combo).
-- Local transcription with Whisper large-v3-turbo (WhisperKit, on the Neural Engine), with a live preview in a small floating widget.
-- Optional cloud transcription; if the cloud fails, Captylo falls back to the local model.
-- Optional AI modes (cleanup, email, to-do list, English, your own) with a hard time limit.
-- Learns from your corrections: fix a word once and Captylo remembers it, on your Mac.
-- Dictionary: vocabulary hints and replacement rules for names and terms.
-- History with audio playback, search and CSV export; dashboard with words, sessions and time saved.
-- File transcription: drop an audio or video file (including WhatsApp/Telegram voice notes, with or without a name extension) or use "Otwórz za pomocą" in Finder.
-- Meeting notes: records the call (mic + system audio, no bot) and transcribes it live on your Mac (⌃⌥⌘M starts and ends it); it notices when a call app starts or ends and asks whether to record; in Pro: a more accurate cloud transcript, AI fixes of misheard words (the original can be restored), speaker labels and AI notes.
-- Meeting search: find anything said in any meeting, whatever the Polish word form ("oferta" also finds "ofertę"), with the matching lines under each meeting; a click jumps to that moment in the transcript.
-- "Zapytaj" (Pro): ask one meeting or all of them a question in plain language and get a short answer with clickable sources (`[12:34]` plays or opens the moment it came from); if the meetings do not say it, Captylo says so instead of guessing.
-- Access for your AI assistant (optional, off by default): a local, read-only MCP server, so an assistant like Claude Desktop or Cursor can list, read and search your meetings on this Mac.
-- Calendar (optional): names the meeting after the event, keeps the participants, shows today's upcoming meetings in Spotkania and reminds you shortly before a call with a link. It only asks; it never starts recording by itself.
-- Menu bar menu, Polish UI with English translations.
+```text
+Dictation (hold Right ⌘, speak, let go)
+  microphone -> Whisper large-v3 turbo (Neural Engine)            raw text
+             -> Bielik 1.5B + word guard     "Czyszczenie"         text pasted at the cursor   ~1.4 s
+             -> Bielik Minitron 7B           AI modes (e-mail, list, English, your own prompts)  ~10 s
+
+Meetings (⌃⌥⇧M: mic + system audio, no bot)
+  live Whisper transcript -> speaker labels (on device)
+             -> Bielik 1.5B + line guard     fixes of misheard words (optional)
+             -> Bielik Minitron 7B           AI notes with [mm:ss] citations, "Zapytaj" (ask the meeting)
+```
+
+- **The model server:** `llama-server` from llama.cpp (pinned commit, Metal) ships inside the app. Szpak starts it when needed:
+  - only on `127.0.0.1`, on a random port, with a token on every request;
+  - it frees the memory after 10 idle minutes (you can change this) and quits with the app.
+- **Two roles, two models:**
+  - *dictation correction* (cleanup, meeting transcript fixes, note titles) on **Bielik 1.5B v3 Q8_0** (1.7 GB);
+  - *AI features* (modes, meeting notes, "Zapytaj") on **Bielik Minitron 7B v3 Q4_K_M** (4.5 GB).
+
+  In Modele you can pick another model for each role: Bielik 4.5B, Minitron or Bielik in the cloud.
+- **Model downloads:** models come from SpeakLeash's official Hugging Face repositories at pinned revisions. Downloads resume after a break and each file is checked against its SHA-256 before use.
+- **The word guard:** a small model asked to "fix punctuation" sometimes changes the meaning (the person, a summary, a loop). Szpak therefore merges the answer with the raw text word by word. It keeps only punctuation, capitals, Polish diacritics, small typos (macOS spell checker), your dictionary terms and removed fillers, and puts every other word back. In our 60-dictation test the meaning stayed intact in all 60.
+- **When the model is late or down:** dictation never hangs. Past a time limit that grows with the text, or when the model server fails, Szpak pastes the raw text and says why.
+
+## Numbers
+
+MacBook Pro M3 Pro, 36 GB RAM. 60 real dictations of the author, with no client data. Full method and tables: [docs/benchmark.md](docs/benchmark.md) (in Polish).
+
+| | Result |
+|---|---|
+| Correction on Bielik 1.5B, dictations up to 60 words | p50 1.37 s, p95 2.49 s in the app (Captylo's cloud AI: 0.80 s / 1.82 s) |
+| Meaning kept after the correction | 60 of 60 (without the word guard the 1.5B changed it in 8-15%) |
+| Punctuation F1 against the cloud output | 0.82 raw Whisper -> 0.89 |
+| AI modes on Minitron 7B (e-mail, list, organize) | p50 ~10 s, p95 18-25 s; 3 of 36 fell back to the raw text |
+| AI notes on Minitron 7B | 30-44 min meeting in 2-3 min, 60 min in 6 min (in the background) |
+| Memory of the model server | 2.0 GB (1.5B), 8.3-8.5 GB (Minitron, incl. the mapped model file) |
+| Network while working | none: every run used only 127.0.0.1, and the pipeline also runs in a sandbox with outbound internet blocked |
 
 ## Requirements
 
-- macOS 14.4 or later
-- Apple Silicon (M1 or newer)
-- Microphone and Accessibility permissions (for the global hotkey and pasting)
-- For meeting notes: the "System Audio Recording Only" permission (asked the first time a meeting records)
-- Optional: full access to Calendars (asked only when you turn "Kalendarz" on in Settings > Spotkania)
+- macOS 14.4 or later on Apple Silicon (M1 or newer).
+- **Full local AI: 16 GB of RAM** and about 7.2 GB of free disk space for the Bielik models (6.2 GB, plus 1 GB of headroom while downloading), plus 1.5 GB for the Whisper model.
+- **Less than 16 GB (experimental):** the correction runs locally on Bielik 1.5B, and the AI features run either on the 1.5B (weaker) or on Bielik in the cloud with your own CloudFerro Sherlock key. Not tested on an 8 GB Mac.
+- Permissions:
+  - Microphone and Accessibility (for the global hotkey and for pasting);
+  - for meetings, "System Audio Recording Only";
+  - optional: Calendars.
 
 ## Install
 
-1. Download [Captylo.dmg](https://captylo.com/download/Captylo.dmg) from [captylo.com](https://captylo.com) (earlier versions are attached to the [GitHub releases](https://github.com/dawidkawalec/captylo/releases)).
-2. Open it and drag Captylo to the Applications folder ("Programy").
-3. Open Captylo. It asks for the microphone, then for Accessibility (System Settings > Privacy & Security), so the hotkey works and the text can be pasted where you type. Meeting notes ask for "System Audio Recording Only" the first time they record.
+1. Download `Szpak.dmg` from the [GitHub releases](https://github.com/dawidkawalec/captylo-bielik/releases). It is signed with a Developer ID and notarized by Apple.
+2. Open it and drag Szpak to the Applications folder ("Programy").
+3. Open Szpak. The onboarding:
+   - asks for the microphone, then for Accessibility;
+   - downloads the speech model;
+   - in the "Pobierz Bielika" step, shows what your Mac can run and downloads the Bielik models.
 
-The app is signed with a Developer ID and notarized by Apple, so macOS opens it without the "unidentified developer" warning. The first launch downloads the speech model (about 1.6 GB) once; after that dictation works offline. Updates come through the app (Ustawienia > Aplikacja > Aktualizacje, or "Sprawdź aktualizacje…" in the menu bar menu); Captylo asks before it installs one.
+After that, dictation and the AI work offline. Szpak runs side by side with Captylo, with its own data folder and its own shortcuts. There are no automatic updates: a new version is a new release.
 
-If you used a copy you built yourself before, macOS treats the downloaded app as a new one and asks for the permissions again, once.
+## Features
+
+- **Hotkey:** a short tap starts and stops dictation, holding it records push-to-talk. The default is Right Command; Right Option, Fn or your own combo also work.
+- **Transcription:** local Whisper large-v3 turbo (WhisperKit, Neural Engine), with a live preview in a small floating widget.
+- **Correction:** Bielik 1.5B with the word guard ("Czyszczenie", the default AI mode).
+- **AI modes:** on Bielik Minitron 7B (e-mail, to-do list, organize your thoughts, English, your own prompts). Each mode has a hard time limit.
+- **Learning:** fix a word once and Szpak remembers it, on your Mac.
+- **Dictionary:** vocabulary hints and replacement rules for names and terms.
+- **History and dashboard:** history with audio playback, search and CSV export; a dashboard with words, sessions and time saved.
+- **File transcription:** drop an audio or video file, including voice notes from WhatsApp or Telegram.
+- **Meetings:**
+  - records the call (mic and system audio, no bot) and transcribes it live (⌃⌥⇧M starts and ends it);
+  - notices call apps and asks whether to record;
+  - after the call, all on Bielik: speaker labels (macOS 15+), AI fixes of misheard words (the original can be restored), and AI notes in parts with a merge for long meetings.
+- **Meeting search:** finds anything said in any meeting, whatever the Polish word form.
+- **"Zapytaj":** ask one meeting, or all of them, in plain language. The answer has clickable `[mm:ss]` sources. If the meetings do not say it, Szpak says so instead of guessing.
+- **Local usage counter, with no telemetry:**
+  - dictations;
+  - corrections the guard accepted and rejected;
+  - average time;
+  - modes and meetings.
+
+  It can be exported to JSON.
+- **Other:** a local, read-only MCP server for your AI assistant (off by default), calendar names and reminders (optional), a menu bar menu, and a Polish UI with English translations.
 
 ## Build it yourself
 
-You can also build Captylo from this repository. You need a Mac with Apple Silicon and **Xcode 26** (free from the Mac App Store, about 10 GB, install it first and open it once to accept the licence).
-
-### The easy way: let an AI agent do it
-
-You do not need to be a developer. Open the **Terminal** app, install [Claude Code](https://claude.com/claude-code) (or use Codex, Cursor or any coding agent you like), start it in your home folder and paste this:
-
-```text
-Build and install the Captylo dictation app for me from https://github.com/dawidkawalec/captylo.
-1. Check that full Xcode 26 is installed (not just the Command Line Tools) and selected with xcode-select. If it is missing, stop and tell me to install it from the Mac App Store.
-2. Install Homebrew if it is missing, then `brew install xcodegen`.
-3. Clone the repository into ~/captylo and run `make install` there (it builds a Release version and copies Captylo.app to /Applications).
-4. Open /Applications/Captylo.app and walk me through granting the Microphone and Accessibility permissions in System Settings.
-If a step fails, read the error, fix it and try again. Explain what you do in simple words.
-```
-
-The first launch downloads the speech model (about 1.6 GB) once. After that dictation works offline.
-
-### The manual way
+You need a Mac with Apple Silicon, **Xcode 26** (installed and opened once) and Homebrew.
 
 ```bash
-brew install xcodegen
-git clone https://github.com/dawidkawalec/captylo.git
-cd captylo
-make install   # Release build, copied to ~/Downloads and /Applications
+brew install xcodegen cmake
+git clone https://github.com/dawidkawalec/captylo-bielik.git szpak
+cd szpak
+make llama     # builds llama-server from the pinned llama.cpp commit (once, cached in ~/Library/Caches/Szpak)
+make install   # Release build of Szpak.app with llama-server inside, copied to ~/Downloads and /Applications
 ```
 
 Other targets:
@@ -75,48 +110,35 @@ Other targets:
 make gen      # generate Captylo.xcodeproj from project.yml
 make build    # Debug build into .local-build/
 make test     # unit tests
-make release  # Release build, copied to ~/Downloads/Captylo.app
-make run      # launch the last build
-make check    # permissions, model and paths as JSON
+make release  # Release build, copied to ~/Downloads/Szpak.app
+make check    # permissions, models, local AI and paths as JSON
 ```
 
-Self-built copies are signed ad hoc, so macOS may forget the Microphone and Accessibility permissions after you rebuild. Run `make reset-tcc` and grant them again, or run `scripts/setup-signing.sh` once to create a local signing identity that keeps them across builds. Self-built copies check the same update feed as the download, and installing an update replaces them with the official, notarized build; turn off "Sprawdzaj automatycznie" in Ustawienia > Aplikacja to keep your own.
+Self-built copies are signed ad hoc, so macOS may forget the permissions after a rebuild. You can run `make reset-tcc` and grant them again, or run `scripts/setup-signing.sh` once to keep them across builds.
 
-How a public release is made (Developer ID, notarization, the DMG, the update feed): [docs/release.md](docs/release.md).
+The headless flags (`--transcribe`, `--meeting-ai`, `--check`) and how to repeat the measurements are described in [docs/architecture.md](docs/architecture.md) and [docs/benchmark.md](docs/benchmark.md). How the local AI is built: [docs/local-ai.md](docs/local-ai.md).
 
 ## Privacy
 
-Transcription runs locally on your Mac by default: recordings and text never leave it. The cloud features are optional and off until you turn them on: cloud transcription receives the recording, the AI modes receive the transcript. API keys are stored in the macOS login Keychain. The code is open, so you can check all of this yourself.
+Everything runs on your Mac: recordings, transcripts, AI answers, meeting notes and what Szpak learns from your corrections. There is no telemetry, no update check, no account and no server of ours. Szpak opens a network connection in only two cases:
 
-In Pro, the cloud and AI requests without a key of your own, and every meeting AI request, go through our server (`api.captylo.com`), which passes them on to the cloud and AI providers and keeps none of the audio or text, not even in its logs. It stores your e-mail address, your sign-in sessions, the state of your subscription and this month's usage counts (audio seconds and AI tokens), nothing else. Payments are handled by the payment provider; we never see your card. The full list of providers and what each one receives is in the [privacy policy](https://captylo.com/prywatnosc/).
+- **huggingface.co,** while it downloads the speech model and the Bielik models;
+- **CloudFerro Sherlock,** only if you turn on "Bielik w chmurze" in Modele and paste your own key. The AI requests of the roles you put on the cloud then go straight from your Mac to that Polish cloud, with no proxy of ours. The key is kept in the macOS login Keychain.
 
-Learning from your corrections ("Ucz się z moich poprawek", Settings) stays on your Mac too: after a paste Captylo reads back only that text field for a short while, never password fields, password managers or terminals, and keeps what it learned in `learning.json` next to the dictionary. With an AI mode on, a few before/after pairs go to the same AI to update your style description. Every lesson can be undone in Słownik, and the switch turns it all off.
+Learning from your corrections reads back only the text field you dictated into, for a short while. It never reads password fields, password managers or terminals. What it learns stays in `learning.json` next to the dictionary.
 
-Meetings are recorded and transcribed on your Mac as well; the audio files can be deleted automatically (Settings > Spotkania) while transcripts and notes stay. Three optional Pro features send meeting data after a meeting ("Zapytaj" below is the fourth): the cloud transcript sends the meeting audio to the same cloud as cloud transcription, and the AI fixes and AI notes send the transcript to Captylo AI through our server. The cloud transcript and the AI fixes are off until you turn them on in Settings. Meeting detection only checks which apps use the microphone and, for browsers, whether a window or tab title names a call service; it stores nothing and never records without asking.
-
-Meeting search runs entirely on your Mac: the search index is a local file next to your meetings that holds no text the meetings do not already hold. "Zapytaj" (Pro) sends the question and the relevant parts of your meetings to Captylo AI through our server: for one meeting its transcript and notes, for all meetings only the matching excerpts (never whole transcripts). Questions about one meeting and their answers are kept with that meeting on your Mac, questions across all meetings only while the app runs; neither is ever logged.
-
-The MCP server for AI assistants is off until you turn on "Dostęp dla asystentów AI (MCP)" in Settings > Spotkania. It runs locally, only reads your meetings (it never changes them and makes no network or AI calls of its own) and answers only the assistant that started it. Once you connect an assistant, that assistant decides where the meeting text it reads goes next, so connect only one you trust with your meetings.
-
-The calendar is read only on this Mac, and only while "Kalendarz" is on: Captylo keeps the event's title, id and the participants' names with the meeting and never logs them. The participants' names leave your Mac only when the AI notes, the AI fixes or "Zapytaj" run (all Pro, Captylo AI through our server), as part of the same meeting text those features already send, or when an assistant you connected over MCP reads the meeting. A reminder before a call is a question, never an automatic recording.
-
-## Pricing
-
-- **Free**: unlimited local dictation and meeting notes on your Mac, forever. Cloud transcription and AI modes for dictation work in Free too when you paste your own API keys in Settings (Modele); you pay the provider directly.
-- **Pro** (the only paid plan): cloud transcription and AI modes with no keys to set up, the meeting AI (AI notes, AI fixes of the transcript, "Zapytaj") on Captylo AI, our own AI service, speaker labels, plus every future feature. You pay by card (yearly or monthly, cancel any time from the app) and sign in to a Captylo account in Settings > Konto Captylo with your e-mail address and a code we send you; no passwords. Fair use: 20 hours of cloud transcription and 3 million AI tokens a month (a meeting's two tracks count separately). Launch prices: [captylo.com](https://captylo.com/#cennik), terms: [captylo.com/regulamin](https://captylo.com/regulamin/).
-
-For dictation your own key always wins: with a key in Settings, Captylo talks to that provider directly even in Pro. The meeting AI runs only on Captylo AI. The server behind Pro (accounts, payments, Captylo AI) is a separate service and not part of this repository; what it may store and log is described above and in the [privacy policy](https://captylo.com/prywatnosc/).
-
-## Contributing
-
-Issues and pull requests are welcome. Start with [AGENTS.md](AGENTS.md): it is the source of truth for the architecture, the rules and the commands, for people and coding agents alike. Deeper notes live in [docs/](docs/). A change is done when `make build` and `make test` pass.
+The MCP server for AI assistants is off by default. It only reads your meetings and answers only the assistant that started it. The calendar is read on this Mac only while "Kalendarz" is on.
 
 ## Licence
 
-Captylo is free software under the [GNU General Public License v3.0](LICENSE): you may use, study, change and share it, and anything you distribute that is built on it must stay under the GPLv3 with its source available.
+Szpak is free software under the [GNU General Public License v3.0](LICENSE), like Captylo it was forked from.
 
-The licence covers the code. The **Captylo name, logo and app icon** are not licensed for other products: if you publish a fork, please give it its own name and icon.
+- The Bielik models are made by SpeakLeash and released under Apache 2.0. They are downloaded from Hugging Face on first use, not bundled.
+- llama.cpp is MIT.
+- Szpak's icon is a variant of the Captylo icon, used with the permission of Captylo's owner. The Captylo name and logo are not licensed for other products.
 
-The animated grain gradient is a separately licensed shader (React Bits "Grainient", MIT + Commons Clause), included under an additional permission (GPLv3 section 7). [NOTICE.md](NOTICE.md) has the details and the other third-party components with their licences.
+[NOTICE.md](NOTICE.md) lists every third-party component with its licence.
 
-Made by [Dawid Kawalec](https://kawalec.pl).
+Thanks to SpeakLeash and the Bielik team, llama.cpp, WhisperKit and FluidAudio.
+
+Made by [Dawid Kawalec](https://kawalec.pl) (CRAFTWEB).

@@ -116,13 +116,15 @@ struct AppSettingsTests {
         #expect(raw.contains("ai.model.features"))
         #expect(raw.contains("ai.local.idleMinutes"))
         #expect(raw.contains("notes.shortcut"))
+        #expect(raw.contains("ai.cloud.provider"))
+        #expect(raw.contains("ai.cloud.url"))
         // Nothing of the account, Pro, the support card or the old cloud settings is left.
         for gone in ["account.cache", "account.refreshedAt", "dev.pro", "supportCard.hiddenUntil",
                      "meetings.proBannerHiddenUntil", "meetings.cloudTranscript", "ai.captylo",
                      "stt.captylo", "ai.model", "openRouter.modelsCache"] {
             #expect(!raw.contains(gone), "\(gone)")
         }
-        #expect(AppSettings.keys.count == 46)
+        #expect(AppSettings.keys.count == 48)
     }
 
     @Test func meetingMCPDefaultsOff() throws {

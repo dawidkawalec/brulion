@@ -595,7 +595,7 @@ final class AppState {
         }
 
         // The cloud key: read once on the Keychain queue so the hot path hits the cache.
-        keyStore.preload([KeyStore.Account.cloudFerroSherlock])
+        keyStore.preload(KeyStore.Account.cloudKeys)
 
         // Hotkey tap: installed now when trusted, otherwise on the Accessibility flip (gotcha 38).
         // Revoking the grant kills the tap but leaves its port behind, so a re-grant always builds
@@ -837,6 +837,8 @@ final class AppState {
             _ = settings.hotkey
             _ = settings.cloudAIEnabled
             _ = settings.cloudAIModel
+            _ = settings.cloudAIProvider
+            _ = settings.cloudAICustomURL
             _ = settings.aiCorrectionModel
             _ = settings.aiFeaturesModel
             _ = settings.localAIIdleMinutes
@@ -894,11 +896,12 @@ final class AppState {
         cloudKeyRevision += 1
     }
 
-    /// "Bielik w chmurze" is on and a key is saved (on 8 GB the AI features then go there).
+    /// "Bielik w chmurze" is on, the provider has a valid address and its key is saved (on 8 GB
+    /// the AI features then go there).
     var isCloudAIReady: Bool {
         _ = cloudKeyRevision
-        guard settings.cloudAIEnabled else { return false }
-        let key = keyStore.get(KeyStore.Account.cloudFerroSherlock)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard settings.cloudAIEnabled, settings.cloudAIConfiguration.baseURL != nil else { return false }
+        let key = keyStore.get(settings.cloudAIProvider.keyAccount)?.trimmingCharacters(in: .whitespacesAndNewlines)
         return !(key ?? "").isEmpty
     }
 

@@ -119,7 +119,8 @@ struct EnhancementAIModeTests {
 
     @Test func noAIMessagePointsAtModele() {
         let message = ChatCompletionsError.missingKeyMessage
-        #expect(message.contains("Modele > Zaawansowane"))
+        #expect(message.contains("w Modele"))
+        #expect(message.contains("klucz Bielika w chmurze"))
         #expect(message.contains("model lokalny"))
         #expect(!message.contains("Pro"))
         #expect(ChatCompletionsError.missingKey.errorDescription == message)

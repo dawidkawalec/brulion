@@ -2,12 +2,13 @@ import AppKit
 import SwiftUI
 
 /// "Modele" in two tabs (`SettingsLevel`). "Podstawowe": the speech engine (local model
-/// download, language), "Bielik na tym Macu" (`LocalModelsPanel`: requirements, the Bielik
-/// downloads), the "Tryby AI" list (`AIModesPanel`) and AI cleanup (master switch, where each
-/// role runs, test call). "Zaawansowane": the model per role and the idle time
-/// (`AIRoleModelsPanel`), "Bielik w chmurze" (CloudFerro Sherlock on the user's own key, off by
-/// default) and the local usage counter (`LocalAIStatsPanel`). "Podstawowe" always says where
-/// the AI runs, so nothing goes to the cloud unseen.
+/// download, language), "Gdzie działa Bielik" (`AILocationPanel`: this Mac, the AI features in
+/// the cloud or everything in the cloud, with the CloudFerro Sherlock key), "Bielik na tym Macu"
+/// (`LocalModelsPanel`: requirements, the Bielik downloads), the "Tryby AI" list
+/// (`AIModesPanel`) and AI cleanup (master switch, where each role runs, test call).
+/// "Zaawansowane": the model per role and the idle time (`AIRoleModelsPanel`) and the local usage
+/// counter (`LocalAIStatsPanel`). "Podstawowe" always says where the AI runs, so nothing goes to
+/// the cloud unseen.
 @MainActor
 struct ModelsView: View {
     @Environment(AppState.self) private var appState
@@ -49,6 +50,13 @@ struct ModelsView: View {
             LanguagePicker(language: $settings.language)
         }
 
+        AILocationPanel(
+            keyStore: appState.keyStore,
+            settings: settings,
+            routing: appState.aiRoleRouting,
+            onKeyChange: appState.cloudKeyDidChange
+        )
+
         LocalModelsPanel(localAI: appState.localAI, routing: appState.aiRoleRouting, cloudReady: appState.isCloudAIReady)
 
         AIModesPanel(settings: settings, tester: appState.modeTester)
@@ -61,6 +69,8 @@ struct ModelsView: View {
                 routing: appState.aiRoleRouting,
                 cloudReady: appState.isCloudAIReady,
                 cloudModel: settings.cloudAIModel,
+                cloudProvider: settings.cloudAIProvider,
+                cloudCustomURL: settings.cloudAICustomURL,
                 store: appState.localAI.store,
                 onChange: showAdvanced
             )
@@ -71,7 +81,6 @@ struct ModelsView: View {
     @ViewBuilder
     private var advanced: some View {
         AIRoleModelsPanel(settings: appState.settings, localAI: appState.localAI, cloudReady: appState.isCloudAIReady)
-        CloudBielikSection(keyStore: appState.keyStore, settings: appState.settings, onKeyChange: appState.cloudKeyDidChange)
         LocalAIStatsPanel(usage: appState.localAI.usage)
     }
 }
@@ -85,6 +94,8 @@ private struct AIRouteSummary: View {
     let routing: AIRoleRouting
     let cloudReady: Bool
     let cloudModel: String
+    let cloudProvider: CloudAIProvider
+    let cloudCustomURL: String
     let store: LocalAIModelStore
     let onChange: () -> Void
 
@@ -104,9 +115,10 @@ private struct AIRouteSummary: View {
         let name = LocalAIText.roleName(role)
         switch routing.effectiveChoice(for: role, cloudReady: cloudReady) {
         case .cloud:
-            let model = CloudAIRouteProvider.model(cloudModel)
+            let model = CloudAIRouteProvider.model(cloudModel, provider: cloudProvider)
+            let provider = cloudProvider.displayName(customURL: cloudCustomURL)
             return cloudReady
-                ? String(localized: "\(name): Bielik w chmurze CloudFerro (\(model)), na Twój klucz")
+                ? String(localized: "\(name): Bielik w chmurze \(provider) (\(model)), na Twój klucz")
                 : String(localized: "\(name): Bielik w chmurze, wyłączony (bez AI)")
         case .local(let id):
             let model = LocalAIText.title(.local(id))
@@ -117,18 +129,21 @@ private struct AIRouteSummary: View {
     }
 }
 
-// MARK: - Bielik in the cloud
+// MARK: - Where Bielik runs
 
-/// "Zaawansowane": "Bielik w chmurze" (CloudFerro Sherlock on the user's own key, PRD 7.5).
-/// Off by default; the note says plainly where the text goes when it is on.
+/// "Podstawowe": "Gdzie działa Bielik" (PRD 7.5). On this Mac (the default), the AI features in
+/// the cloud, or everything in the cloud: Bielik 11B v3.0, the strongest Bielik, at a Polish
+/// provider (`CloudAIProvider`: CloudFerro Sherlock by default, PCSS AI HUB) or on the user's own
+/// OpenAI-compatible server, on the user's own key. The pick writes the cloud switch and the role
+/// picks (`AppSettings.setAILocation`); a mix made in Zaawansowane selects no option. While the
+/// cloud is on: "Dostawca", the server address (own server only), the provider's key (save,
+/// test, remove), the model id and a plain note on where the text goes.
 @MainActor
-private struct CloudBielikSection: View {
-    /// Sherlock's documentation (the key is created in the Sherlock console it describes).
-    static let docsURL = URL(string: "https://docs.cloudferro.com/en/latest/sherlock/Sherlock-chat-completion-endpoint-on-CloudFerro-Cloud.html")!
-
+private struct AILocationPanel: View {
     let keyStore: KeyStore
     @Bindable var settings: AppSettings
-    /// The key was saved or removed (where the AI features run on 8 GB depends on it).
+    let routing: AIRoleRouting
+    /// The key was saved or removed (`AppState.cloudKeyDidChange`).
     let onKeyChange: () -> Void
 
     @State private var key = ""
@@ -136,47 +151,175 @@ private struct CloudBielikSection: View {
     @State private var status: (text: String, tone: InlineStatus.Tone)?
     @State private var isChecking = false
 
+    private var location: AILocation? {
+        routing.location(cloudEnabled: settings.cloudAIEnabled)
+    }
+
+    private var selection: Binding<AILocation?> {
+        Binding(
+            get: { location },
+            set: { picked in
+                if let picked {
+                    settings.setAILocation(picked)
+                }
+            }
+        )
+    }
+
     var body: some View {
         GlassPanel {
-            GlassSectionHeader("Bielik w chmurze", systemImage: "cloud")
-            ToolCaption("Dla Maców, na których model lokalny działa za wolno. Gdy to włączysz, tekst do poprawienia i pytania o spotkania idą z Twojego Maca prosto do polskiej chmury CloudFerro (Bielik 11B) i nigdzie indziej. Klucz zostaje w pęku kluczy macOS.")
-                .padding(.horizontal, GlassTokens.Padding.rowHorizontal)
-            GlassToggleRow("Używaj Bielika w chmurze", systemImage: "cloud", isOn: $settings.cloudAIEnabled)
-            if settings.cloudAIEnabled, !isSaved {
-                ToolStatusLine(text: String(localized: "Bez zapisanego klucza AI działa tylko na tym Macu."), tone: .error)
-                    .padding(.leading, GlassTokens.Size.rowIconColumn + 16)
-            }
-            GlassRowSeparator()
-            APIKeyField(
-                title: "Klucz CloudFerro Sherlock",
-                placeholder: "Klucz API",
-                key: $key,
-                status: status,
-                isChecking: isChecking,
-                linkTitle: "Skąd wziąć klucz",
-                linkURL: Self.docsURL,
-                isSaved: isSaved,
-                removeMessage: String(localized: "Bez klucza Bielik w chmurze nie zadziała, AI zostanie na tym Macu."),
-                onSave: save,
-                onVerify: verify,
-                onRemove: remove
+            GlassSectionHeader("Gdzie działa Bielik", systemImage: "arrow.triangle.branch")
+            GlassSegmentedPicker(
+                selection: selection,
+                segments: [
+                    GlassSegment(AILocation?.some(.local), "Na tym Macu", systemImage: "laptopcomputer"),
+                    GlassSegment(AILocation?.some(.featuresInCloud), "Funkcje AI w chmurze", systemImage: "cloud"),
+                    GlassSegment(AILocation?.some(.allInCloud), "Wszystko w chmurze", systemImage: "cloud.fill"),
+                ],
+                fillsWidth: true
             )
-            GlassRow(title: Text("Model"), subtitle: Text("Nazwa modelu w CloudFerro Sherlock"), systemImage: "brain") {
-                TextField("Model", text: $settings.cloudAIModel, prompt: Text(verbatim: CloudAIRouteProvider.defaultModel))
-                    .textFieldStyle(.glass)
-                    .frame(maxWidth: 260)
-                    .accessibilityLabel(Text("Model"))
+            .accessibilityLabel(Text("Gdzie działa Bielik"))
+            .padding(.horizontal, GlassTokens.Padding.rowHorizontal)
+            .padding(.bottom, 2)
+            ToolCaption(text: description)
+                .padding(.horizontal, GlassTokens.Padding.rowHorizontal)
+            if settings.cloudAIEnabled {
+                cloudRows
             }
         }
-        .onAppear {
-            key = keyStore.get(KeyStore.Account.cloudFerroSherlock) ?? ""
-            isSaved = !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        .onAppear(perform: loadKey)
+        .onChange(of: settings.cloudAIProvider) {
+            status = nil
+            loadKey()
+        }
+    }
+
+    private var provider: CloudAIProvider { settings.cloudAIProvider }
+
+    /// The saved key of the current provider into the field.
+    private func loadKey() {
+        key = keyStore.get(provider.keyAccount) ?? ""
+        isSaved = !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// What the picked option does, in one or two sentences.
+    private var description: Text {
+        switch location {
+        case .local?:
+            Text("Korekta dyktowania i funkcje AI działają na Bielikach pobranych na ten Mac. Nic nie wychodzi z komputera, a AI działa też bez internetu.")
+        case .featuresInCloud?:
+            Text("Dyktowanie poprawia Bielik na tym Macu. Tryby AI, notatki ze spotkań i Zapytaj liczy Bielik 11B v3.0, najmocniejszy Bielik, w chmurze wybranego dostawcy, na Twój klucz.")
+        case .allInCloud?:
+            Text("Wszystko liczy Bielik 11B v3.0, najmocniejszy Bielik, w chmurze wybranego dostawcy, na Twój klucz. Każde dyktowanie poprawiane przez AI też idzie wtedy do chmury, a bez internetu AI nie działa.")
+        case nil:
+            Text("Własne ustawienie z zakładki Zaawansowane. Wybierz jedną z opcji, żeby je zastąpić.")
+        }
+    }
+
+    @ViewBuilder
+    private var cloudRows: some View {
+        GlassRowSeparator()
+        providerRow
+        if provider == .custom {
+            customURLRow
+        }
+        APIKeyField(
+            title: keyTitle,
+            placeholder: "Klucz API",
+            key: $key,
+            status: status,
+            isChecking: isChecking,
+            linkTitle: provider == .custom ? "Dostawcy Bielika" : "Jak założyć konto i klucz",
+            linkURL: provider.setupURL,
+            isSaved: isSaved,
+            removeMessage: String(localized: "Bez klucza Bielik w chmurze nie zadziała, a funkcje ustawione na chmurę zostaną bez AI."),
+            onSave: save,
+            onVerify: verify,
+            onRemove: remove
+        )
+        if !isSaved {
+            ToolStatusLine(text: String(localized: "Bez zapisanego klucza funkcje ustawione na chmurę działają bez AI."), tone: .error)
+                .padding(.leading, GlassTokens.Size.rowIconColumn + 16)
+        }
+        GlassRow(title: Text("Model"), subtitle: Text("Nazwa modelu u dostawcy"), systemImage: "brain") {
+            TextField("Model", text: $settings.cloudAIModel, prompt: Text(verbatim: provider.defaultModel))
+                .textFieldStyle(.glass)
+                .frame(maxWidth: 260)
+                .accessibilityLabel(Text("Model"))
+        }
+        ToolCaption(text: privacyNote)
+            .padding(.horizontal, GlassTokens.Padding.rowHorizontal)
+    }
+
+    private var providerRow: some View {
+        GlassRow(title: Text("Dostawca"), subtitle: providerSubtitle, systemImage: "building.2") {
+            GlassMenuValue(Self.providerTitle(provider)) {
+                Picker("Dostawca", selection: Binding(get: { provider }, set: { settings.setCloudAIProvider($0) })) {
+                    ForEach(CloudAIProvider.allCases, id: \.self) { option in
+                        Text(verbatim: Self.providerTitle(option)).tag(option)
+                    }
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            }
+            .accessibilityLabel(Text("Dostawca"))
+            .accessibilityValue(Text(verbatim: Self.providerTitle(provider)))
+        }
+    }
+
+    @ViewBuilder
+    private var customURLRow: some View {
+        GlassRow(title: Text("Adres serwera"), subtitle: Text("Adres API zgodnego z OpenAI, np. https://ai.twojafirma.pl/v1"), systemImage: "link") {
+            TextField("Adres serwera", text: $settings.cloudAICustomURL, prompt: Text(verbatim: "https://.../v1"))
+                .textFieldStyle(.glass)
+                .frame(maxWidth: 260)
+                .accessibilityLabel(Text("Adres serwera"))
+        }
+        if settings.cloudAIConfiguration.baseURL == nil {
+            ToolStatusLine(text: String(localized: "Wpisz pełny adres zaczynający się od https://."), tone: .error)
+                .padding(.leading, GlassTokens.Size.rowIconColumn + 16)
+        }
+    }
+
+    /// The provider as the "Dostawca" menu names it.
+    static func providerTitle(_ provider: CloudAIProvider) -> String {
+        switch provider {
+        case .sherlock: String(localized: "CloudFerro Sherlock (Polska)")
+        case .pcss: String(localized: "PCSS AI HUB (Poznań)")
+        case .custom: String(localized: "Własny serwer zgodny z OpenAI")
+        }
+    }
+
+    private var providerSubtitle: Text {
+        switch provider {
+        case .sherlock: Text("Polska chmura CloudFerro, płatność za użycie. Klucz tworzysz w konsoli Sherlock.")
+        case .pcss: Text("Poznańskie Centrum Superkomputerowo-Sieciowe. Dla firm w abonamencie, dla naukowców i studentów bez opłat.")
+        case .custom: Text("Dowolny serwer z API zgodnym z OpenAI, np. Bielik na serwerze Twojej firmy.")
+        }
+    }
+
+    private var keyTitle: LocalizedStringKey {
+        switch provider {
+        case .sherlock: "Klucz CloudFerro Sherlock"
+        case .pcss: "Klucz PCSS AI HUB"
+        case .custom: "Klucz API serwera"
+        }
+    }
+
+    private var privacyNote: Text {
+        switch provider {
+        case .sherlock:
+            Text("Tekst idzie z Twojego Maca prosto do CloudFerro w Polsce, bez żadnego pośrednika. CloudFerro podaje, że nie przechowuje zapytań ani odpowiedzi. Klucz zostaje w pęku kluczy macOS.")
+        case .pcss:
+            Text("Tekst idzie z Twojego Maca prosto do PCSS w Poznaniu, bez żadnego pośrednika. Klucz zostaje w pęku kluczy macOS.")
+        case .custom:
+            Text("Tekst idzie z Twojego Maca prosto pod ten adres. Sprawdź, gdzie ten serwer przetwarza dane i czy ich nie przechowuje. Klucz zostaje w pęku kluczy macOS.")
         }
     }
 
     private func save() {
         do {
-            try keyStore.set(key.trimmingCharacters(in: .whitespacesAndNewlines), account: KeyStore.Account.cloudFerroSherlock)
+            try keyStore.set(key.trimmingCharacters(in: .whitespacesAndNewlines), account: provider.keyAccount)
             isSaved = true
             onKeyChange()
             status = (String(localized: "Klucz zapisany w pęku kluczy."), .success)
@@ -187,7 +330,7 @@ private struct CloudBielikSection: View {
 
     private func remove() {
         do {
-            try keyStore.delete(account: KeyStore.Account.cloudFerroSherlock)
+            try keyStore.delete(account: provider.keyAccount)
             key = ""
             isSaved = false
             onKeyChange()
@@ -197,13 +340,24 @@ private struct CloudBielikSection: View {
         }
     }
 
-    /// "Testuj połączenie": the typed key and model, saved or not, cloud on or off.
+    /// "Testuj połączenie": the typed key and model, saved or not, cloud on or off, at the
+    /// provider's address.
     private func verify() {
+        guard let baseURL = settings.cloudAIConfiguration.baseURL else {
+            status = (String(localized: "Wpisz pełny adres zaczynający się od https://."), .error)
+            return
+        }
         isChecking = true
         let candidate = key
         let model = settings.cloudAIModel
+        let provider = provider
         Task {
-            switch await CloudAIRouteProvider.testConnection(key: candidate, model: model) {
+            switch await CloudAIRouteProvider.testConnection(
+                key: candidate,
+                model: model,
+                provider: provider,
+                client: ChatCompletionsClient(baseURL: baseURL)
+            ) {
             case .success(let ms):
                 status = (String(localized: "OK, Bielik w chmurze odpowiada (\(ms) ms)."), .success)
             case .failure(let error):

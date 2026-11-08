@@ -102,7 +102,10 @@ struct SettingsView: View {
             )
         }
 
-        PrivacyPanel(cloudEnabled: settings.cloudAIEnabled)
+        PrivacyPanel(
+            cloudRoles: appState.aiRoleRouting.cloudRoles(cloudEnabled: appState.isCloudAIReady),
+            cloudName: settings.cloudAIProvider.displayName(customURL: settings.cloudAICustomURL)
+        )
 
         GlassPanel(spacing: 4) {
             sectionHeader("Aplikacja", systemImage: "macwindow")

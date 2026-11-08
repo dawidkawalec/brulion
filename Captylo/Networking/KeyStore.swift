@@ -14,6 +14,12 @@ final class KeyStore: Sendable {
     enum Account {
         /// The user's CloudFerro Sherlock key for "Bielik w chmurze" (`CloudAIRouteProvider`).
         static let cloudFerroSherlock = "cloudferro-sherlock"
+        /// The PCSS AI HUB key (`CloudAIProvider.pcss`).
+        static let pcssAIHub = "pcss-ai-hub"
+        /// The key of the user's own OpenAI-compatible server (`CloudAIProvider.custom`).
+        static let customCloud = "cloud-custom"
+        /// Every cloud key, for the launch preload.
+        static let cloudKeys = CloudAIProvider.allCases.map(\.keyAccount)
     }
 
     /// One Keychain lookup: the value (nil when absent or unreadable) and the raw status.
@@ -173,6 +179,13 @@ final class KeyStore: Sendable {
                 _ = self.get(account)
             }
         }
+    }
+
+    /// A value for this process only, never written to the Keychain: it wins over a stored item
+    /// and over a Keychain read still in flight (the headless debug runs take the cloud key from
+    /// `SHERLOCK_API_KEY`, `DebugRunner`).
+    func useForThisProcess(_ value: String, account: String) {
+        cache.withLock { $0[account] = .some(value) }
     }
 
     /// Updates the existing item or adds a new one.

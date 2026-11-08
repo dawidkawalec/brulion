@@ -12,11 +12,43 @@ final class DebugRunner: DebugCommandRunner {
     /// Keeps the `--design-preview` windows alive.
     private var designPreview: DesignPreviewRunner?
 
+    /// The environment variable a headless run takes the CloudFerro Sherlock key from (the name
+    /// CloudFerro's own examples use). Only for this process: never saved to the Keychain.
+    nonisolated static let cloudKeyVariable = "SHERLOCK_API_KEY"
+    /// The same for the provider picked in the settings (`-ai.cloud.provider pcss|custom`).
+    nonisolated static let activeCloudKeyVariable = "SZPAK_CLOUD_KEY"
+
     init(appState: AppState) {
         self.appState = appState
     }
 
+    /// The cloud keys in `environment` by Keychain account: `SHERLOCK_API_KEY` for Sherlock,
+    /// `SZPAK_CLOUD_KEY` for `activeProvider` (it wins when that is Sherlock too). Blank values
+    /// are ignored.
+    nonisolated static func cloudKeys(in environment: [String: String], activeProvider: CloudAIProvider) -> [String: String] {
+        func nonBlank(_ name: String) -> String? {
+            guard let value = environment[name]?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else { return nil }
+            return value
+        }
+        var keys: [String: String] = [:]
+        if let value = nonBlank(cloudKeyVariable) {
+            keys[CloudAIProvider.sherlock.keyAccount] = value
+        }
+        if let value = nonBlank(activeCloudKeyVariable) {
+            keys[activeProvider.keyAccount] = value
+        }
+        return keys
+    }
+
+    /// True when this run uses a cloud key from the environment instead of the Keychain.
+    private var cloudKeyFromEnvironment = false
+
     func run(_ command: DebugCommand) async -> Int32 {
+        let keys = Self.cloudKeys(in: ProcessInfo.processInfo.environment, activeProvider: appState.settings.cloudAIProvider)
+        for (account, key) in keys {
+            appState.keyStore.useForThisProcess(key, account: account)
+        }
+        cloudKeyFromEnvironment = keys[appState.settings.cloudAIProvider.keyAccount] != nil
         switch command {
         case .transcribe(let url, let ai, let language, let engine, let mode, let moreFiles):
             return await transcribe(urls: [url] + moreFiles, ai: ai, language: language, engine: engine, modeQuery: mode)
@@ -625,7 +657,10 @@ final class DebugRunner: DebugCommandRunner {
                 "launchAtLogin": loginStatus,
             ],
             "keys": [
-                "cloudFerroSherlock": appState.keyStore.get(KeyStore.Account.cloudFerroSherlock) != nil,
+                "cloudProvider": settings.cloudAIProvider.rawValue,
+                "cloudBaseURL": Self.orNull(settings.cloudAIConfiguration.baseURL?.absoluteString),
+                "cloudKey": appState.keyStore.get(settings.cloudAIProvider.keyAccount) != nil,
+                "cloudKeyFromEnvironment": cloudKeyFromEnvironment,
             ],
             "dictionary": [
                 "vocabulary": appState.dictionary.data.vocabulary.count,
@@ -666,6 +701,8 @@ final class DebugRunner: DebugCommandRunner {
             "models": Dictionary(uniqueKeysWithValues: localAI.store.models.map { ($0.id, localAI.store.isInstalled($0.id)) }),
             "modelsDirectory": localAI.store.modelsDirectory.path(percentEncoded: false),
             "roles": roles,
+            "location": Self.orNull(routing.location(cloudEnabled: appState.settings.cloudAIEnabled)?.rawValue),
+            "cloudReady": cloudReady,
             "idleMinutes": appState.settings.localAIIdleMinutes,
         ]
     }

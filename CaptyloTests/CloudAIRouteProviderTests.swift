@@ -80,6 +80,76 @@ struct CloudAIRouteProviderTests {
         #expect(settings.cloudAIModel == CloudAIRouteProvider.defaultModel)
     }
 
+    // MARK: Providers
+
+    @Test func thePresetsKnowTheirAddressModelAndKey() {
+        #expect(CloudAIProvider.sherlock.presetBaseURL?.absoluteString == "https://api-sherlock.cloudferro.com/openai/v1/")
+        #expect(CloudAIProvider.sherlock.defaultModel == "Bielik-11B-v3.0-Instruct")
+        #expect(CloudAIProvider.sherlock.keyAccount == KeyStore.Account.cloudFerroSherlock)
+        #expect(CloudAIProvider.pcss.presetBaseURL?.absoluteString == "https://llm.hpc.psnc.pl/v1/")
+        #expect(CloudAIProvider.pcss.defaultModel == "bielik:11b")
+        #expect(CloudAIProvider.pcss.keyAccount == "pcss-ai-hub")
+        #expect(CloudAIProvider.custom.presetBaseURL == nil)
+        #expect(CloudAIProvider.custom.keyAccount == "cloud-custom")
+        #expect(Set(KeyStore.Account.cloudKeys).count == CloudAIProvider.allCases.count)
+    }
+
+    @Test func theOwnServerAddressIsCheckedAndGetsATrailingSlash() {
+        let custom = CloudAIProvider.custom
+        #expect(custom.baseURL(customURL: " https://ai.firma.pl/v1 ")?.absoluteString == "https://ai.firma.pl/v1/")
+        #expect(custom.baseURL(customURL: "http://10.0.0.5:8000/v1/")?.absoluteString == "http://10.0.0.5:8000/v1/")
+        #expect(custom.baseURL(customURL: "") == nil)
+        #expect(custom.baseURL(customURL: "ai.firma.pl/v1") == nil)
+        #expect(custom.baseURL(customURL: "ftp://ai.firma.pl/v1") == nil)
+        #expect(custom.displayName(customURL: "https://ai.firma.pl/v1") == "ai.firma.pl")
+        // A preset ignores the typed address.
+        #expect(CloudAIProvider.pcss.baseURL(customURL: "https://inny.pl/v1")?.host() == "llm.hpc.psnc.pl")
+        #expect(CloudAIProvider.pcss.displayName(customURL: "") == "PCSS AI HUB")
+    }
+
+    @Test func eachProviderRoutesToItsAddressWithItsOwnKey() async throws {
+        let keyStore = KeyStore.inMemory(seed: ["cloudferro-sherlock": "sherlock-key", "pcss-ai-hub": "pcss-key", "cloud-custom": "own-key"])
+        func route(_ configuration: CloudAIRouteProvider.Configuration) async -> AIRoute? {
+            await CloudAIRouteProvider(keyStore: keyStore, configuration: { configuration }, session: StubURLProtocol.makeSession())
+                .route(for: .features, timeout: .seconds(1))
+        }
+        let pcss = try #require(await route(.init(isEnabled: true, model: "", provider: .pcss)))
+        #expect(pcss.client.baseURL.absoluteString == "https://llm.hpc.psnc.pl/v1/")
+        #expect(pcss.key == "pcss-key")
+        #expect(pcss.model == "bielik:11b")
+
+        let own = try #require(await route(.init(isEnabled: true, model: "bielik", provider: .custom, customURL: "https://ai.firma.pl/v1")))
+        #expect(own.client.baseURL.absoluteString == "https://ai.firma.pl/v1/")
+        #expect(own.key == "own-key")
+        #expect(own.model == "bielik")
+
+        // An own server without a valid address has no route.
+        #expect(await route(.init(isEnabled: true, model: "", provider: .custom, customURL: "nie-adres")) == nil)
+        // Another provider's key is never used.
+        let noKey = CloudAIRouteProvider(keyStore: KeyStore.inMemory(seed: ["cloudferro-sherlock": "sherlock-key"]),
+                                         configuration: { .init(isEnabled: true, model: "", provider: .pcss) })
+        #expect(await noKey.route(for: .features, timeout: .seconds(1)) == nil)
+    }
+
+    @MainActor
+    @Test func changingTheProviderDropsTheTypedModel() throws {
+        let suite = "pl.craftweb.szpak.tests.cloud-provider.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.cloudAIProvider == .sherlock)
+        settings.cloudAIModel = "Bielik-11B-v2.6-Instruct"
+        settings.setCloudAIProvider(.pcss)
+        #expect(settings.cloudAIProvider == .pcss)
+        #expect(settings.cloudAIModel == "bielik:11b")
+        #expect(defaults.string(forKey: "ai.cloud.provider") == "pcss")
+        settings.cloudAICustomURL = "https://ai.firma.pl/v1"
+        settings.setCloudAIProvider(.custom)
+        #expect(settings.cloudAIConfiguration.baseURL?.absoluteString == "https://ai.firma.pl/v1/")
+        defaults.set("openai", forKey: "ai.cloud.provider")
+        #expect(settings.cloudAIProvider == .sherlock, "an unknown stored provider reads as Sherlock")
+    }
+
     // MARK: Prewarm and the connection test
 
     @Test func prewarmHitsTheModelsEndpointOnlyWhileOn() async throws {

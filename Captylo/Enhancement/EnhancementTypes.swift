@@ -129,6 +129,9 @@ enum EnhancementFailure: LocalizedError, Sendable, Equatable {
         case .deadline(let seconds):
             let limit = seconds.formatted(.number.precision(.fractionLength(0...1)).locale(AppLocale.current))
             return String(localized: "Przekroczono limit \(limit) s")
+        case .http(let status) where status == 401 || status == 403:
+            // The cloud's usual failure: a wrong or revoked key.
+            return String(localized: "Nieprawidłowy klucz AI")
         case .http(let status):
             return String(localized: "Błąd AI \(String(status))")
         case .network:

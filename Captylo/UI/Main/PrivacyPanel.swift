@@ -1,12 +1,17 @@
 import SwiftUI
 
 /// "Prywatność" on Ustawienia > Podstawowe (PRD 7.6): exactly what Szpak connects to.
-/// huggingface.co only while a model downloads, CloudFerro Sherlock only while "Bielik w
-/// chmurze" is on (its current state shown), and nothing else: no telemetry, no update check,
-/// no account.
+/// huggingface.co only while a model downloads, the "Bielik w chmurze" provider only for the
+/// roles "Gdzie działa Bielik" sends there (the current state shown), and nothing else: no
+/// telemetry, no update check, no account.
 @MainActor
 struct PrivacyPanel: View {
-    let cloudEnabled: Bool
+    /// The roles whose text goes to the cloud now (`AIRoleRouting.cloudRoles`, empty while the
+    /// cloud is off or has no key).
+    let cloudRoles: [AIRole]
+    /// The cloud provider's name (`CloudAIProvider.displayName`): "CloudFerro Sherlock", "PCSS
+    /// AI HUB" or the host of the user's own server.
+    let cloudName: String
 
     var body: some View {
         GlassPanel(spacing: 4) {
@@ -25,11 +30,11 @@ struct PrivacyPanel: View {
                 EmptyView()
             }
             GlassRow(
-                title: Text(verbatim: "CloudFerro Sherlock"),
+                title: cloudRoles.isEmpty ? Text("Bielik w chmurze") : Text(verbatim: cloudName),
                 subtitle: cloudSubtitle,
                 systemImage: "cloud"
             ) {
-                GlassBadge(cloudEnabled ? "Włączony" : "Wyłączony", tone: cloudEnabled ? .warning : .neutral)
+                GlassBadge(cloudRoles.isEmpty ? "Wyłączony" : "Włączony", tone: cloudRoles.isEmpty ? .neutral : .warning)
             }
             GlassRow(
                 title: Text("Nic więcej"),
@@ -42,8 +47,13 @@ struct PrivacyPanel: View {
     }
 
     private var cloudSubtitle: Text {
-        cloudEnabled
-            ? Text("Bielik w chmurze jest włączony: tekst do poprawienia i pytania o spotkania idą prosto do polskiej chmury CloudFerro.")
-            : Text("Tylko gdy włączysz Bielika w chmurze (Modele > Zaawansowane). Bez tego AI działa wyłącznie na tym Macu.")
+        if cloudRoles.contains(.correction) {
+            return cloudRoles.contains(.features)
+                ? Text("Bielik w chmurze jest włączony dla wszystkiego: dyktowania do poprawienia, tryby AI, notatki i pytania o spotkania idą prosto do \(cloudName).")
+                : Text("Bielik w chmurze jest włączony dla korekty: dyktowania do poprawienia idą prosto do \(cloudName).")
+        }
+        return cloudRoles.contains(.features)
+            ? Text("Bielik w chmurze jest włączony dla funkcji AI: tryby AI, notatki i pytania o spotkania idą prosto do \(cloudName). Dyktowanie poprawia Bielik na tym Macu.")
+            : Text("Tylko gdy wybierzesz Bielika w chmurze (Modele > Gdzie działa Bielik). Bez tego AI działa wyłącznie na tym Macu.")
     }
 }

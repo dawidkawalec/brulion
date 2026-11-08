@@ -33,6 +33,54 @@ struct AppSettingsLocalAITests {
         #expect(reread.aiFeaturesModel == nil)
     }
 
+    @Test func pickingTheCloudForARoleTurnsTheCloudOn() {
+        let (settings, _) = makeSettings()
+        #expect(!settings.cloudAIEnabled)
+        settings.setAIModelChoice(.local(LocalModelCatalog.bielik45B.id), for: .features)
+        #expect(!settings.cloudAIEnabled)
+        settings.setAIModelChoice(.cloud, for: .correction)
+        #expect(settings.cloudAIEnabled)
+    }
+
+    @Test func aLocationWritesTheSwitchAndThePicks() {
+        let (settings, defaults) = makeSettings()
+        let mac16 = HardwareProfile(physicalMemoryBytes: 16 * 1024 * 1024 * 1024)
+        settings.aiCorrectionModel = .local(LocalModelCatalog.bielik45B.id)
+
+        settings.setAILocation(.featuresInCloud)
+        #expect(settings.cloudAIEnabled)
+        #expect(settings.aiFeaturesModel == .cloud)
+        // The role that stays on this Mac keeps its own pick.
+        #expect(settings.aiCorrectionModel == .local(LocalModelCatalog.bielik45B.id))
+        #expect(settings.aiRoleRouting(hardware: mac16).location(cloudEnabled: settings.cloudAIEnabled) == .featuresInCloud)
+
+        settings.setAILocation(.allInCloud)
+        #expect(settings.aiCorrectionModel == .cloud)
+        #expect(settings.aiFeaturesModel == .cloud)
+        #expect(settings.aiRoleRouting(hardware: mac16).location(cloudEnabled: settings.cloudAIEnabled) == .allInCloud)
+
+        settings.setAILocation(.featuresInCloud)
+        // Taken off the cloud: back to the plan, not to the old local pick.
+        #expect(settings.aiCorrectionModel == nil)
+        #expect(settings.aiFeaturesModel == .cloud)
+
+        settings.setAILocation(.local)
+        #expect(!settings.cloudAIEnabled)
+        #expect(settings.aiCorrectionModel == nil)
+        #expect(settings.aiFeaturesModel == nil)
+        #expect(defaults.object(forKey: "ai.model.features") == nil)
+        #expect(settings.aiRoleRouting(hardware: mac16).location(cloudEnabled: settings.cloudAIEnabled) == .local)
+    }
+
+    @Test func goingLocalKeepsLocalPicks() {
+        let (settings, _) = makeSettings()
+        settings.aiFeaturesModel = .local(LocalModelCatalog.bielik45B.id)
+        settings.cloudAIEnabled = true
+        settings.setAILocation(.local)
+        #expect(!settings.cloudAIEnabled)
+        #expect(settings.aiFeaturesModel == .local(LocalModelCatalog.bielik45B.id))
+    }
+
     @Test func anUnknownStoredModelReadsAsTheDefault() {
         let (settings, defaults) = makeSettings()
         defaults.set("bielik-99b", forKey: "ai.model.correction")

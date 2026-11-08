@@ -57,6 +57,11 @@
 #   CAPTYLO_PREVIEW_BIELIK=<s>    passed through, main-modele / onboarding-bielik: the Bielik
 #                             download states, `none`, `downloading` (default: 1.5B ready,
 #                             Minitron at 42 %) or `installed`
+#   CAPTYLO_PREVIEW_CLOUD=<c>     passed through, main-modele / main-ustawienia: "Gdzie działa
+#                             Bielik" on `features` ("Funkcje AI w chmurze") or `all` ("Wszystko
+#                             w chmurze") with the sample key; default "Na tym Macu"
+#   CAPTYLO_PREVIEW_PROVIDER=<p>  passed through, with CAPTYLO_PREVIEW_CLOUD: "Dostawca" on
+#                             `pcss` or `custom` (no key saved for those); default `sherlock`
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

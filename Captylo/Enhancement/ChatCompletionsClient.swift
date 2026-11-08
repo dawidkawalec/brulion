@@ -199,6 +199,6 @@ enum ChatCompletionsError: LocalizedError, Sendable, Equatable {
 
     /// The one "no AI" message of the app ("Przetwórz przez AI", "Testuj tryb", the test call).
     static var missingKeyMessage: String {
-        String(localized: "AI jest niedostępne: pobierz model lokalny w Modele albo włącz Bielika w chmurze w Modele > Zaawansowane.")
+        String(localized: "AI jest niedostępne: pobierz model lokalny albo dodaj klucz Bielika w chmurze w Modele.")
     }
 }

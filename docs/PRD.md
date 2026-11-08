@@ -154,7 +154,10 @@ Stan Hugging Face z 7.11.2026: wszystkie modele na licencji Apache 2.0, repozyto
 - Transkrypt dłuższy niż ok. 20 tys. tokenów dzielimy: notatki z części, potem scalenie.
 
 **7.5 Bielik w chmurze (opcja).**
-- W Ustawieniach (Zaawansowane): pole klucza CloudFerro Sherlock i test połączenia.
+- Model: Bielik 11B v3.0 Instruct, najmocniejszy Bielik (stan HF i Sherlocka z 8.11.2026).
+- Decyzja Dawida 8.11.2026: w Modele > Podstawowe jest wybór "Gdzie działa Bielik" z trzech opcji: "Na tym Macu" (domyślnie), "Funkcje AI w chmurze" (korekta na Macu, tryby, notatki i Zapytaj w chmurze), "Wszystko w chmurze". Pod nim, gdy chmura jest wybrana: pole klucza CloudFerro Sherlock, test połączenia i nazwa modelu. Ręczny wybór modelu dla roli zostaje w Zaawansowanych.
+- Decyzja Dawida 8.11.2026, dostawcy: dane mają zostać w Polsce, minimum w UE. Menu "Dostawca" ma tylko CloudFerro Sherlock (domyślnie, polska chmura, deklaruje brak przechowywania zapytań), PCSS AI HUB (Poznań) i "Własny serwer zgodny z OpenAI". Hugging Face (Public AI) i ARK Labs z listy na bielik.ai nie trafiają do aplikacji, bo nie gwarantują danych w UE albo tego nie podają.
+- Do pomiarów: tryb bez okna bierze klucz ze zmiennej `SHERLOCK_API_KEY` (Sherlock) albo `SZPAK_CLOUD_KEY` (dostawca wybrany argumentem `-ai.cloud.provider`), tylko dla tego procesu, bez zapisu w pęku kluczy.
 - Jasna informacja, że tekst idzie wtedy do polskiej chmury. Domyślnie wyłączone.
 - Bez naszego pośrednika: klient łączy się wprost z Sherlockiem.
 

@@ -144,6 +144,54 @@ struct AIRoutingTests {
         #expect(routing.effectiveChoice(for: .features, cloudReady: false) == .cloud)
     }
 
+    // MARK: Where Bielik runs (AILocation)
+
+    @Test func thePlainSetupsReadAsTheirLocation() {
+        let local = AIRoleRouting(hardware: Self.mac16)
+        #expect(local.location(cloudEnabled: false) == .local)
+        // The cloud on but no role on it: nothing leaves the Mac.
+        #expect(local.location(cloudEnabled: true) == .local)
+        #expect(local.cloudRoles(cloudEnabled: true).isEmpty)
+
+        let features = AIRoleRouting(hardware: Self.mac16, features: .cloud)
+        #expect(features.location(cloudEnabled: true) == .featuresInCloud)
+        #expect(features.cloudRoles(cloudEnabled: true) == [.features])
+
+        let all = AIRoleRouting(hardware: Self.mac16, correction: .cloud, features: .cloud)
+        #expect(all.location(cloudEnabled: true) == .allInCloud)
+        #expect(all.cloudRoles(cloudEnabled: true) == [.correction, .features])
+    }
+
+    @Test func aLocalPickStaysTheSameLocation() {
+        let routing = AIRoleRouting(hardware: Self.mac16, correction: .local(LocalModelCatalog.bielik45B.id), features: .cloud)
+        #expect(routing.location(cloudEnabled: true) == .featuresInCloud)
+    }
+
+    @Test func eightGigabytesCountTheDefaultFeaturesAsCloudOnlyWhileItIsOn() {
+        let routing = AIRoleRouting(hardware: Self.mac8)
+        #expect(routing.location(cloudEnabled: true) == .featuresInCloud)
+        #expect(routing.location(cloudEnabled: false) == .local)
+        #expect(routing.cloudRoles(cloudEnabled: false).isEmpty)
+    }
+
+    @Test func mixesWithoutAnOptionReadAsNil() {
+        // Correction in the cloud, the AI features on this Mac.
+        let correctionOnly = AIRoleRouting(hardware: Self.mac16, correction: .cloud)
+        #expect(correctionOnly.location(cloudEnabled: true) == nil)
+        #expect(correctionOnly.cloudRoles(cloudEnabled: true) == [.correction])
+        // A role picked as the cloud while the cloud is off has no AI: not "Na tym Macu".
+        let switchedOff = AIRoleRouting(hardware: Self.mac16, features: .cloud)
+        #expect(switchedOff.location(cloudEnabled: false) == nil)
+        #expect(switchedOff.cloudRoles(cloudEnabled: false).isEmpty)
+    }
+
+    @Test func aLocationListsItsCloudRoles() {
+        #expect(AILocation.local.cloudRoles.isEmpty)
+        #expect(!AILocation.local.usesCloud)
+        #expect(AILocation.featuresInCloud.cloudRoles == [.features])
+        #expect(AILocation.allInCloud.cloudRoles == [.correction, .features])
+    }
+
     // MARK: AIRoleRouteProvider
 
     private static func composite(

@@ -260,6 +260,22 @@ enum DesignPreviewData {
         settings.aiModes = BuiltInAIModes.all + [sampleCustomMode]
         settings.aiActiveModeID = BuiltInAIModes.cleanupID
         settings.dashboardRange = dayRange
+        if let location = aiLocation() {
+            settings.setAILocation(location)
+        }
+        if let provider = ProcessInfo.processInfo.environment["CAPTYLO_PREVIEW_PROVIDER"].flatMap(CloudAIProvider.init(rawValue:)) {
+            settings.setCloudAIProvider(provider)
+        }
+    }
+
+    /// `CAPTYLO_PREVIEW_CLOUD=features|all`: "Gdzie działa Bielik" on "Funkcje AI w chmurze" or
+    /// "Wszystko w chmurze" (the seeded key store holds a sample key); default: "Na tym Macu".
+    static func aiLocation(environment: [String: String] = ProcessInfo.processInfo.environment) -> AILocation? {
+        switch environment["CAPTYLO_PREVIEW_CLOUD"]?.lowercased() {
+        case "features": .featuresInCloud
+        case "all": .allInCloud
+        default: nil
+        }
     }
 
     // MARK: Dictionary

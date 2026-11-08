@@ -88,6 +88,31 @@ struct NetworkingTests {
         #expect(KeyStore.Account.cloudFerroSherlock == "cloudferro-sherlock")
     }
 
+    @Test func aKeyForThisProcessWinsAndNeverTouchesTheKeychain() async {
+        let reads = OSAllocatedUnfairLock(initialState: 0)
+        let store = KeyStore(service: "com.captylo.app.tests") { _, _ in
+            reads.withLock { $0 += 1 }
+            return KeyStore.ReadResult(value: "sk-stored", status: errSecSuccess)
+        }
+        store.useForThisProcess("sk-env", account: KeyStore.Account.cloudFerroSherlock)
+        #expect(store.get(KeyStore.Account.cloudFerroSherlock) == "sk-env")
+        #expect(await store.load(KeyStore.Account.cloudFerroSherlock) == .value("sk-env"))
+        #expect(reads.withLock { $0 } == 0)
+    }
+
+    @Test func theHeadlessRunsReadTheCloudKeysFromTheEnvironment() {
+        #expect(DebugRunner.cloudKeyVariable == "SHERLOCK_API_KEY")
+        #expect(DebugRunner.activeCloudKeyVariable == "SZPAK_CLOUD_KEY")
+        let sherlock = DebugRunner.cloudKeys(in: ["SHERLOCK_API_KEY": " sk-1 \n"], activeProvider: .pcss)
+        #expect(sherlock == ["cloudferro-sherlock": "sk-1"])
+        let active = DebugRunner.cloudKeys(in: ["SHERLOCK_API_KEY": "sk-1", "SZPAK_CLOUD_KEY": "pk-2"], activeProvider: .pcss)
+        #expect(active == ["cloudferro-sherlock": "sk-1", "pcss-ai-hub": "pk-2"])
+        let custom = DebugRunner.cloudKeys(in: ["SZPAK_CLOUD_KEY": "ck-3"], activeProvider: .custom)
+        #expect(custom == ["cloud-custom": "ck-3"])
+        #expect(DebugRunner.cloudKeys(in: ["SHERLOCK_API_KEY": "  "], activeProvider: .sherlock).isEmpty)
+        #expect(DebugRunner.cloudKeys(in: [:], activeProvider: .sherlock).isEmpty)
+    }
+
     @Test func keyStoreCachesOnlyDefiniteAnswers() {
         let calls = OSAllocatedUnfairLock(initialState: [String: Int]())
         let store = KeyStore(service: "com.captylo.app.tests") { _, account in

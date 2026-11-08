@@ -1,56 +1,66 @@
 import Foundation
 import os
 
-/// "Bielik w chmurze" (docs/PRD.md 6 and 7.5): Bielik 11B in CloudFerro Sherlock on the user's
-/// own key, straight from this Mac with no server of ours in between. A route only while
-/// `AppSettings.cloudAIEnabled` is on (off by default) and a key is saved; it serves both roles.
-/// The local model server's provider goes in front of this one at integration (`AppState`).
+/// "Bielik w chmurze" (docs/PRD.md 6 and 7.5): Bielik 11B v3.0 at a Polish provider
+/// (`CloudAIProvider`: CloudFerro Sherlock by default, PCSS AI HUB) or on the user's own
+/// OpenAI-compatible server, on the user's own key, straight from this Mac with no server of ours
+/// in between. A route only while `AppSettings.cloudAIEnabled` is on (off by default) and the
+/// provider's key is saved; it serves the roles the routing sends here. The local model server's
+/// provider goes in front of this one at integration (`AppState`).
 struct CloudAIRouteProvider: AIRouteProviding {
     /// What the provider reads from the settings, as a snapshot it can read off the main actor.
     struct Configuration: Sendable, Equatable {
         var isEnabled: Bool
+        /// The model id as typed; blank = the provider's default.
         var model: String
+        var provider: CloudAIProvider = .sherlock
+        /// The user's server, `CloudAIProvider.custom` only.
+        var customURL: String = ""
+
+        var baseURL: URL? { provider.baseURL(customURL: customURL) }
     }
 
-    /// Sherlock's OpenAI-compatible API. Source (checked 2026-11-07):
-    /// https://docs.cloudferro.com/en/latest/sherlock/Sherlock-chat-completion-endpoint-on-CloudFerro-Cloud.html
-    /// (`POST {base}/chat/completions` with `Authorization: Bearer <key>`).
-    static let baseURL = URL(string: "https://api-sherlock.cloudferro.com/openai/v1/")!
-    /// Bielik 11B v3.0 Instruct as the same page names it in its examples; the list of models is
-    /// `GET {base}/models` (https://docs.cloudferro.com/en/latest/sherlock/Models-endpoints-on-CloudFerro-Cloud.html).
-    /// The default of `AppSettings.cloudAIModel`, which the user can change.
-    static let defaultModel = "Bielik-11B-v3.0-Instruct"
+    /// Sherlock's OpenAI-compatible API (`CloudAIProvider.sherlock`, the default provider).
+    static let baseURL = CloudAIProvider.sherlock.presetBaseURL!
+    /// Bielik 11B v3.0 Instruct as Sherlock names it; the list of models is `GET {base}/models`.
+    static let defaultModel = CloudAIProvider.sherlock.defaultModel
     /// How long a dictation-path prewarm may wait for the Keychain.
     static let prewarmKeyTimeout: Duration = .seconds(2)
 
     let keyStore: KeyStore
     let configuration: @Sendable () -> Configuration
-    let client: ChatCompletionsClient
+    /// Replaces the client built from the provider's base URL (tests).
+    let clientOverride: ChatCompletionsClient?
     let session: URLSession
     private let prewarmer = Prewarmer()
 
     init(
         keyStore: KeyStore,
         configuration: @escaping @Sendable () -> Configuration,
-        client: ChatCompletionsClient = ChatCompletionsClient(baseURL: CloudAIRouteProvider.baseURL),
+        client: ChatCompletionsClient? = nil,
         session: URLSession = HTTP.llmSession
     ) {
         self.keyStore = keyStore
         self.configuration = configuration
-        self.client = client
+        clientOverride = client
         self.session = session
     }
 
     func route(for role: AIRole, timeout: Duration) async -> AIRoute? {
         let current = configuration()
         guard current.isEnabled else { return nil }
-        switch await keyStore.load(KeyStore.Account.cloudFerroSherlock, timeout: timeout) {
+        guard let baseURL = current.baseURL else {
+            Log.enhancement.error("Cloud AI skipped: the server address is not a valid http(s) URL")
+            return nil
+        }
+        switch await keyStore.load(current.provider.keyAccount, timeout: timeout) {
         case .timedOut:
             Log.enhancement.error("Cloud AI skipped: the Keychain did not answer in time")
             return nil
         case .value(let stored):
             guard let key = Self.nonBlank(stored) else { return nil }
-            return AIRoute(client: client, key: key, model: Self.model(current.model), kind: .cloud)
+            let client = clientOverride ?? ChatCompletionsClient(baseURL: baseURL)
+            return AIRoute(client: client, key: key, model: Self.model(current.model, provider: current.provider), kind: .cloud)
         }
     }
 
@@ -64,17 +74,19 @@ struct CloudAIRouteProvider: AIRouteProviding {
     // MARK: Settings helpers
 
     /// "Testuj połączenie": one tiny chat call with the key and model typed in the settings
-    /// (saved or not, cloud on or off). The round trip in milliseconds, or why it failed.
+    /// (saved or not, cloud on or off) at the provider's address. The round trip in milliseconds,
+    /// or why it failed.
     static func testConnection(
         key: String,
         model: String,
+        provider: CloudAIProvider = .sherlock,
         client: ChatCompletionsClient = ChatCompletionsClient(baseURL: baseURL),
         session: URLSession = HTTP.llmSession,
         timeout: Duration = Enhancer.utilityDeadline
     ) async -> Result<Int, any Error> {
         guard let key = nonBlank(key) else { return .failure(ChatCompletionsError.missingKey) }
         let request = client.chatRequest(
-            model: Self.model(model),
+            model: Self.model(model, provider: provider),
             messages: [.system("Odpowiedz jednym słowem: ok."), .user("ok")],
             maxTokens: 1,
             key: key
@@ -107,9 +119,9 @@ struct CloudAIRouteProvider: AIRouteProviding {
         return request
     }
 
-    /// The model id as typed, or the default when the field is blank.
-    static func model(_ typed: String) -> String {
-        nonBlank(typed) ?? defaultModel
+    /// The model id as typed, or the provider's default when the field is blank.
+    static func model(_ typed: String, provider: CloudAIProvider = .sherlock) -> String {
+        nonBlank(typed) ?? provider.defaultModel
     }
 
     private static func nonBlank(_ text: String?) -> String? {

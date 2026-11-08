@@ -14,6 +14,8 @@ final class AppSettings {
         case aiEnabled = "ai.enabled"
         case cloudAIEnabled = "ai.cloud.enabled"
         case cloudAIModel = "ai.cloud.model"
+        case cloudAIProvider = "ai.cloud.provider"
+        case cloudAICustomURL = "ai.cloud.url"
         case aiCorrectionModel = "ai.model.correction"
         case aiFeaturesModel = "ai.model.features"
         case localAIIdleMinutes = "ai.local.idleMinutes"
@@ -112,23 +114,53 @@ final class AppSettings {
         set { withMutation(keyPath: \.aiEnabled) { defaults.set(newValue, forKey: Key.aiEnabled.rawValue) } }
     }
 
-    /// "Bielik w chmurze" (Modele > Zaawansowane, off by default): with a CloudFerro Sherlock key
-    /// saved, the AI runs on Bielik 11B in the cloud (`CloudAIRouteProvider`). The text then goes
-    /// to CloudFerro and nowhere else.
+    /// "Bielik w chmurze" (off by default; set by "Gdzie działa Bielik" in Modele > Podstawowe,
+    /// `setAILocation`): with the provider's key saved, the roles picked as the cloud run on
+    /// Bielik 11B there (`CloudAIRouteProvider`). The text then goes to that provider and nowhere
+    /// else.
     var cloudAIEnabled: Bool {
         get { track(\.cloudAIEnabled); return bool(.cloudAIEnabled, default: false) }
         set { withMutation(keyPath: \.cloudAIEnabled) { defaults.set(newValue, forKey: Key.cloudAIEnabled.rawValue) } }
     }
 
-    /// The Sherlock model id for "Bielik w chmurze" (`CloudAIRouteProvider.defaultModel` unless changed).
+    /// "Dostawca": who serves "Bielik w chmurze" (CloudFerro Sherlock unless changed; an unknown
+    /// stored value reads as Sherlock). Changing it clears the typed model id, so the new
+    /// provider starts on its own default (`setCloudAIProvider`).
+    var cloudAIProvider: CloudAIProvider {
+        get {
+            track(\.cloudAIProvider)
+            return defaults.string(forKey: Key.cloudAIProvider.rawValue).flatMap(CloudAIProvider.init(rawValue:)) ?? .sherlock
+        }
+        set { withMutation(keyPath: \.cloudAIProvider) { defaults.set(newValue.rawValue, forKey: Key.cloudAIProvider.rawValue) } }
+    }
+
+    /// Picks the provider and drops the model id typed for the previous one.
+    func setCloudAIProvider(_ provider: CloudAIProvider) {
+        guard provider != cloudAIProvider else { return }
+        cloudAIProvider = provider
+        withMutation(keyPath: \.cloudAIModel) { defaults.removeObject(forKey: Key.cloudAIModel.rawValue) }
+    }
+
+    /// The address of the user's own OpenAI-compatible server (`CloudAIProvider.custom`).
+    var cloudAICustomURL: String {
+        get { track(\.cloudAICustomURL); return string(.cloudAICustomURL, default: "") }
+        set { withMutation(keyPath: \.cloudAICustomURL) { defaults.set(newValue, forKey: Key.cloudAICustomURL.rawValue) } }
+    }
+
+    /// The model id for "Bielik w chmurze" (the provider's `defaultModel` unless changed).
     var cloudAIModel: String {
-        get { track(\.cloudAIModel); return string(.cloudAIModel, default: CloudAIRouteProvider.defaultModel) }
+        get { track(\.cloudAIModel); return string(.cloudAIModel, default: cloudAIProvider.defaultModel) }
         set { withMutation(keyPath: \.cloudAIModel) { defaults.set(newValue, forKey: Key.cloudAIModel.rawValue) } }
     }
 
     /// What `CloudAIRouteProvider` reads, as a value it can keep off the main actor.
     var cloudAIConfiguration: CloudAIRouteProvider.Configuration {
-        CloudAIRouteProvider.Configuration(isEnabled: cloudAIEnabled, model: cloudAIModel)
+        CloudAIRouteProvider.Configuration(
+            isEnabled: cloudAIEnabled,
+            model: cloudAIModel,
+            provider: cloudAIProvider,
+            customURL: cloudAICustomURL
+        )
     }
 
     // MARK: Models per role (Modele > Zaawansowane)
@@ -154,11 +186,29 @@ final class AppSettings {
         }
     }
 
-    /// nil puts the role back on the Mac's default plan.
+    /// nil puts the role back on the Mac's default plan. Picking the cloud turns "Bielik w
+    /// chmurze" on, so the role never ends up with no AI because the switch stayed off.
     func setAIModelChoice(_ choice: AIModelChoice?, for role: AIRole) {
         switch role {
         case .correction: aiCorrectionModel = choice
         case .features: aiFeaturesModel = choice
+        }
+        if choice == .cloud {
+            cloudAIEnabled = true
+        }
+    }
+
+    /// "Gdzie działa Bielik" (Modele > Podstawowe): writes the cloud switch and the role picks
+    /// for `location`. A role that stays on this Mac keeps its local pick; a role taken off the
+    /// cloud goes back to the Mac's default plan.
+    func setAILocation(_ location: AILocation) {
+        cloudAIEnabled = location.usesCloud
+        for role in AIRole.allCases {
+            if location.cloudRoles.contains(role) {
+                setAIModelChoice(.cloud, for: role)
+            } else if aiModelChoice(for: role) == .cloud {
+                setAIModelChoice(nil, for: role)
+            }
         }
     }
 

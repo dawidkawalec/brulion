@@ -90,6 +90,25 @@ struct AIRoleRouting: Equatable, Sendable {
         }
     }
 
+    /// The roles whose text goes to the cloud while "Bielik w chmurze" is `cloudEnabled`: a role
+    /// picked as the cloud, and on the experimental tier the AI features by default. None while
+    /// the cloud is off (such a role has no route at all, `AIRoleRouteProvider`).
+    func cloudRoles(cloudEnabled: Bool) -> [AIRole] {
+        guard cloudEnabled else { return [] }
+        return AIRole.allCases.filter { target(for: $0) != .local }
+    }
+
+    /// The "Gdzie działa Bielik" option these picks amount to; nil for a mix it has no option for:
+    /// the correction in the cloud with the AI features local, or a role picked as the cloud
+    /// while the cloud is off.
+    func location(cloudEnabled: Bool) -> AILocation? {
+        if !cloudEnabled, AIRole.allCases.contains(where: { target(for: $0) == .cloud }) {
+            return nil
+        }
+        let roles = cloudRoles(cloudEnabled: cloudEnabled)
+        return AILocation.allCases.first { $0.cloudRoles == roles }
+    }
+
     /// The local models in use for `cloudReady`, each once, in role order: what the requirements
     /// and the onboarding recommend to download.
     func modelsInUse(cloudReady: Bool) -> [LocalModelSpec] {

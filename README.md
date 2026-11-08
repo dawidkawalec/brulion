@@ -2,7 +2,7 @@
 
 **Mów, a Bielik poprawi tekst na Twoim Macu.** Speak, and the text appears wherever you type, with all of the AI running on Bielik on your own Mac.
 
-Szpak is an open source dictation and meeting-notes app for macOS. Its whole language layer runs on **Bielik**, the Polish open language model by [SpeakLeash](https://speakleash.org), locally through llama.cpp. You need no account, no subscription and no server of ours. Speech recognition and AI stay on the Mac. If you want, the AI features can run on Bielik 11B in the Polish cloud instead (CloudFerro Sherlock, with your own key).
+Szpak is an open source dictation and meeting-notes app for macOS. Its whole language layer runs on **Bielik**, the Polish open language model by [SpeakLeash](https://speakleash.org), locally through llama.cpp. You need no account, no subscription and no server of ours. Speech recognition and AI stay on the Mac. If you want, the AI can run on Bielik 11B v3.0, the strongest Bielik, in the Polish cloud instead (CloudFerro Sherlock, with your own key): only the AI features, or everything.
 
 Szpak is a fork of [Captylo](https://captylo.com) 1.0.17, made for [Bielik Awards 2026](docs/bielik-awards.md) (category c, small language models under 10B parameters).
 
@@ -30,6 +30,12 @@ Meetings (⌃⌥⇧M: mic + system audio, no bot)
   In Modele you can pick another model for each role: Bielik 4.5B, Minitron or Bielik in the cloud.
 - **Model downloads:** models come from SpeakLeash's official Hugging Face repositories at pinned revisions. Downloads resume after a break and each file is checked against its SHA-256 before use.
 - **The word guard:** a small model asked to "fix punctuation" sometimes changes the meaning (the person, a summary, a loop). Szpak therefore merges the answer with the raw text word by word. It keeps only punctuation, capitals, Polish diacritics, small typos (macOS spell checker), your dictionary terms and removed fillers, and puts every other word back. In our 60-dictation test the meaning stayed intact in all 60.
+- **Bielik in the cloud (optional):** "Gdzie działa Bielik" in Modele has three options:
+  - "Na tym Macu" (the default): everything above, offline;
+  - "Funkcje AI w chmurze": the correction stays on the Mac, while the modes, meeting notes and "Zapytaj" run on **Bielik 11B v3.0 Instruct** in CloudFerro Sherlock;
+  - "Wszystko w chmurze": both roles on Bielik 11B.
+
+  Under "Dostawca" you pick where the 11B runs, only places that keep the data in Poland: **CloudFerro Sherlock** (the default), **PCSS AI HUB** in Poznań, or your own OpenAI-compatible server (for example Bielik on your company's vLLM). You paste your own key, and the requests go straight from your Mac to that provider. The 11B model is above the 10B limit of the award category, so it is only an option: every number below comes from the local models.
 - **When the model is late or down:** dictation never hangs. Past a time limit that grows with the text, or when the model server fails, Szpak pastes the raw text and says why.
 
 ## Numbers
@@ -123,7 +129,7 @@ The headless flags (`--transcribe`, `--meeting-ai`, `--check`) and how to repeat
 Everything runs on your Mac: recordings, transcripts, AI answers, meeting notes and what Szpak learns from your corrections. There is no telemetry, no update check, no account and no server of ours. Szpak opens a network connection in only two cases:
 
 - **huggingface.co,** while it downloads the speech model and the Bielik models;
-- **CloudFerro Sherlock,** only if you turn on "Bielik w chmurze" in Modele and paste your own key. The AI requests of the roles you put on the cloud then go straight from your Mac to that Polish cloud, with no proxy of ours. The key is kept in the macOS login Keychain.
+- **The cloud provider you pick** (CloudFerro Sherlock, PCSS AI HUB or your own server), only if you choose one of the cloud options under "Gdzie działa Bielik" in Modele and paste your own key. The AI requests of the roles you put on the cloud then go straight from your Mac to that provider, with no proxy of ours. Each provider's key is kept in the macOS login Keychain.
 
 Learning from your corrections reads back only the text field you dictated into, for a short while. It never reads password fields, password managers or terminals. What it learns stays in `learning.json` next to the dictionary.
 

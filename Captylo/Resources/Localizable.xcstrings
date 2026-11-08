@@ -3258,16 +3258,6 @@
         }
       }
     },
-    "Skąd wziąć klucz": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Where to get a key"
-          }
-        }
-      }
-    },
     "Pobierz model": {
       "localizations": {
         "en": {
@@ -6778,9 +6768,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "“Fix” needs the Accessibility permission." } }
       }
     },
-    "AI jest niedostępne: pobierz model lokalny w Modele albo włącz Bielika w chmurze w Modele > Zaawansowane.": {
+    "AI jest niedostępne: pobierz model lokalny albo dodaj klucz Bielika w chmurze w Modele.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "AI is unavailable: download a local model in Models or turn on Bielik in the cloud in Models > Advanced." } }
+        "en": { "stringUnit": { "state": "translated", "value": "AI is unavailable: download a local model or add the key for Bielik in the cloud in Models." } }
       }
     },
     "Brak modelu AI": {
@@ -6818,9 +6808,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "%1$@: %2$@, not downloaded yet (no AI)" } }
       }
     },
-    "%@: Bielik w chmurze CloudFerro (%@), na Twój klucz": {
+    "%@: Bielik w chmurze %@ (%@), na Twój klucz": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%1$@: Bielik in the CloudFerro cloud (%2$@), on your key" } }
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@: Bielik in the cloud of %2$@ (%3$@), on your key" } }
       }
     },
     "%@: Bielik w chmurze, wyłączony (bez AI)": {
@@ -6873,14 +6863,29 @@
         "en": { "stringUnit": { "state": "translated", "value": "A Polish language model that cleans up your dictation and runs the AI features on this Mac." } }
       }
     },
-    "Bielik w chmurze jest wyłączony albo nie ma klucza: ta rola działa bez AI, dopóki go nie włączysz poniżej.": {
+    "Brak klucza CloudFerro Sherlock: ta rola działa bez AI, dopóki nie dodasz klucza w zakładce Podstawowe (Gdzie działa Bielik).": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the cloud is off or has no key: this role runs without AI until you turn it on below." } }
+        "en": { "stringUnit": { "state": "translated", "value": "No CloudFerro Sherlock key: this role runs without AI until you add the key on the Basic tab (Where Bielik runs)." } }
       }
     },
-    "Bielik w chmurze jest włączony: tekst do poprawienia i pytania o spotkania idą prosto do polskiej chmury CloudFerro.": {
+    "Bielik w chmurze jest włączony dla wszystkiego: dyktowania do poprawienia, tryby AI, notatki i pytania o spotkania idą prosto do %@.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the cloud is on: text to clean up and questions about meetings go straight to CloudFerro's Polish cloud." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the cloud is on for everything: dictations to clean up, AI modes, notes and questions about meetings go straight to %@." } }
+      }
+    },
+    "Bielik w chmurze jest włączony dla korekty: dyktowania do poprawienia idą prosto do %@.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the cloud is on for the correction: dictations to clean up go straight to %@." } }
+      }
+    },
+    "Bielik w chmurze jest włączony dla funkcji AI: tryby AI, notatki i pytania o spotkania idą prosto do %@. Dyktowanie poprawia Bielik na tym Macu.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the cloud is on for the AI features: AI modes, notes and questions about meetings go straight to %@. Bielik on this Mac cleans up your dictation." } }
+      }
+    },
+    "Bielik w chmurze": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the cloud" } }
       }
     },
     "Chmura (Bielik 11B)": {
@@ -7143,9 +7148,9 @@
         "en": { "stringUnit": { "state": "translated", "value": "Your Mac: %1$@ RAM, %2$@ free disk space" } }
       }
     },
-    "Tylko gdy włączysz Bielika w chmurze (Modele > Zaawansowane). Bez tego AI działa wyłącznie na tym Macu.": {
+    "Tylko gdy wybierzesz Bielika w chmurze (Modele > Gdzie działa Bielik). Bez tego AI działa wyłącznie na tym Macu.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Only when you turn on Bielik in the cloud (Models > Advanced). Without it the AI runs only on this Mac." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Only when you choose Bielik in the cloud (Models > Where Bielik runs). Without it the AI runs only on this Mac." } }
       }
     },
     "Tylko podczas pobierania modeli: Whisper do rozpoznawania mowy i Bielik do AI. Bez konta i bez ciasteczek.": {
@@ -7228,24 +7233,134 @@
         "en": { "stringUnit": { "state": "translated", "value": "OK, %1$@, %2$lld ms" } }
       }
     },
-    "Bielik w chmurze": {
+    "Gdzie działa Bielik": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Bielik in the cloud" } }
+        "en": { "stringUnit": { "state": "translated", "value": "Where Bielik runs" } }
       }
     },
-    "Dla Maców, na których model lokalny działa za wolno. Gdy to włączysz, tekst do poprawienia i pytania o spotkania idą z Twojego Maca prosto do polskiej chmury CloudFerro (Bielik 11B) i nigdzie indziej. Klucz zostaje w pęku kluczy macOS.": {
+    "Na tym Macu": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "For Macs where the local model is too slow. With this on, the text to clean up and your questions about meetings go from your Mac straight to CloudFerro's Polish cloud (Bielik 11B) and nowhere else. The key stays in the macOS Keychain." } }
+        "en": { "stringUnit": { "state": "translated", "value": "On this Mac" } }
       }
     },
-    "Używaj Bielika w chmurze": {
+    "Funkcje AI w chmurze": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Use Bielik in the cloud" } }
+        "en": { "stringUnit": { "state": "translated", "value": "AI features in the cloud" } }
       }
     },
-    "Bez zapisanego klucza AI działa tylko na tym Macu.": {
+    "Wszystko w chmurze": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Without a saved key, the AI runs only on this Mac." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Everything in the cloud" } }
+      }
+    },
+    "Korekta dyktowania i funkcje AI działają na Bielikach pobranych na ten Mac. Nic nie wychodzi z komputera, a AI działa też bez internetu.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Dictation correction and the AI features run on the Bielik models downloaded to this Mac. Nothing leaves the computer, and the AI works offline too." } }
+      }
+    },
+    "Dyktowanie poprawia Bielik na tym Macu. Tryby AI, notatki ze spotkań i Zapytaj liczy Bielik 11B v3.0, najmocniejszy Bielik, w chmurze wybranego dostawcy, na Twój klucz.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik on this Mac cleans up your dictation. AI modes, meeting notes and Ask run on Bielik 11B v3.0, the strongest Bielik, in the cloud of the provider you pick, on your own key." } }
+      }
+    },
+    "Wszystko liczy Bielik 11B v3.0, najmocniejszy Bielik, w chmurze wybranego dostawcy, na Twój klucz. Każde dyktowanie poprawiane przez AI też idzie wtedy do chmury, a bez internetu AI nie działa.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Everything runs on Bielik 11B v3.0, the strongest Bielik, in the cloud of the provider you pick, on your own key. Every dictation the AI cleans up goes to the cloud too, and the AI does not work offline." } }
+      }
+    },
+    "Dostawca": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Provider" } }
+      }
+    },
+    "CloudFerro Sherlock (Polska)": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "CloudFerro Sherlock (Poland)" } }
+      }
+    },
+    "PCSS AI HUB (Poznań)": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "PCSS AI HUB (Poznań)" } }
+      }
+    },
+    "Własny serwer zgodny z OpenAI": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Your own OpenAI-compatible server" } }
+      }
+    },
+    "Polska chmura CloudFerro, płatność za użycie. Klucz tworzysz w konsoli Sherlock.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "CloudFerro's Polish cloud, pay as you go. You create the key in the Sherlock console." } }
+      }
+    },
+    "Poznańskie Centrum Superkomputerowo-Sieciowe. Dla firm w abonamencie, dla naukowców i studentów bez opłat.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Poznań Supercomputing and Networking Center. A subscription for companies, free for scientists and students." } }
+      }
+    },
+    "Dowolny serwer z API zgodnym z OpenAI, np. Bielik na serwerze Twojej firmy.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Any server with an OpenAI-compatible API, for example Bielik on your company's own server." } }
+      }
+    },
+    "Adres serwera": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Server address" } }
+      }
+    },
+    "Adres API zgodnego z OpenAI, np. https://ai.twojafirma.pl/v1": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The address of an OpenAI-compatible API, for example https://ai.yourcompany.com/v1" } }
+      }
+    },
+    "Wpisz pełny adres zaczynający się od https://.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Type the full address, starting with https://." } }
+      }
+    },
+    "Klucz PCSS AI HUB": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "PCSS AI HUB key" } }
+      }
+    },
+    "Klucz API serwera": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Server API key" } }
+      }
+    },
+    "Nieprawidłowy klucz AI": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Invalid AI key" } }
+      }
+    },
+    "Dostawcy Bielika": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bielik providers" } }
+      }
+    },
+    "Tekst idzie z Twojego Maca prosto do PCSS w Poznaniu, bez żadnego pośrednika. Klucz zostaje w pęku kluczy macOS.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The text goes from your Mac straight to PCSS in Poznań, with no one in between. The key stays in the macOS Keychain." } }
+      }
+    },
+    "Tekst idzie z Twojego Maca prosto pod ten adres. Sprawdź, gdzie ten serwer przetwarza dane i czy ich nie przechowuje. Klucz zostaje w pęku kluczy macOS.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The text goes from your Mac straight to this address. Check where that server processes the data and whether it keeps it. The key stays in the macOS Keychain." } }
+      }
+    },
+    "Własne ustawienie z zakładki Zaawansowane. Wybierz jedną z opcji, żeby je zastąpić.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "A custom setup from the Advanced tab. Pick one of the options to replace it." } }
+      }
+    },
+    "Bez zapisanego klucza funkcje ustawione na chmurę działają bez AI.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Without a saved key, the features set to the cloud run without AI." } }
+      }
+    },
+    "Jak założyć konto i klucz": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "How to get an account and a key" } }
       }
     },
     "Klucz CloudFerro Sherlock": {
@@ -7258,14 +7373,19 @@
         "en": { "stringUnit": { "state": "translated", "value": "API key" } }
       }
     },
-    "Bez klucza Bielik w chmurze nie zadziała, AI zostanie na tym Macu.": {
+    "Bez klucza Bielik w chmurze nie zadziała, a funkcje ustawione na chmurę zostaną bez AI.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Without a key, Bielik in the cloud will not work and the AI stays on this Mac." } }
+        "en": { "stringUnit": { "state": "translated", "value": "Without a key, Bielik in the cloud will not work, and the features set to the cloud will have no AI." } }
       }
     },
-    "Nazwa modelu w CloudFerro Sherlock": {
+    "Tekst idzie z Twojego Maca prosto do CloudFerro w Polsce, bez żadnego pośrednika. CloudFerro podaje, że nie przechowuje zapytań ani odpowiedzi. Klucz zostaje w pęku kluczy macOS.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "The model name in CloudFerro Sherlock" } }
+        "en": { "stringUnit": { "state": "translated", "value": "The text goes from your Mac straight to CloudFerro in Poland, with no one in between. CloudFerro states that it keeps neither the prompts nor the answers. The key stays in the macOS Keychain." } }
+      }
+    },
+    "Nazwa modelu u dostawcy": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "The model name at the provider" } }
       }
     },
     "Testuj połączenie": {

@@ -305,7 +305,7 @@ struct EnhancementEnhancerTests {
         }
         #expect(failure == .http(status: 401))
         #expect(failure.errorDescription == ChatCompletionsError.unauthorized.errorDescription)
-        #expect(outcome.note == String(localized: "Błąd AI \(String(401))"))
+        #expect(outcome.note == String(localized: "Nieprawidłowy klucz AI"))
     }
 
     @Test func deadlineFailsWithinBudgetAndKeepsTheRawText() async {

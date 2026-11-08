@@ -105,7 +105,7 @@ struct AIRoleModelsPanel: View {
     private func notes(_ role: AIRole, current: AIModelChoice) -> [String] {
         switch current {
         case .cloud:
-            return cloudReady ? [] : [String(localized: "Bielik w chmurze jest wyłączony albo nie ma klucza: ta rola działa bez AI, dopóki go nie włączysz poniżej.")]
+            return cloudReady ? [] : [String(localized: "Brak klucza CloudFerro Sherlock: ta rola działa bez AI, dopóki nie dodasz klucza w zakładce Podstawowe (Gdzie działa Bielik).")]
         case .local(let id):
             var notes: [String] = []
             switch localAI.store.state(for: id) {

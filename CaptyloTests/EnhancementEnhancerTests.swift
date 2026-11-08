@@ -496,8 +496,8 @@ struct EnhancementEnhancerTests {
         #expect(Enhancer.deadline(for: slow, input: words(10), fallback: .seconds(3), adaptive: true) == .seconds(15))
 
         let mode = BuiltInAIModes.organize.job(vocabulary: [])
-        // A mode: 3 + 20 x 0.23 x 1.5 = 9.9 s over its own 8 s.
-        #expect(Enhancer.deadline(for: mode, input: words(20), fallback: .seconds(3), adaptive: true) == .milliseconds(9900))
+        // A mode: 10 + 20 x 0.23 x 1.5 = 16.9 s over its own 8 s.
+        #expect(Enhancer.deadline(for: mode, input: words(20), fallback: .seconds(3), adaptive: true) == .milliseconds(16900))
         #expect(Enhancer.deadline(for: mode, input: words(200), fallback: .seconds(3), adaptive: true) == .seconds(30))
         // A job without its own limit takes the enhancer's (15 s off the dictation path).
         var utility = mode

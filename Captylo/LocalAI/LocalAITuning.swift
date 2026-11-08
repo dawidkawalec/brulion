@@ -60,8 +60,11 @@ enum LocalAITuning {
 
     /// Fixed part of the cleanup deadline, seconds (1.5B: warm first token p50 0.07-0.09 s).
     static let cleanupBaseSeconds = 1.0
-    /// Fixed part of an AI mode's deadline, seconds (Minitron: warm first token p50 0.4 s).
-    static let modeBaseSeconds = 3.0
+    /// Fixed part of an AI mode's deadline, seconds. A mode's answer can be much longer than the
+    /// dictation (an e-mail or a list from a few words), and Minitron's time follows the answer
+    /// (~2 s + ~0.2 s per answer word, F3 7.11): with 3 s, 9 of 36 short dictations in e-mail, list
+    /// and organize hit the limit; 10 s gives 5-10 words about 12-14 s.
+    static let modeBaseSeconds = 10.0
     /// Time per input word, seconds: 1.5B p50 0.032, p95 0.039 (rounded up to 0.04);
     /// Minitron p50 0.15, p95 0.23.
     static let correctionSecondsPerWord = 0.04

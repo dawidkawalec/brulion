@@ -26,8 +26,8 @@ struct MenuBarMenu: View {
         }
 
         let meetings = appState.meetingRecorder
-        // Shows ⌃⌥⌘M while the global shortcut is on (it works with the menu closed too).
-        let meetingShortcut = settings.meetingsShortcut ? KeyboardShortcut("m", modifiers: [.command, .option, .control]) : nil
+        // Shows ⌃⌥⇧M (`GlobalShortcut.meeting`) while the global shortcut is on (it works with the menu closed too).
+        let meetingShortcut = settings.meetingsShortcut ? KeyboardShortcut("m", modifiers: [.shift, .option, .control]) : nil
         if meetings.isRecording {
             Button("Zakończ spotkanie") {
                 appState.toggleMeetingRecording()
@@ -46,7 +46,7 @@ struct MenuBarMenu: View {
         Button(appState.dictationController.phase.isCapturing ? "Zakończ nagrywanie" : "Nowa notatka głosowa") {
             appState.toggleVoiceNote()
         }
-        .keyboardShortcut(settings.notesShortcut ? KeyboardShortcut("n", modifiers: [.command, .option, .control]) : nil)
+        .keyboardShortcut(settings.notesShortcut ? KeyboardShortcut("n", modifiers: [.shift, .option, .control]) : nil)
 
         Button("Kopiuj ostatnią transkrypcję") {
             Task {

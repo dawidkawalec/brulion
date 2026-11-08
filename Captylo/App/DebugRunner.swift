@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import os
 
 /// Headless debug commands (docs/architecture.md "Debug CLI flags"): JSON on stdout, exit code back.
 /// `--show-widget` is the exception: it shows the widget and never returns.
@@ -17,8 +18,8 @@ final class DebugRunner: DebugCommandRunner {
 
     func run(_ command: DebugCommand) async -> Int32 {
         switch command {
-        case .transcribe(let url, let ai, let language, let engine):
-            return await transcribe(url: url, ai: ai, language: language, engine: engine)
+        case .transcribe(let url, let ai, let language, let engine, let mode, let moreFiles):
+            return await transcribe(urls: [url] + moreFiles, ai: ai, language: language, engine: engine, modeQuery: mode)
         case .showWidget(let state):
             return await showWidget(state)
         case .check:
@@ -41,6 +42,8 @@ final class DebugRunner: DebugCommandRunner {
             return await watchPaste(text)
         case .meetingFromFiles(let me, let them):
             return await meetingFromFiles(me: me, them: them)
+        case .meetingAI(let url, let templateID, let fix, let questions):
+            return await meetingAI(url: url, templateID: templateID, fix: fix, questions: questions)
         case .benchmark(let url, let reference, let language):
             return await benchmark(url: url, reference: reference, language: language)
         case .rebuildSearchIndex:
@@ -208,6 +211,98 @@ final class DebugRunner: DebugCommandRunner {
         }
     }
 
+    // MARK: --meeting-ai
+
+    /// The AI after a meeting on a saved transcript (`DebugMeetingInput`), in an in-memory store and
+    /// on `appState.aiRoutes`, in the order a real meeting runs them: the transcript fixes (with
+    /// `fix`), the AI notes, then each question in turn (later ones see the earlier answers, like
+    /// "Zapytaj"). A question that fails is printed with its reason and does not fail the run.
+    private func meetingAI(url: URL, templateID: String?, fix: Bool, questions: [String]) async -> Int32 {
+        let started = ContinuousClock.now
+        do {
+            let input = try JSONDecoder().decode(DebugMeetingInput.self, from: Data(contentsOf: url))
+            let (meeting, segments) = input.records(fallbackTitle: url.deletingPathExtension().lastPathComponent)
+            let database = Database(modelContainer: try Store.makeInMemoryContainer())
+            try await database.createMeeting(meeting)
+            for segment in segments {
+                try await database.appendSegment(segment)
+            }
+            let routes = appState.aiRoutes
+            var payload: [String: Any] = [
+                "ok": true,
+                "title": meeting.title,
+                "segments": segments.count,
+                "words": segments.filter { !$0.isEcho }.reduce(0) { $0 + WordCounter.count($1.text) },
+                "durationSeconds": Self.seconds(meeting.duration),
+            ]
+
+            if fix {
+                let step = ContinuousClock.now
+                let glossary = MeetingCorrectionProcessor.glossary(vocabulary: appState.dictionary.data.vocabulary, meeting: meeting)
+                let result = try await MeetingTranscriptCorrector(routes: routes).correct(meeting: meeting, segments: segments, glossary: glossary)
+                try await database.updateSegments(result.changes)
+                let before = Dictionary(segments.map { ($0.id, $0.text) }, uniquingKeysWith: { first, _ in first })
+                payload["fix"] = [
+                    "model": result.model,
+                    "changed": result.changes.count,
+                    "changes": result.changes.map { ["start": Self.seconds($0.start), "before": before[$0.id] ?? "", "after": $0.text] },
+                    "ms": Self.milliseconds(since: step),
+                ] as [String: Any]
+            }
+
+            let template = templateID.map { BuiltInMeetingTemplates.template(id: $0) } ?? BuiltInMeetingTemplates.pick(forTitle: meeting.title)
+            let current = try await database.segments(meetingID: meeting.id)
+            let calls = CallTotal()
+            let notesStep = ContinuousClock.now
+            let notes = try await MeetingSummarizer(routes: routes).summarize(meeting: meeting, segments: current, template: template) { _, total in
+                calls.set(total)
+            }
+            payload["notes"] = [
+                "template": template.id,
+                "model": notes.model,
+                "calls": calls.value,
+                "markdown": notes.markdown,
+                "ms": Self.milliseconds(since: notesStep),
+            ] as [String: Any]
+
+            if !questions.isEmpty {
+                let asker = MeetingAsker(database: database, routes: routes)
+                var answers: [[String: Any]] = []
+                for question in questions {
+                    let step = ContinuousClock.now
+                    let asked = await asker.ask(meetingID: meeting.id, question: question)
+                    answers.append([
+                        "question": question,
+                        "answer": Self.orNull(asked?.answer),
+                        "error": Self.orNull(asked?.error),
+                        "model": Self.orNull(asked?.model),
+                        "ms": Self.milliseconds(since: step),
+                    ])
+                }
+                payload["ask"] = answers
+            }
+            payload["ms"] = Self.milliseconds(since: started)
+            payload["peakMemoryMB"] = PeakMemory.peakMB()
+            Self.emit(payload)
+            return 0
+        } catch {
+            let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            Self.emit(["ok": false, "error": message, "ms": Self.milliseconds(since: started)])
+            return 1
+        }
+    }
+
+    /// The call total the notes' progress last reported (it grows when merges need rounds).
+    private final class CallTotal: Sendable {
+        private let total = OSAllocatedUnfairLock(initialState: 0)
+        var value: Int { total.withLock { $0 } }
+        func set(_ value: Int) { total.withLock { $0 = value } }
+    }
+
+    private static func milliseconds(since start: ContinuousClock.Instant) -> Int {
+        Int((ContinuousClock.now - start) / .milliseconds(1))
+    }
+
     /// Seconds rounded to hundredths for readable JSON. A `Decimal`, because `JSONSerialization`
     /// prints a rounded `Double` with its binary tail (5.31 as 5.3099999999999996).
     private static func seconds(_ value: Double) -> Decimal {
@@ -329,18 +424,38 @@ final class DebugRunner: DebugCommandRunner {
 
     // MARK: --transcribe
 
-    private func transcribe(url: URL, ai: Bool, language: String?, engine engineOverride: STTEngine?) async -> Int32 {
+    /// Each file in turn in one run, one JSON object per file: the first meets a cold model server
+    /// (started while it is transcribed), the next ones the warm server of dictations in a row.
+    /// Exit code 1 when any file failed.
+    private func transcribe(urls: [URL], ai: Bool, language: String?, engine engineOverride: STTEngine?, modeQuery: String?) async -> Int32 {
         let settings = appState.settings
         let languageCode: String? = language.map { TranscriptionLanguages.engineCode(for: $0) } ?? settings.transcriptionLanguage
         let engine = engineOverride ?? settings.sttEngine
-        let started = ContinuousClock.now
+        var activeMode = settings.activeMode
+        if let modeQuery {
+            guard let picked = DebugCommand.mode(matching: modeQuery, in: settings.aiModes) else {
+                Self.emit(["error": "No AI mode matches \"\(modeQuery)\"", "modes": settings.aiModes.map { $0.builtInKey ?? $0.name }])
+                return 1
+            }
+            activeMode = picked
+        }
         if ai {
             // Like the hotkey going down: the local model server starts while the speech is
             // transcribed, so the cleanup sees the warm server a real dictation sees.
             let enhancer = appState.enhancer
-            let role = settings.activeMode.role
+            let role = activeMode.role
             Task { await enhancer.prewarm(role) }
         }
+        var status: Int32 = 0
+        for url in urls {
+            let code = await transcribeOne(url: url, ai: ai, languageCode: languageCode, engine: engine, mode: activeMode)
+            if code != 0 { status = code }
+        }
+        return status
+    }
+
+    private func transcribeOne(url: URL, ai: Bool, languageCode: String?, engine: STTEngine, mode activeMode: AIMode) async -> Int32 {
+        let started = ContinuousClock.now
         do {
             let (samples, duration) = try await AudioDecoder.decode16kMono(url)
             // A take carries its finalized 16 kHz WAV like a dictation; write one next to the temp files.
@@ -368,7 +483,7 @@ final class DebugRunner: DebugCommandRunner {
             var enhancementMode: String?
             var enhancementNote: String?
             if ai {
-                let mode = settings.activeMode
+                let mode = activeMode
                 enhancementMode = mode.name
                 let outcome = await appState.enhancer.enhance(
                     text,
@@ -392,6 +507,7 @@ final class DebugRunner: DebugCommandRunner {
 
             let total = ContinuousClock.now - started
             var payload: [String: Any] = [
+                "file": url.lastPathComponent,
                 "text": text,
                 "rawText": result.text,
                 "spelled": spelling.spelled.map { ["heard": $0.heard, "spelled": $0.spelled] },
@@ -413,7 +529,7 @@ final class DebugRunner: DebugCommandRunner {
             return 0
         } catch {
             let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-            Self.emit(["error": message])
+            Self.emit(["file": url.lastPathComponent, "error": message])
             return 1
         }
     }

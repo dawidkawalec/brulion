@@ -10,7 +10,7 @@ struct DebugCommandTests {
 
     @Test func parsesTranscribeWithDefaults() {
         let command = DebugCommand.parse(["app", "--transcribe", "~/Desktop/nagranie.m4a"])
-        guard case .transcribe(let url, let ai, let language, let engine) = command else {
+        guard case .transcribe(let url, let ai, let language, let engine, let mode, let moreFiles) = command else {
             Issue.record("expected transcribe")
             return
         }
@@ -19,6 +19,87 @@ struct DebugCommandTests {
         #expect(ai == false)
         #expect(language == nil)
         #expect(engine == nil)
+        #expect(mode == nil)
+        #expect(moreFiles.isEmpty)
+    }
+
+    @Test func parsesTranscribeOfSeveralFiles() {
+        let command = DebugCommand.parse(["app", "--transcribe", "/tmp/a.wav", "/tmp/b.wav", "~/c.wav", "--mode", "email", "-ai.enabled", "YES"])
+        #expect(command == .transcribe(
+            url: URL(fileURLWithPath: "/tmp/a.wav"),
+            ai: true,
+            language: nil,
+            mode: "email",
+            moreFiles: [URL(fileURLWithPath: "/tmp/b.wav"), URL(fileURLWithPath: ("~/c.wav" as NSString).expandingTildeInPath)]
+        ))
+    }
+
+    @Test func transcribeModeImpliesAI() {
+        let url = URL(fileURLWithPath: "/tmp/a.wav")
+        #expect(DebugCommand.parse(["app", "--transcribe", "/tmp/a.wav", "--mode", "email"])
+            == .transcribe(url: url, ai: true, language: nil, mode: "email"))
+        // Arguments of the defaults domain ("-ai.enabled YES") after the flags are ignored.
+        #expect(DebugCommand.parse(["app", "--transcribe", "/tmp/a.wav", "--mode", "Lista zadań", "-ai.enabled", "YES"])
+            == .transcribe(url: url, ai: true, language: nil, mode: "Lista zadań"))
+        #expect(DebugCommand.parse(["app", "--transcribe", "/tmp/a.wav", "--mode"]) == nil)
+        #expect(DebugCommand.parse(["app", "--transcribe", "/tmp/a.wav", "--mode", "--ai"]) == nil)
+    }
+
+    @Test func findsModesByKeyOrName() {
+        let modes = BuiltInAIModes.all
+        #expect(DebugCommand.mode(matching: "email", in: modes)?.builtInKey == BuiltInAIModes.Key.email)
+        #expect(DebugCommand.mode(matching: "E-MAIL", in: modes)?.builtInKey == BuiltInAIModes.Key.email)
+        #expect(DebugCommand.mode(matching: "lista zadan", in: modes)?.builtInKey == BuiltInAIModes.Key.tasks)
+        #expect(DebugCommand.mode(matching: " Uporządkuj myśli ", in: modes)?.builtInKey == BuiltInAIModes.Key.organize)
+        #expect(DebugCommand.mode(matching: "nie ma takiego", in: modes) == nil)
+    }
+
+    @Test func parsesMeetingAI() {
+        let url = URL(fileURLWithPath: "/tmp/m.json")
+        #expect(DebugCommand.parse(["app", "--meeting-ai", "/tmp/m.json"])
+            == .meetingAI(url: url, templateID: nil, fix: false, questions: []))
+        #expect(DebugCommand.parse(["app", "--meeting-ai", "/tmp/m.json", "--fix", "--template", "client", "--ask", "Co ustaliliśmy?", "--ask", "Kto co robi?"])
+            == .meetingAI(url: url, templateID: "client", fix: true, questions: ["Co ustaliliśmy?", "Kto co robi?"]))
+        #expect(DebugCommand.meetingAI(url: url, templateID: nil, fix: false, questions: []).isHeadless)
+        #expect(DebugCommand.parse(["app", "--meeting-ai"]) == nil)
+        #expect(DebugCommand.parse(["app", "--meeting-ai", "--fix"]) == nil)
+        #expect(DebugCommand.parse(["app", "--meeting-ai", "/tmp/m.json", "--ask"]) == nil)
+        #expect(DebugCommand.parse(["app", "--meeting-ai", "/tmp/m.json", "--ask", "  "]) == nil)
+        #expect(DebugCommand.parse(["app", "--meeting-ai", "/tmp/m.json", "--template"]) == nil)
+    }
+
+    @Test func decodesMeetingInputFromMeetingFromFiles() throws {
+        // The shape `--meeting-from-files` prints, plus a title and speaker names.
+        let json = """
+        {"ok": true, "title": "Przegląd", "speakerNames": {"1": "Agnieszka"},
+         "segments": [
+           {"track": "me", "start": 0.5, "end": 4.2, "text": "Zaczynamy.", "echo": false, "speaker": null},
+           {"track": "them", "start": 4.5, "text": "Dobrze.", "speaker": "1"},
+           {"start": 9, "text": "Echo.", "echo": true}
+         ]}
+        """
+        let input = try JSONDecoder().decode(DebugMeetingInput.self, from: Data(json.utf8))
+        let (meeting, segments) = input.records(fallbackTitle: "plik")
+        #expect(meeting.title == "Przegląd")
+        #expect(meeting.status == .completed)
+        #expect(meeting.speakerNames == ["1": "Agnieszka"])
+        #expect(segments.map(\.track) == [.me, .them, .them])
+        #expect(segments.allSatisfy { $0.meetingID == meeting.id })
+        #expect(segments[0].end == 4.2)
+        // A missing end runs to just before the next segment; the last one counts six seconds.
+        #expect(abs(segments[1].end - 8.7) < 0.001)
+        #expect(abs(segments[2].end - 14.7) < 0.001)
+        #expect(segments[1].speaker == "1")
+        #expect(segments[2].isEcho)
+        #expect(abs(meeting.duration - 14.7) < 0.001)
+    }
+
+    @Test func meetingInputFallsBackToTheFileName() throws {
+        let input = try JSONDecoder().decode(DebugMeetingInput.self, from: Data(#"{"segments": []}"#.utf8))
+        let (meeting, segments) = input.records(fallbackTitle: "spotkanie-60")
+        #expect(meeting.title == "spotkanie-60")
+        #expect(segments.isEmpty)
+        #expect(meeting.duration == 0)
     }
 
     @Test func transcribeRequiresAPath() {

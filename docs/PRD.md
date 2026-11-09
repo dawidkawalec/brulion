@@ -296,9 +296,15 @@ Gdy zabraknie czasu, tniemy od końca tej listy. Rdzeń zgłoszenia to dyktowani
 - Nowa tożsamość od razu w całym repo: `Brulion.app`, bundle `pl.craftweb.brulion`, dane w `~/Library/Application Support/Brulion/`, schemat URL `brulion` (sekcja 4). Kod też nazywa się teraz Brulion: moduł Swift, foldery `Brulion/` i `BrulionTests/`, projekt `Brulion.xcodeproj`, zmienne środowiskowe `BRULION_*`. Repo na GitHubie: `dawidkawalec/brulion`.
 - Znak przerysowany pod nazwę: "b" z ołówkiem i dymkiem mowy (opis wyżej, "Wygląd w barwach Bielika"). Odrzucone po podglądzie: kartka z bazgrołem i liniami (za słaba i za skomplikowana), stalówka, dymek z rogiem kartki.
 
+**Wydanie publiczne 0.9.1 (Dawid, 10.11)**
+- DMG 0.9.0 z 8.11 nosił jeszcze starą nazwę, więc publiczne wydanie to 0.9.1. `make dist VERSION=0.9.1` z `main` przesuniętego na `bielik` (build 123, profil notaryzacji `captylo-notary`): aplikacja i DMG z helperem `llama-server` przyjęte przez Apple, staple OK, Gatekeeper "accepted source=Notarized Developer ID", aplikacja z DMG startuje. `Brulion-0.9.1.dmg`, 26 851 251 B, SHA-256 `072d2408c6d17b9c5eb5256bae0594f0f77e63efd93447eb8ee808ef83b1d31b`.
+- Przed upublicznieniem przegląd całej historii (gitleaks i własne wzorce w commitach Brulionu): bez sekretów i danych osobowych; commity Captylo to te same, co w publicznym `dawidkawalec/captylo`.
+- Po popupie Dawida: `main` i `bielik` na GitHubie, `main` domyślną gałęzią (wydana wersja; prace idą dalej na `bielik`, `main` przesuwamy przy każdym wydaniu), release v0.9.1 z DMG, repo publiczne. Linki ze strony, README i zgłoszenia działają bez logowania.
+- Przeniesienie repo z `captylo-bielik` zostawiło w `.local-build/SourcePackages/workspace-state.json` starą ścieżkę do paczki FluidAudio i build Release padał. Plik trzeba odłożyć, SPM odtwarza go sam.
+
 **Do Dawida**
 1. ~~Ikona~~: rozstrzygnięte 8.11 (własny znak w barwach Bielika), przerysowana 9.11 razem z nazwą (wyżej).
-2. Zgoda na upublicznienie repo na GitHubie (popup przed zmianą widoczności; kierunek ustalony 8.11, wyżej).
+2. ~~Zgoda na upublicznienie repo na GitHubie~~: repo publiczne od 10.11, razem z wydaniem 0.9.1 (wyżej).
 3. Czy ogłosić nową wersję użytkownikom Captylo (mail przez `tbsend`, po popupie).
 4. Odczyt liczb z produkcji Captylo.
 

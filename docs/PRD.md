@@ -1,4 +1,4 @@
-# PRD - Captylo na Bieliku (nazwa do wyboru, sekcja 4)
+# PRD - Brulion (fork Captylo, cała AI na Bieliku)
 
 Wersja 1, 2026-11-07. Właściciel: Dawid Kawalec (CRAFTWEB Sp. z o.o.).
 Twardy termin: zgłoszenie do Bielik Awards 2026 do **15.11.2026, 23:59**. Cel: formularz wysłany **14.11** (dzień zapasu).
@@ -57,30 +57,25 @@ Ok. 49 tys. linii Swifta, 127 plików testów. Mapa poniżej pochodzi z `rg`. Wy
 
 ## 4. Tożsamość: działa obok Captylo na tym samym Macu
 
-- **Nazwa**: wybiera Dawid na starcie F1. Wymagania (Dawid, 7.11):
+- **Nazwa**: **Brulion** (decyzja Dawida 9.11.2026, sekcja 12). Brulion to zeszyt na brudno: mówisz na brudno, Bielik oddaje tekst na czysto. Wymagania (Dawid, 7.11), które nazwa spełnia:
   - bez "Offline" i "Lokalnie", bo może dojść Bielik w chmurze;
-  - ma nawiązywać do Bielika albo do innego ptaka kojarzonego z szeptem, mową lub dyktowaniem;
   - słowa "Bielik" nie wstawiamy (znak SpeakLeash; regulamin zabrania sugerowania afiliacji, § 3 ust. 2-3), a w opisie piszemy "działa na Bieliku".
 
-  Kandydaci:
-  - **Szpak**: szpaki naśladują ludzką mowę;
-  - **Pióro**: pióro ptaka i pióro do pisania;
-  - **Kruk**: kruki uczą się słów, a kruki Odyna to Myśl i Pamięć.
-
-  Odrzucone: Sowa (afera taśmowa), Słowik (skojarzenia z Pruszkowem). Przed decyzją sprawdzić kolizje: App Store, GitHub, domeny .pl i .app.
-- Identyfikatory techniczne ustalamy raz, zaraz po wyborze nazwy, i potem ich nie zmieniamy. Uprawnienia macOS (mikrofon, dostępność, nagrywanie dźwięku) są przypisane do bundle id.
-- Wzór identyfikatorów:
-  - bundle `com.captylo.<nazwa>` (albo `pl.craftweb.<nazwa>`, decyzja przy nazwie);
-  - produkt `<Nazwa>.app`, dane w `~/Library/Application Support/<Nazwa>/`;
-  - Keychain i subsystem logów jak bundle, schemat URL `<nazwa>`.
+  Wymóg nawiązania do ptaka z 7.11 odpadł razem z decyzją 9.11.
+- Identyfikatory techniczne ustalone razem z nazwą 9.11 i potem już ich nie zmieniamy. Uprawnienia macOS (mikrofon, dostępność, nagrywanie dźwięku) są przypisane do bundle id.
+- Identyfikatory:
+  - bundle `pl.craftweb.brulion`;
+  - produkt `Brulion.app` (plik wykonywalny `Brulion`), dane w `~/Library/Application Support/Brulion/`;
+  - Keychain i subsystem logów jak bundle, schemat URL `brulion`, serwer MCP `brulion`;
+  - moduł Swift, foldery i projekt: `Brulion`, `Brulion/`, `BrulionTests/`, `Brulion.xcodeproj`.
 - Domyślny skrót inny niż w Captylo, bo dwie aplikacje z tym samym skrótem się gryzą.
-- Ikona i wygląd: własny znak Szpaka (szpak śpiewający na gałązce) w barwach strony bielik.ai, bez logo Bielika i SpeakLeash (decyzja 8.11 w sekcji 12, zastąpiła wariant ikony Captylo).
+- Ikona i wygląd: własny znak Brulionu (małe "b": trzon to ołówek, brzuszek to dymek mowy) w barwach strony bielik.ai, bez logo Bielika i SpeakLeash (barwy: decyzja 8.11, znak: 9.11, oba w sekcji 12; zastąpiły wariant ikony Captylo).
 - Licencja GPLv3 dziedziczona po Captylo. `NOTICE.md` uzupełnione o llama.cpp (MIT) i modele Bielik (Apache 2.0; aplikacja je pobiera, nie dołącza do instalatora).
 
 ## 5. Architektura AI
 
 ```
-<Nazwa>.app
+Brulion.app
  ├─ Whisper large-v3-turbo (WhisperKit, lokalnie)  ->  surowa transkrypcja
  ├─ Enhancer / Meetings AI  ── klient zgodny z OpenAI (chat/completions) ──┬─> 127.0.0.1:<port>  llama-server + model "korekta"
  │                                                                         ├─> 127.0.0.1:<port>  llama-server + model "funkcje AI"
@@ -105,7 +100,7 @@ Ok. 49 tys. linii Swifta, 127 plików testów. Mapa poniżej pochodzi z `rg`. Wy
   - bramka F0 dotyczy typowego dyktowania do 60 słów: p95 korekty najwyżej 3 s na M3 Pro.
 
   Po przekroczeniu limitu wklejamy surowy tekst. Spotkania liczą się w tle bez limitu, z paskiem postępu.
-- **Przenoszalność**: lokalna AI to samodzielny moduł (`Captylo/LocalAI/`: ModelManager, serwer modelu, klient) za protokołem trasy, a wycinanie chmury idzie osobnymi commitami. Dzięki temu tryb lokalny da się później przenieść do głównego Captylo. Poprawek wydanych w Captylo w trakcie sprintu nie przenosimy, chyba że są krytyczne.
+- **Przenoszalność**: lokalna AI to samodzielny moduł (`Brulion/LocalAI/`: ModelManager, serwer modelu, klient) za protokołem trasy, a wycinanie chmury idzie osobnymi commitami. Dzięki temu tryb lokalny da się później przenieść do głównego Captylo. Poprawek wydanych w Captylo w trakcie sprintu nie przenosimy, chyba że są krytyczne.
 
 ## 6. Modele i poziomy
 
@@ -157,7 +152,7 @@ Stan Hugging Face z 7.11.2026: wszystkie modele na licencji Apache 2.0, repozyto
 - Model: Bielik 11B v3.0 Instruct, najmocniejszy Bielik (stan HF i Sherlocka z 8.11.2026).
 - Decyzja Dawida 8.11.2026: w Modele > Podstawowe jest wybór "Gdzie działa Bielik" z trzech opcji: "Na tym Macu" (domyślnie), "Funkcje AI w chmurze" (korekta na Macu, tryby, notatki i Zapytaj w chmurze), "Wszystko w chmurze". Pod nim, gdy chmura jest wybrana: pole klucza CloudFerro Sherlock, test połączenia i nazwa modelu. Ręczny wybór modelu dla roli zostaje w Zaawansowanych.
 - Decyzja Dawida 8.11.2026, dostawcy: dane mają zostać w Polsce, minimum w UE. Menu "Dostawca" ma tylko CloudFerro Sherlock (domyślnie, polska chmura, deklaruje brak przechowywania zapytań), PCSS AI HUB (Poznań) i "Własny serwer zgodny z OpenAI". Hugging Face (Public AI) i ARK Labs z listy na bielik.ai nie trafiają do aplikacji, bo nie gwarantują danych w UE albo tego nie podają.
-- Do pomiarów: tryb bez okna bierze klucz ze zmiennej `SHERLOCK_API_KEY` (Sherlock) albo `SZPAK_CLOUD_KEY` (dostawca wybrany argumentem `-ai.cloud.provider`), tylko dla tego procesu, bez zapisu w pęku kluczy.
+- Do pomiarów: tryb bez okna bierze klucz ze zmiennej `SHERLOCK_API_KEY` (Sherlock) albo `BRULION_CLOUD_KEY` (dostawca wybrany argumentem `-ai.cloud.provider`), tylko dla tego procesu, bez zapisu w pęku kluczy.
 - Jasna informacja, że tekst idzie wtedy do polskiej chmury. Domyślnie wyłączone.
 - Bez naszego pośrednika: klient łączy się wprost z Sherlockiem.
 
@@ -256,7 +251,7 @@ Gdy zabraknie czasu, tniemy od końca tej listy. Rdzeń zgłoszenia to dyktowani
   - stała tożsamość techniczna (sekcja 4);
   - anonimowy punkt odniesienia "Captylo AI (chmura)" (sekcja 8);
   - poziom 8 GB eksperymentalny bez testu na sprzęcie (sekcja 8);
-  - lokalna AI jako przenoszalny moduł `Captylo/LocalAI/` (sekcja 5);
+  - lokalna AI jako przenoszalny moduł `Brulion/LocalAI/` (sekcja 5);
   - tytuły notatek, `StyleDistiller` i transkrypcja plików na trasie lokalnej (7.3).
 
 **Dawid, 7.11, po przeglądzie wykonawcy**
@@ -278,12 +273,12 @@ Gdy zabraknie czasu, tniemy od końca tej listy. Rdzeń zgłoszenia to dyktowani
   - korekta domyślnie na 1.5B ze strażnikiem; w Modele można wybrać do korekty 4.5B, Minitrona albo chmurę;
   - funkcje AI na Minitronie 7B (tryby z limitem do 30 s);
   - poprawki transkryptu spotkań na modelu korekty, zawsze przez `TranscriptFixGuard` (bez niego 1.5B psuł 62 z 306 czystych linii).
-- Nazwa: **Szpak** (7.11, po sprawdzeniu kolizji; szpak.app wolne). Identyfikatory na stałe: `Szpak.app`, bundle `pl.craftweb.szpak`, dane w `~/Library/Application Support/Szpak/`, schemat URL `szpak`.
-- Prywatne repo `dawidkawalec/captylo-bielik` założone 7.11 (zgoda Dawida); publiczne dopiero w F3, po popupie.
+- Nazwa robocza i identyfikatory z 7.11: zastąpione decyzją z 9.11 (niżej, "Nazwa").
+- Prywatne repo na GitHubie założone 7.11 (zgoda Dawida), dziś `dawidkawalec/brulion`; publiczne dopiero w F3, po popupie.
 
 **Wygląd w barwach Bielika (Dawid, 8.11)**
 - Cała aplikacja przechodzi z kolorów Captylo (Deep Tide) na paletę strony bielik.ai: oliwkowy brąz, rhubarb #F66953, ciepła biel. Tło "Ciemny" to brąz z żarem rhubarb, akcent i przełączniki w odcieniu ember, nagrywanie karmazynowe.
-- Własny znak: szpak śpiewający na gałązce (płaski, kanciasty jak sygnet Bielika, ale nie orzeł Bielika). Ikona: ciemny brąz z ptakiem w rhubarb. Z jednej geometrii (`scripts/make-szpak-brand.swift`) powstają ikona, symbol w onboardingu i sidebarze, ikony paska menu oraz favicony w `docs/brand/`.
+- Własny znak (obecny od 9.11, razem z nazwą, wybrany przez Dawida z kilku wariantów): małe "b", którego trzon to ołówek (zaostrzone drewno i grafit oddzielone szczelinami), a brzuszek to dymek mowy z kwadratowym prawym dolnym rogiem i otworem w kształcie dymka. Ołówek i dymek stoją na jednej prostej linii bazowej, bez uskoku. Mówisz, Brulion pisze. Płaski i geometryczny jak grafika bielik.ai, nasz własny rysunek, nigdy orzeł Bielika ani znak SpeakLeash. Ikona: rhubarb #F66953 na oliwkowo-brązowym kafelku. Wordmark: "brulion" małymi literami, Geologica Bold. Z jednej geometrii (`scripts/make-brulion-brand.swift`) powstają ikona, symbol `BrandSymbol` w onboardingu i sidebarze (z `brulion-mark.svg`), ikony paska menu (wariant nagrywania dodaje kropkę) oraz pliki w `docs/brand/`: `brulion-mark.svg`, `brulion-mark-light.svg`, `brulion-mark-dark.svg`, `brulion-icon-1024.png`, `favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`, `og.png`.
 - Fonty: Geologica (nagłówki, liczby, wordmark, jak na bielik.ai) i Inter (tekst UI). Manrope odpada.
 - Szczegóły i tokeny: [docs/design/dusk-glass.md](design/dusk-glass.md), zasada 7.
 
@@ -294,10 +289,15 @@ Gdy zabraknie czasu, tniemy od końca tej listy. Rdzeń zgłoszenia to dyktowani
 **Domknięcie F2 i F3 (Dawid, 8.11, "zostaje tylko F4")**
 - Zapytaj o spotkanie dłuższe niż ok. 45 min: zamiast odmowy idą notatki AI i fragmenty pod pytanie (linie ze słowami pytania z sąsiadami i końcówka spotkania), tyle, ile mieści się w budżecie, jedno wywołanie (`MeetingAskExcerpts`). Odmowa zostaje tylko, gdy nie ma notatek AI ani pasującej linii albo gdy nawet notatki się nie mieszczą.
 - Mac z 16 GB: plan pamięci przyjmuje zmierzone 8,45 GB dla Minitrona. 1.5B i Minitron działają tam po kolei (serwis zatrzymuje 1.5B, gdy startuje Minitron, następne dyktowanie czeka ok. 1-2 s); budżet 60% RAM bez zmian. Od 24 GB oba zostają w pamięci.
-- Wydanie: `main` przejmuje Szpaka, repo publiczne, release v0.9.0 z notaryzowanym DMG z `main` (każdy krok na remote po popupie). Test na czystym Macu robi Dawid na DMG z GitHuba.
+- Wydanie: `main` przejmuje Brulion, repo publiczne, release v0.9.0 z notaryzowanym DMG z `main` (każdy krok na remote po popupie). Test na czystym Macu robi Dawid na DMG z GitHuba.
+
+**Nazwa (Dawid, 9.11)**
+- 9.11.2026: ostateczna nazwa Brulion (Dawid odrzucił poprzednią nazwę roboczą); story: mówisz na brudno, dostajesz na czysto.
+- Nowa tożsamość od razu w całym repo: `Brulion.app`, bundle `pl.craftweb.brulion`, dane w `~/Library/Application Support/Brulion/`, schemat URL `brulion` (sekcja 4). Kod też nazywa się teraz Brulion: moduł Swift, foldery `Brulion/` i `BrulionTests/`, projekt `Brulion.xcodeproj`, zmienne środowiskowe `BRULION_*`. Repo na GitHubie: `dawidkawalec/brulion`.
+- Znak przerysowany pod nazwę: "b" z ołówkiem i dymkiem mowy (opis wyżej, "Wygląd w barwach Bielika"). Odrzucone po podglądzie: kartka z bazgrołem i liniami (za słaba i za skomplikowana), stalówka, dymek z rogiem kartki.
 
 **Do Dawida**
-1. ~~Ikona Szpaka~~: rozstrzygnięte 8.11 (własny znak w barwach Bielika, wyżej).
+1. ~~Ikona~~: rozstrzygnięte 8.11 (własny znak w barwach Bielika), przerysowana 9.11 razem z nazwą (wyżej).
 2. Zgoda na upublicznienie repo na GitHubie (popup przed zmianą widoczności; kierunek ustalony 8.11, wyżej).
 3. Czy ogłosić nową wersję użytkownikom Captylo (mail przez `tbsend`, po popupie).
 4. Odczyt liczb z produkcji Captylo.

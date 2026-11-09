@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """A window of a Sejm sitting (public transcripts, api.sejm.gov.pl) as a meeting transcript for
-`Szpak --meeting-ai` (docs/benchmark.md, docs/architecture.md "Debug CLI flags").
+`Brulion --meeting-ai` (docs/benchmark.md, docs/architecture.md "Debug CLI flags").
 
 Realistic, public and reproducible input for the meeting benchmark: real speakers and the real
 start and end time of every statement. Each statement is cut into transcript-like segments of
@@ -22,7 +22,7 @@ API = "https://api.sejm.gov.pl/sejm/term{term}/proceedings/{sitting}/{date}/tran
 
 
 def fetch(url):
-    request = urllib.request.Request(url, headers={"User-Agent": "szpak-benchmark/1.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": "brulion-benchmark/1.0"})
     with urllib.request.urlopen(request, timeout=30) as response:
         return response.read().decode("utf-8")
 

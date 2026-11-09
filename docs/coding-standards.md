@@ -7,7 +7,7 @@
 - `@Model` classes never cross actors; pass value structs (`DictationRecord`) or `PersistentIdentifier`.
 - Shared mutable state on hot paths uses `OSAllocatedUnfairLock`; no `Synchronization` module (macOS 15 only), no `DispatchSemaphore` on the cooperative pool.
 - Synchronous blocking calls (Core ML load, `AsrModels.loadLocal`) run on a dedicated `DispatchQueue` bridged with `withCheckedThrowingContinuation`.
-- Queue bridges: a **generic** helper that awaits a checked continuation and is not isolated (`onQueue<T>`, `onKeychainQueue<T>`, `offMain<T>`, `withConnection<T>`, `LocalAITimeout.value<T>`) is marked `@concurrent`. Without it, `SWIFT_APPROACHABLE_CONCURRENCY` makes it `nonisolated(nonsending)`, and a Release build (`-O`) for macOS 14.4 with Swift 6.3 can return its `@MainActor` caller on a cooperative thread. The caller keeps running off the main thread until its next hop, and crashes at the first runtime isolation check (Szpak 0.9.0: `DictationController.start` reading `settings.activeMode` right after `capture.start`). Debug builds and a macOS 15 target hide it. `scripts/check-nonsending-resume.sh` compiles the minimal repro with the project's target and shows whether the current Xcode still has the bug.
+- Queue bridges: a **generic** helper that awaits a checked continuation and is not isolated (`onQueue<T>`, `onKeychainQueue<T>`, `offMain<T>`, `withConnection<T>`, `LocalAITimeout.value<T>`) is marked `@concurrent`. Without it, `SWIFT_APPROACHABLE_CONCURRENCY` makes it `nonisolated(nonsending)`, and a Release build (`-O`) for macOS 14.4 with Swift 6.3 can return its `@MainActor` caller on a cooperative thread. The caller keeps running off the main thread until its next hop, and crashes at the first runtime isolation check (Brulion 0.9.0: `DictationController.start` reading `settings.activeMode` right after `capture.start`). Debug builds and a macOS 15 target hide it. `scripts/check-nonsending-resume.sh` compiles the minimal repro with the project's target and shows whether the current Xcode still has the bug.
 - `os.Logger(subsystem: AppIdentity.bundleID, category: ...)` through `Log`; `OSSignposter` around the hot path. No `print` except the debug CLI output.
 - Errors are typed enums conforming to `LocalizedError` with Polish `errorDescription`. Never store an error message in a transcript field.
 - Regex work uses `NSRegularExpression` with `escapedTemplate(for:)` for replacements (the old Swift Regex path lost `$` and `\`).
@@ -23,21 +23,21 @@
 
 ## Localization
 
-- Source strings are Polish, written as SwiftUI literals or `String(localized: "...")`. English lives in `Captylo/Resources/Localizable.xcstrings`.
-- The product name in every string is "Szpak" (no version suffix), declined in Polish: "Szpak potrzebuje...", "Otwórz Szpaka", "w Szpaku"; English keeps "Szpak". The version shows as "Wersja 0.9.0". "Captylo" never appears in a UI text (`AppIdentityTests.noUserFacingTextSaysCaptylo`).
+- Source strings are Polish, written as SwiftUI literals or `String(localized: "...")`. English lives in `Brulion/Resources/Localizable.xcstrings`.
+- The product name in every string is "Brulion" (no version suffix), declined in Polish as an inanimate noun: "Brulion potrzebuje...", "Otwórz Brulion", "folder danych Brulionu", "Brulionowi", "z Brulionem", "w Brulionie"; English keeps "Brulion". The version shows as "Wersja 0.9.0". "Captylo" never appears in a UI text (`AppIdentityTests.noUserFacingTextSaysCaptylo`), and neither does the earlier working name (`AppIdentityTests`).
 - Use plural variants in the catalog for counts ("1 słowo", "2 słowa", "5 słów").
-- `make build` does not sync new keys into the catalog (only the Xcode IDE does): add every new Polish key with its English value to `Localizable.xcstrings` by hand. The keys the compiler extracted are in `.local-build/**/Captylo.build/Objects-normal/arm64/*.stringsdata`.
-- Info.plist strings (`NSMicrophoneUsageDescription`) are translated in `Captylo/Resources/InfoPlist.xcstrings`.
+- `make build` does not sync new keys into the catalog (only the Xcode IDE does): add every new Polish key with its English value to `Localizable.xcstrings` by hand. The keys the compiler extracted are in `.local-build/**/Brulion.build/Objects-normal/arm64/*.stringsdata`.
+- Info.plist strings (`NSMicrophoneUsageDescription`) are translated in `Brulion/Resources/InfoPlist.xcstrings`.
 - Numbers, dates and language names use `AppLocale.current` (pl_PL under the Polish UI, en_US under the English one), never a hardcoded `Locale(identifier:)` or the system region.
 - Never build a sentence from a localized literal plus an unlocalized fragment (`"Kopiuj \(x ? "AI" : "oryginał")"`): write each full variant as its own key.
 - No long dashes in any text (UI, docs, commits): use "-".
 
 ## Tests
 
-- Swift Testing (`import Testing`), one file per module under `CaptyloTests/`. Pure logic (text processing, hotkey matching, stats, request builders, parsers) must be covered; UI and hardware are not unit-tested.
+- Swift Testing (`import Testing`), one file per module under `BrulionTests/`. Pure logic (text processing, hotkey matching, stats, request builders, parsers) must be covered; UI and hardware are not unit-tested.
 - Network code is tested with `URLProtocol` stubs and JSON fixtures, never against live APIs.
 
 ## Git
 
 - Commit messages: imperative subject <= 72 chars, body explains what and why. No attribution lines, no AI mentions.
-- The generated `Captylo.xcodeproj` is ignored; `project.yml` is the source.
+- The generated `Brulion.xcodeproj` is ignored; `project.yml` is the source.

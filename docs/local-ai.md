@@ -1,6 +1,6 @@
-# Local AI (`Captylo/LocalAI/`)
+# Local AI (`Brulion/LocalAI/`)
 
-In Szpak all AI runs on Bielik models on the user's Mac, through llama.cpp's `llama-server` bundled as a helper and listening on 127.0.0.1 only (PRD sections 5-7). The module is self-contained: it knows nothing about the app's settings, paths, AI routes or UI. The app hands it paths and settings and asks it for an endpoint per role; everything else (prompts, request bodies, parsing) stays in the app's OpenAI-compatible client.
+In Brulion all AI runs on Bielik models on the user's Mac, through llama.cpp's `llama-server` bundled as a helper and listening on 127.0.0.1 only (PRD sections 5-7). The module is self-contained: it knows nothing about the app's settings, paths, AI routes or UI. The app hands it paths and settings and asks it for an endpoint per role; everything else (prompts, request bodies, parsing) stays in the app's OpenAI-compatible client.
 
 ## Pieces
 
@@ -18,7 +18,7 @@ In Szpak all AI runs on Bielik models on the user's Mac, through llama.cpp's `ll
 | `CorrectionGuard` | `apply(raw:output:vocabulary:spellCheck:)`, the one entry point for a cleanup answer: merge, then reject the merged text outside 50-150 % of the input length (inputs over 40 characters) or under 0.5 word similarity; returns the text to paste and a reason |
 | `CorrectionSpelling` | the merger's spell check from the system dictionaries (Polish, English), asked on the main actor once per answer |
 | `LocalDeadline` | `limit = base + input words x seconds per word x 1.5`, capped at 15 s (cleanup) and 30 s (modes) |
-| `LocalUsageStats` (actor) | local counters (no network): dictations, corrections accepted / rejected by the guard (with reasons), timeouts, average and p95 correction time, mode uses, meetings, server failures; JSON at an injected URL; export to a file the user picks (`szpak.localai.usage.v1`) |
+| `LocalUsageStats` (actor) | local counters (no network): dictations, corrections accepted / rejected by the guard (with reasons), timeouts, average and p95 correction time, mode uses, meetings, server failures; JSON at an injected URL; export to a file the user picks (`brulion.localai.usage.v1`) |
 | `LocalAI.xcstrings` | the module's own string table (`table: "LocalAI"`), Polish source with English |
 
 Logging goes through `LocalAILog` (category `localai`): states, model ids, sizes, ports, pids and exit codes only. Never a prompt, a model answer, the server's output or the token.
@@ -48,7 +48,7 @@ Logging goes through `LocalAILog` (category `localai`): states, model ids, sizes
 
 ## Building the helper
 
-`make llama` runs `scripts/build-llama-server.sh`: the commit is `LLAMA_CPP_COMMIT` in `project.yml` (llama.cpp v0.9.0, `cd959bae99ff4bed22bef2604f45241c09bbb8c8`), a shallow clone of that one commit (or an existing checkout at that commit via `LLAMA_CPP_SOURCE`), built into `~/Library/Caches/Szpak/llama.cpp/<commit>/build/bin/llama-server` (`SZPAK_LLAMA_CACHE` overrides the root). A finished build with the same options is reused; a rebuild starts from an empty build folder. CMake options on top of Release, static, arm64, macOS 14.4:
+`make llama` runs `scripts/build-llama-server.sh`: the commit is `LLAMA_CPP_COMMIT` in `project.yml` (llama.cpp v0.9.0, `cd959bae99ff4bed22bef2604f45241c09bbb8c8`), a shallow clone of that one commit (or an existing checkout at that commit via `LLAMA_CPP_SOURCE`), built into `~/Library/Caches/Brulion/llama.cpp/<commit>/build/bin/llama-server` (`BRULION_LLAMA_CACHE` overrides the root). A finished build with the same options is reused; a rebuild starts from an empty build folder. CMake options on top of Release, static, arm64, macOS 14.4:
 
 | Option | Why |
 |---|---|
@@ -61,7 +61,7 @@ Logging goes through `LocalAILog` (category `localai`): states, model ids, sizes
 
 The result links only system libraries (`otool -L`): Accelerate, Foundation, Metal, MetalKit, CoreFoundation, `libSystem`, `libc++`, `libobjc`. About 20 MB.
 
-The "Embed llama-server" build phase (`project.yml`, the app target) copies `LLAMA_SERVER_PATH` into the app's `Contents/MacOS/llama-server` and signs it (ad-hoc in Xcode builds). A Debug build without the helper only warns (the app then has no local AI); a Release build fails. The phase reads a file outside the source tree that may be missing, so the target has user script sandboxing off. `scripts/sign-app.sh` signs every helper in `Contents/MacOS` inside-out with the app's identity and hardened runtime (no entitlements), before the app. Debug builds can also point at a helper with `SZPAK_LLAMA_SERVER` (`LlamaServerLocator`).
+The "Embed llama-server" build phase (`project.yml`, the app target) copies `LLAMA_SERVER_PATH` into the app's `Contents/MacOS/llama-server` and signs it (ad-hoc in Xcode builds). A Debug build without the helper only warns (the app then has no local AI); a Release build fails. The phase reads a file outside the source tree that may be missing, so the target has user script sandboxing off. `scripts/sign-app.sh` signs every helper in `Contents/MacOS` inside-out with the app's identity and hardened runtime (no entitlements), before the app. Debug builds can also point at a helper with `BRULION_LLAMA_SERVER` (`LlamaServerLocator`).
 
 ## Hosts contacted
 
@@ -125,21 +125,21 @@ All wired (F2, branch `bielik-f2-integration`); details in docs/architecture.md 
 7. **Onboarding and privacy** - done. "Pobierz Bielika" (`BielikStep`) and the requirements box in Modele use `LocalAIRequirements`, `DiskSpace.availableBytes` and `BielikDownloadPlan`; Ustawienia > "Prywatność" names the hosts above.
 8. **Release** - unchanged: `make llama` before `make release` / `make dist`; the notarization covers the helper because `scripts/sign-app.sh` signs it.
 
-Checked end to end on 2026-11-07 (M3 Pro 36 GB, Debug build, `CAPTYLO_DATA_DIR` with `LocalModels` symlinked to the F0 model folder): `--check` found the helper, both models and the standard tier; `--transcribe --ai` on two invented Polish dictations spoken by the system voice ran Whisper and then the cleanup on the 1.5B through the app's route in 0.9 s and 1.8 s (server started by the prewarm), both accepted by the guard; without the prewarm a fresh process missed the 3 s floor, which is why the debug run now prewarms like the hotkey.
+Checked end to end on 2026-11-07 (M3 Pro 36 GB, Debug build, `BRULION_DATA_DIR` with `LocalModels` symlinked to the F0 model folder): `--check` found the helper, both models and the standard tier; `--transcribe --ai` on two invented Polish dictations spoken by the system voice ran Whisper and then the cleanup on the 1.5B through the app's route in 0.9 s and 1.8 s (server started by the prewarm), both accepted by the guard; without the prewarm a fresh process missed the 3 s floor, which is why the debug run now prewarms like the hotkey.
 
 ## Tests
 
-`CaptyloTests/LocalAI*Tests.swift` (Swift Testing): catalog integrity, tiers and plans, downloader through a `URLProtocol` stub (fresh download, Range resume, a server that ignores Range, SHA mismatch removes the `.part`, cancel keeps it, no disk space, redirect to the CDN keeps the Range, redirect elsewhere refused, HTTP errors), the store, the guard and the merger with each of its rules (synthetic Polish sentences, a fixed spell check), the deadline, server arguments and environment, the server lifecycle and the service with a fake process launcher (shared process, port retry, crash, idle stop, cooldown, timeout, memory budget), pid files against a real `/bin/sleep`, usage stats round trip and export.
+`BrulionTests/LocalAI*Tests.swift` (Swift Testing): catalog integrity, tiers and plans, downloader through a `URLProtocol` stub (fresh download, Range resume, a server that ignores Range, SHA mismatch removes the `.part`, cancel keeps it, no disk space, redirect to the CDN keeps the Range, redirect elsewhere refused, HTTP errors), the store, the guard and the merger with each of its rules (synthetic Polish sentences, a fixed spell check), the deadline, server arguments and environment, the server lifecycle and the service with a fake process launcher (shared process, port retry, crash, idle stop, cooldown, timeout, memory budget), pid files against a real `/bin/sleep`, usage stats round trip and export.
 
 `LocalAIEndToEndTests` runs the real helper and a real model, off in `make test`:
 
 ```bash
 lockf -k <shared heavy-work lock> env \
-  TEST_RUNNER_SZPAK_LLAMA_E2E=1 \
-  TEST_RUNNER_SZPAK_LLAMA_SERVER="$(scripts/build-llama-server.sh --path)" \
-  TEST_RUNNER_SZPAK_LLAMA_MODEL=<path to Bielik-1.5B-v3.0-Instruct.Q8_0.gguf> \
-  xcodebuild -project Captylo.xcodeproj -scheme Captylo -derivedDataPath .local-build \
-  CODE_SIGN_IDENTITY="-" test -only-testing:CaptyloTests/LocalAIEndToEndTests
+  TEST_RUNNER_BRULION_LLAMA_E2E=1 \
+  TEST_RUNNER_BRULION_LLAMA_SERVER="$(scripts/build-llama-server.sh --path)" \
+  TEST_RUNNER_BRULION_LLAMA_MODEL=<path to Bielik-1.5B-v3.0-Instruct.Q8_0.gguf> \
+  xcodebuild -project Brulion.xcodeproj -scheme Brulion -derivedDataPath .local-build \
+  CODE_SIGN_IDENTITY="-" test -only-testing:BrulionTests/LocalAIEndToEndTests
 ```
 
 xcodebuild passes environment variables prefixed with `TEST_RUNNER_` to the tests without the prefix. The model file is only read where it is.

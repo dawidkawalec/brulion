@@ -1,4 +1,4 @@
-name: Captylo
+name: Brulion
 options:
   bundleIdPrefix: pl.craftweb
   deploymentTarget:
@@ -21,11 +21,10 @@ packages:
 settings:
   base:
     # The app's identity (docs/PRD.md section 4), next to Captylo on the same Mac. Kept in step
-    # with the variables at the top of the Makefile and Captylo/App/AppIdentity.swift. The module
-    # stays "Captylo" (tests import it).
-    APP_PRODUCT_NAME: Szpak
-    APP_BUNDLE_ID: pl.craftweb.szpak
-    APP_URL_SCHEME: szpak
+    # with the variables at the top of the Makefile and Brulion/App/AppIdentity.swift.
+    APP_PRODUCT_NAME: Brulion
+    APP_BUNDLE_ID: pl.craftweb.brulion
+    APP_URL_SCHEME: brulion
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     SWIFT_APPROACHABLE_CONCURRENCY: YES
@@ -46,7 +45,7 @@ settings:
     # Local AI helper (docs/local-ai.md): llama.cpp v0.9.0, built by scripts/build-llama-server.sh
     # (make llama) into a shared cache outside the repo; the script reads the commit from here.
     LLAMA_CPP_COMMIT: "cd959bae99ff4bed22bef2604f45241c09bbb8c8"
-    LLAMA_SERVER_PATH: "$(HOME)/Library/Caches/Szpak/llama.cpp/$(LLAMA_CPP_COMMIT)/build/bin/llama-server"
+    LLAMA_SERVER_PATH: "$(HOME)/Library/Caches/Brulion/llama.cpp/$(LLAMA_CPP_COMMIT)/build/bin/llama-server"
   configs:
     Debug:
       SWIFT_OPTIMIZATION_LEVEL: "-Onone"
@@ -56,11 +55,11 @@ settings:
       SWIFT_COMPILATION_MODE: wholemodule
 
 targets:
-  Captylo:
+  Brulion:
     type: application
     platform: macOS
     sources:
-      - path: Captylo
+      - path: Brulion
         excludes:
           - "**/*.md"
     dependencies:
@@ -68,7 +67,7 @@ targets:
       - package: WhisperKit
         product: WhisperKit
     entitlements:
-      path: Captylo/Captylo.entitlements
+      path: Brulion/Brulion.entitlements
       properties:
         com.apple.security.app-sandbox: false
         com.apple.security.device.audio-input: true
@@ -77,7 +76,7 @@ targets:
         com.apple.security.network.client: true
         com.apple.security.files.user-selected.read-only: true
     info:
-      path: Captylo/Info.plist
+      path: Brulion/Info.plist
       properties:
         CFBundleName: $(APP_PRODUCT_NAME)
         CFBundleDisplayName: $(APP_PRODUCT_NAME)
@@ -91,9 +90,9 @@ targets:
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
         LSUIElement: false
         NSHumanReadableCopyright: "Copyright 2026 Dawid Kawalec"
-        NSMicrophoneUsageDescription: Szpak nagrywa Twój głos, aby zamienić go na tekst.
-        NSAudioCaptureUsageDescription: Szpak nagrywa dźwięk spotkania (głosy rozmówców), aby zrobić z niego transkrypt i notatki.
-        NSCalendarsFullAccessUsageDescription: Szpak czyta Twój kalendarz, aby nazwać spotkanie, zapisać uczestników i przypomnieć o nagraniu.
+        NSMicrophoneUsageDescription: Brulion nagrywa Twój głos, aby zamienić go na tekst.
+        NSAudioCaptureUsageDescription: Brulion nagrywa dźwięk spotkania (głosy rozmówców), aby zrobić z niego transkrypt i notatki.
+        NSCalendarsFullAccessUsageDescription: Brulion czyta Twój kalendarz, aby nazwać spotkanie, zapisać uczestników i przypomnieć o nagraniu.
         NSSupportsAutomaticTermination: false
         NSSupportsSuddenTermination: false
         ITSAppUsesNonExemptEncryption: false
@@ -107,11 +106,11 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: $(APP_BUNDLE_ID)
             CFBundleURLSchemes: [$(APP_URL_SCHEME)]
-        # Right click > Usługi > "Popraw w Szpaku" (ManualCorrection, CorrectionServiceProvider).
+        # Right click > Usługi > "Popraw w Brulionie" (ManualCorrection, CorrectionServiceProvider).
         # NSRequiredContext (even empty) makes the service on by default.
         NSServices:
           - NSMenuItem:
-              default: Popraw w Szpaku
+              default: Popraw w Brulionie
             NSMessage: fixSelection
             NSPortName: $(APP_PRODUCT_NAME)
             NSSendTypes: [public.utf8-plain-text, NSStringPboardType]
@@ -119,7 +118,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: $(APP_PRODUCT_NAME)
-        PRODUCT_MODULE_NAME: Captylo
+        PRODUCT_MODULE_NAME: Brulion
         PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID)
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
         GENERATE_INFOPLIST_FILE: NO
@@ -140,26 +139,26 @@ targets:
           if [ ! -x "$LLAMA_SERVER_PATH" ]; then
             rm -f "$DEST"
             if [ "$CONFIGURATION" = "Release" ]; then
-              echo "error: Captylo/LocalAI: no llama-server at $LLAMA_SERVER_PATH (run make llama)"
+              echo "error: Brulion/LocalAI: no llama-server at $LLAMA_SERVER_PATH (run make llama)"
               exit 1
             fi
-            echo "warning: Captylo/LocalAI: no llama-server at $LLAMA_SERVER_PATH, the local AI will not start (run make llama)"
+            echo "warning: Brulion/LocalAI: no llama-server at $LLAMA_SERVER_PATH, the local AI will not start (run make llama)"
             exit 0
           fi
           ditto "$LLAMA_SERVER_PATH" "$DEST"
           codesign --force --options runtime --timestamp=none --sign "${EXPANDED_CODE_SIGN_IDENTITY:--}" "$DEST"
     scheme:
       testTargets:
-        - CaptyloTests
+        - BrulionTests
       gatherCoverageData: false
 
-  CaptyloTests:
+  BrulionTests:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - path: CaptyloTests
+      - path: BrulionTests
     dependencies:
-      - target: Captylo
+      - target: Brulion
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).tests
@@ -168,16 +167,16 @@ targets:
         BUNDLE_LOADER: "$(TEST_HOST)"
 
 schemes:
-  Captylo:
+  Brulion:
     build:
       targets:
-        Captylo: all
-        CaptyloTests: [test]
+        Brulion: all
+        BrulionTests: [test]
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - CaptyloTests
+        - BrulionTests
     archive:
       config: Release

@@ -25,7 +25,7 @@
 | Kategoria | - | (c) SLM <10B |
 | Typ zgłaszającego, nazwa, NIP | - | przedsiębiorca, CRAFTWEB Sp. z o.o., NIP z `oferty-umowy-etc/data/company.yaml` |
 | Osoba upoważniona: imię i nazwisko, stanowisko, e-mail, telefon | - | Dawid Kawalec, info@craftweb.pl |
-| Nazwa projektu | - | ostateczna nazwa z PRD sekcja 12 |
+| Nazwa projektu | - | **Brulion** (decyzja 9.11, PRD sekcje 4 i 12; mówisz na brudno, dostajesz na czysto); w opisie "działa na Bieliku" |
 | Krótki opis | **100-1500 znaków** | publikowany, idzie do kapituły |
 | Szczegółowy opis | **300-8000 znaków** | wdrożenie, kontekst, efekty; fragmenty poufne oznaczyć |
 | Prezentacja (opcjonalnie) | link do PDF/PPTX | publiczny, bez logowania, aktywny do 26.11.2026 |

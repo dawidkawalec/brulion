@@ -1,18 +1,18 @@
-PROJECT := Captylo.xcodeproj
-SCHEME := Captylo
+PROJECT := Brulion.xcodeproj
+SCHEME := Brulion
 DERIVED := $(CURDIR)/.local-build
 # The app's identity: keep in step with APP_PRODUCT_NAME / APP_BUNDLE_ID in project.yml and
-# Captylo/App/AppIdentity.swift (docs/PRD.md section 4).
-PRODUCT := Szpak
-BUNDLE_ID := pl.craftweb.szpak
+# Brulion/App/AppIdentity.swift (docs/PRD.md section 4).
+PRODUCT := Brulion
+BUNDLE_ID := pl.craftweb.brulion
 APP_NAME := $(PRODUCT).app
 EXECUTABLE := $(PRODUCT)
 XCODEBUILD := xcodebuild -project $(PROJECT) -scheme $(SCHEME) -derivedDataPath "$(DERIVED)" -skipPackagePluginValidation -skipMacroValidation
-XCPRETTY := grep -E 'error:|warning: .*Captylo(Tests)?/|BUILD (SUCCEEDED|FAILED)|TEST (SUCCEEDED|FAILED)|✘|Test run with'
+XCPRETTY := grep -E 'error:|warning: .*Brulion(Tests)?/|BUILD (SUCCEEDED|FAILED)|TEST (SUCCEEDED|FAILED)|✘|Test run with'
 # Stable local signing identity (see scripts/setup-signing.sh). Without it builds stay ad-hoc.
-SIGN_NAME := Captylo Dev
-SIGN_KEYCHAIN := $(HOME)/Library/Keychains/captylo-dev.keychain-db
-SIGN_PASSWORD_FILE := $(HOME)/.claude/secrets/captylo-dev-keychain.key
+SIGN_NAME := Brulion Dev
+SIGN_KEYCHAIN := $(HOME)/Library/Keychains/brulion-dev.keychain-db
+SIGN_PASSWORD_FILE := $(HOME)/.claude/secrets/brulion-dev-keychain.key
 # Public releases (scripts/release.sh): codesign matches this as a prefix of the certificate
 # name, so one Developer ID Application certificate in the login Keychain is enough.
 DIST_IDENTITY ?= Developer ID Application
@@ -36,7 +36,7 @@ release: gen
 	@$(MAKE) --no-print-directory sign APP_PATH="$(HOME)/Downloads/$(APP_NAME)"
 	@echo "Release build copied to ~/Downloads/$(APP_NAME)"
 
-# Re-sign with the stable "Captylo Dev" identity so Microphone/Accessibility grants survive rebuilds.
+# Re-sign with the stable "Brulion Dev" identity so Microphone/Accessibility grants survive rebuilds.
 # codesign only finds the identity through the keychain search list, so the signing keychain joins
 # the list for this one call and the previous list comes back right after (also on failure or
 # Ctrl-C): a keychain left in the list shows up as a client certificate in VPN and browser prompts.
@@ -45,13 +45,13 @@ release: gen
 # validation matches Team IDs, and neither the self-signed certificate nor an ad-hoc signature
 # has one, so dyld would refuse it and the app would die at launch. Development signatures
 # therefore add com.apple.security.cs.disable-library-validation to a copy of the app's
-# entitlements made at sign time. The Developer ID release signs with Captylo.entitlements as
+# entitlements made at sign time. The Developer ID release signs with Brulion.entitlements as
 # is, never with this.
-DEV_ENTITLEMENTS := $(DERIVED)/CaptyloDev.entitlements
+DEV_ENTITLEMENTS := $(DERIVED)/BrulionDev.entitlements
 
 sign:
 	@mkdir -p "$(DERIVED)"
-	@cp "$(CURDIR)/Captylo/Captylo.entitlements" "$(DEV_ENTITLEMENTS)"
+	@cp "$(CURDIR)/Brulion/Brulion.entitlements" "$(DEV_ENTITLEMENTS)"
 	@/usr/libexec/PlistBuddy -c "Add :com.apple.security.cs.disable-library-validation bool true" "$(DEV_ENTITLEMENTS)"
 	@if security find-identity -p codesigning "$(SIGN_KEYCHAIN)" 2>/dev/null | grep -q '"$(SIGN_NAME)"'; then \
 		security unlock-keychain -p "$$(cat "$(SIGN_PASSWORD_FILE)")" "$(SIGN_KEYCHAIN)"; \
@@ -87,7 +87,7 @@ reset-tcc:
 	-tccutil reset ListenEvent $(BUNDLE_ID)
 
 # Release into dist/<version>/: Developer ID signature, notarization, stapled DMG
-# (scripts/release.sh, docs/release.md). dist-dry signs with "Captylo Dev" and skips
+# (scripts/release.sh, docs/release.md). dist-dry signs with "Brulion Dev" and skips
 # notarization. There is no update feed: the DMG goes to a GitHub release by hand.
 dist:
 	@test -n "$(VERSION)" || { echo "usage: make dist VERSION=1.0.0"; exit 2; }
@@ -110,5 +110,5 @@ clean:
 help:
 	@echo "gen build test release install run check reset-tcc clean"
 	@echo "dist VERSION=x.y.z      Developer ID release into dist/ (sign, notarize, stapled DMG)"
-	@echo "dist-dry VERSION=x.y.z  the same with Captylo Dev, no notarization, nothing leaves the Mac"
+	@echo "dist-dry VERSION=x.y.z  the same with Brulion Dev, no notarization, nothing leaves the Mac"
 	@echo "llama                   build (or reuse) the llama-server helper of the local AI"

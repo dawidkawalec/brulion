@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Renders the living "Zmierzch" window background (Captylo/Resources/Video/dusk-loop.mp4) from our
+# Renders the living "Zmierzch" window background (Brulion/Resources/Video/dusk-loop.mp4) from our
 # own blurred dusk photo (docs/design/backdrops/dusk-wallpaper.jpg). No stock footage. Next to the
 # video it writes the poster, the same photo with the same grade
-# (Captylo/Resources/Assets.xcassets/DuskWallpaper.imageset/dusk-wallpaper.jpg), shown until the
+# (Brulion/Resources/Assets.xcassets/DuskWallpaper.imageset/dusk-wallpaper.jpg), shown until the
 # first frame is ready and when the video cannot play.
 #
 #   scripts/make-dusk-video.sh [out.mp4]
 #
-# Grade: the photo's lilac sky does not belong to Szpak, so its luminance is mapped onto the
+# Grade: the photo's lilac sky does not belong to Brulion, so its luminance is mapped onto the
 # Bielik palette (a gradient map): shadows to ink and Bielik brown, the sky to clay and rhubarb,
 # the brightest light to apricot. The source photo stays untouched.
 #
@@ -30,8 +30,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$ROOT/docs/design/backdrops/dusk-wallpaper.jpg"
-OUT="${1:-$ROOT/Captylo/Resources/Video/dusk-loop.mp4}"
-POSTER="${POSTER:-$ROOT/Captylo/Resources/Assets.xcassets/DuskWallpaper.imageset/dusk-wallpaper.jpg}"
+OUT="${1:-$ROOT/Brulion/Resources/Video/dusk-loop.mp4}"
+POSTER="${POSTER:-$ROOT/Brulion/Resources/Assets.xcassets/DuskWallpaper.imageset/dusk-wallpaper.jpg}"
 FFMPEG="${FFMPEG:-$(command -v /opt/homebrew/bin/ffmpeg || command -v ffmpeg)}"
 LOOP="${LOOP:-24}"
 FPS="${FPS:-30}"

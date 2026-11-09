@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Screenshot one Captylo screen from the design preview (docs/design/dusk-glass.md).
+# Screenshot one Brulion screen from the design preview (docs/design/dusk-glass.md).
 #
 #   scripts/snap.sh <target> <out.png>
 #   scripts/snap.sh --list
@@ -15,59 +15,59 @@
 # the widget, window shadow kept) unless a backdrop is set.
 #
 # Environment:
-#   CAPTYLO_BIN=<path>        binary to launch (default: this checkout's Debug build)
+#   BRULION_BIN=<path>        binary to launch (default: this checkout's Debug build)
 #   SNAP_SETTLE=<seconds>     wait after the window appears (default 2.5)
 #   SNAP_BACKDROP=<b>         put a known backdrop right behind the target and capture the region:
 #                             `white`, `dark`, `dusk` (docs/design/backdrops/dusk-wallpaper.jpg) or
 #                             an image path. Without it windows show the real desktop behind them.
 #                             The backdrop and the target float above other apps' windows while
 #                             the preview runs, so the region capture is not covered.
-#   CAPTYLO_WINDOW_BG=<s>     passed through: window background `glass`, `aurora` or `dusk`
-#                             ("Tło okna"; default: the app default)
-#   CAPTYLO_GLASS_FALLBACK=1  passed through: draws the macOS 14/15 fallbacks on macOS 26
+#   BRULION_WINDOW_BG=<s>     passed through: window background `brulion`, `brulionLight`,
+#                             `aurora` or `dusk` ("Tło okna"; default: the app default)
+#   BRULION_GLASS_FALLBACK=1  passed through: draws the macOS 14/15 fallbacks on macOS 26
 #                             (material glass, aurora glows instead of the mesh)
-#   CAPTYLO_PREVIEW_LIVE=<m>  passed through, main-spotkania only (Debug): a meeting recording
+#   BRULION_PREVIEW_LIVE=<m>  passed through, main-spotkania only (Debug): a meeting recording
 #                             right now. `1` with the consent card and the headphones hint;
 #                             `noaccess`, `silent` or `unavailable` with that system audio warning;
 #                             `nomodel` or `novad` with the warning that no transcript is made
-#   CAPTYLO_PREVIEW_START=nomodel  passed through, main-spotkania only (Debug): a start refused
+#   BRULION_PREVIEW_START=nomodel  passed through, main-spotkania only (Debug): a start refused
 #                             for the missing speech model ("Otwórz Modele" under the header)
-#   CAPTYLO_PREVIEW_TITLE_EDIT=1  passed through, main-spotkania: the details title opens as
+#   BRULION_PREVIEW_TITLE_EDIT=1  passed through, main-spotkania: the details title opens as
 #                             a field
-#   CAPTYLO_PREVIEW_TAB=<t>   passed through, main-spotkania: the details open on `notes`,
+#   BRULION_PREVIEW_TAB=<t>   passed through, main-spotkania: the details open on `notes`,
 #                             `transcript` (default), `ai` ("Notatki AI") or `ask` ("Zapytaj",
 #                             two seeded questions on the budget meeting)
-#   CAPTYLO_PREVIEW_QUERY=<q> passed through, main-spotkania: the search field opens with `q`
+#   BRULION_PREVIEW_QUERY=<q> passed through, main-spotkania: the search field opens with `q`
 #                             typed (`oferta`: two sample meetings with hit lines under the rows)
-#   CAPTYLO_PREVIEW_HIT=1     passed through, with CAPTYLO_PREVIEW_QUERY: the first hit line is
+#   BRULION_PREVIEW_HIT=1     passed through, with BRULION_PREVIEW_QUERY: the first hit line is
 #                             clicked, so the details open "Transkrypt" scrolled to that line
-#   CAPTYLO_PREVIEW_ASK_ALL=1 passed through, main-spotkania: "Zapytaj wszystkie spotkania"
+#   BRULION_PREVIEW_ASK_ALL=1 passed through, main-spotkania: "Zapytaj wszystkie spotkania"
 #                             opens with one seeded answer (citations into two sample meetings)
-#   CAPTYLO_PREVIEW_CALENDAR=1  passed through: "Kalendarz" on with three invented events
+#   BRULION_PREVIEW_CALENDAR=1  passed through: "Kalendarz" on with three invented events
 #                             (the "Nadchodzące" strip in main-spotkania, the rows on in
 #                             main-ustawienia); never the real calendar
-#   CAPTYLO_PREVIEW_AUDIO_CHECK=<r>  passed through, main-ustawienia: the "Dostęp do dźwięku
+#   BRULION_PREVIEW_AUDIO_CHECK=<r>  passed through, main-ustawienia: the "Dostęp do dźwięku
 #                             systemu" row shows a check result: `works`, `noaccess`, `nothing`
 #                             or `failed`
-#   CAPTYLO_PREVIEW_SIZE=<w>x<h>  passed through: main window size (tall captures of long pages)
-#   CAPTYLO_PREVIEW_SCROLL=<f>    passed through: a long page opens scrolled to `f` (0 top,
+#   BRULION_PREVIEW_SIZE=<w>x<h>  passed through: main window size (tall captures of long pages)
+#   BRULION_PREVIEW_SCROLL=<f>    passed through: a long page opens scrolled to `f` (0 top,
 #                             1 bottom), e.g. 0.45 shows "Spotkania" in main-ustawienia
-#   CAPTYLO_PREVIEW_LEVEL=advanced  passed through, main-modele / main-ustawienia: the page
+#   BRULION_PREVIEW_LEVEL=advanced  passed through, main-modele / main-ustawienia: the page
 #                             opens on "Zaawansowane"
-#   CAPTYLO_PREVIEW_BIELIK=<s>    passed through, main-modele / onboarding-bielik: the Bielik
+#   BRULION_PREVIEW_BIELIK=<s>    passed through, main-modele / onboarding-bielik: the Bielik
 #                             download states, `none`, `downloading` (default: 1.5B ready,
 #                             Minitron at 42 %) or `installed`
-#   CAPTYLO_PREVIEW_CLOUD=<c>     passed through, main-modele / main-ustawienia: "Gdzie działa
+#   BRULION_PREVIEW_CLOUD=<c>     passed through, main-modele / main-ustawienia: "Gdzie działa
 #                             Bielik" on `features` ("Funkcje AI w chmurze") or `all` ("Wszystko
 #                             w chmurze") with the sample key; default "Na tym Macu"
-#   CAPTYLO_PREVIEW_PROVIDER=<p>  passed through, with CAPTYLO_PREVIEW_CLOUD: "Dostawca" on
+#   BRULION_PREVIEW_PROVIDER=<p>  passed through, with BRULION_PREVIEW_CLOUD: "Dostawca" on
 #                             `pcss` or `custom` (no key saved for those); default `sherlock`
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # The product name follows APP_PRODUCT_NAME in project.yml.
-PRODUCT="${PRODUCT:-Szpak}"
-BIN="${CAPTYLO_BIN:-$ROOT/.local-build/Build/Products/Debug/$PRODUCT.app/Contents/MacOS/$PRODUCT}"
+PRODUCT="${PRODUCT:-Brulion}"
+BIN="${BRULION_BIN:-$ROOT/.local-build/Build/Products/Debug/$PRODUCT.app/Contents/MacOS/$PRODUCT}"
 SETTLE="${SNAP_SETTLE:-2.5}"
 DUSK="$ROOT/docs/design/backdrops/dusk-wallpaper.jpg"
 TARGETS="widget-compact widget-compact-mode widget-expanded widget-transcribing widget-enhancing onboarding-welcome onboarding-permissions onboarding-model onboarding-bielik onboarding-shortcut onboarding-tryit main-pulpit main-spotkania main-notatki main-historia main-plik main-slownik main-modele main-ustawienia glass-gallery popraw"
@@ -105,11 +105,11 @@ case "$backdrop" in
         ;;
 esac
 
-log="$(mktemp -t captylo-snap)"
+log="$(mktemp -t brulion-snap)"
 # SNAP_LANG=pl|en runs the preview in that UI language (-AppleLanguages, this process only).
 lang_args=()
 [[ -n "${SNAP_LANG:-}" ]] && lang_args=(-AppleLanguages "($SNAP_LANG)")
-CAPTYLO_PREVIEW_BACKDROP="$backdrop" "$BIN" --design-preview "$target" "${lang_args[@]+"${lang_args[@]}"}" >"$log" 2>/dev/null &
+BRULION_PREVIEW_BACKDROP="$backdrop" "$BIN" --design-preview "$target" "${lang_args[@]+"${lang_args[@]}"}" >"$log" 2>/dev/null &
 pid=$!
 
 cleanup() {

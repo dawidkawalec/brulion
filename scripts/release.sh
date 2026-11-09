@@ -9,12 +9,14 @@
 # DMG -> sign the DMG -> notarize the DMG -> staple the DMG -> check.
 # Both submissions, so the app inside the DMG carries its own ticket too.
 #
-# A dry run signs with the local "Captylo Dev" identity (make sign), leaves the DMG unsigned,
+# A dry run signs with the local "Brulion Dev" identity (make sign), leaves the DMG unsigned,
 # skips notarization and stapling, and reports what a real run would refuse instead of stopping.
 #
 # Environment: PRODUCT (the app's name, APP_PRODUCT_NAME in project.yml; make passes it),
 # DIST_IDENTITY (default "Developer ID Application", matched by codesign as a prefix of the
-# certificate name), NOTARY_PROFILE (default captylo-notary, a notarytool Keychain profile),
+# certificate name), NOTARY_PROFILE (default brulion-notary, a notarytool Keychain profile;
+# create it once with `xcrun notarytool store-credentials brulion-notary ...` or pass an
+# existing profile's name, docs/release.md),
 # DRY_RUN=1. Secrets come only from the Keychain: the identity and the notary profile; nothing
 # is read from or written to the repo.
 set -euo pipefail
@@ -23,7 +25,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 DIST_IDENTITY="${DIST_IDENTITY:-Developer ID Application}"
-NOTARY_PROFILE="${NOTARY_PROFILE:-captylo-notary}"
+NOTARY_PROFILE="${NOTARY_PROFILE:-brulion-notary}"
 DRY_RUN="${DRY_RUN:-0}"
 DERIVED="$ROOT/.local-build"
 PRODUCT="${PRODUCT:-$(sed -n 's/^ *APP_PRODUCT_NAME: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' project.yml | head -1)}"
@@ -69,7 +71,7 @@ cleanup() {
 trap cleanup EXIT
 
 if dry; then
-  printf '%s %s: DRY RUN (Captylo Dev signature, no notarization, nothing leaves this Mac)\n' "$PRODUCT" "$VERSION"
+  printf '%s %s: DRY RUN (Brulion Dev signature, no notarization, nothing leaves this Mac)\n' "$PRODUCT" "$VERSION"
 else
   printf '%s %s: release build\n' "$PRODUCT" "$VERSION"
 fi
@@ -119,7 +121,7 @@ if dry; then
 elif xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
   note "Notary profile \"$NOTARY_PROFILE\": works"
 else
-  die "The notarytool profile \"$NOTARY_PROFILE\" is missing or rejected (xcrun notarytool store-credentials $NOTARY_PROFILE ..., docs/release.md)"
+  die "The notarytool profile \"$NOTARY_PROFILE\" is missing or rejected (create it once: xcrun notarytool store-credentials $NOTARY_PROFILE ..., or pass NOTARY_PROFILE=<existing profile>; docs/release.md)"
 fi
 
 # 2. Build
@@ -132,7 +134,7 @@ mkdir -p "$OUT"
 touch "$ROOT/dist/.metadata_never_index"
 make --no-print-directory gen >/dev/null
 BUILD_LOG="$OUT/build.log"
-if ! xcodebuild -project Captylo.xcodeproj -scheme Captylo -derivedDataPath "$DERIVED" \
+if ! xcodebuild -project Brulion.xcodeproj -scheme Brulion -derivedDataPath "$DERIVED" \
   -skipPackagePluginValidation -skipMacroValidation -configuration Release \
   CURRENT_PROJECT_VERSION="$BUILD" CODE_SIGN_IDENTITY="-" build >"$BUILD_LOG" 2>&1; then
   grep -E 'error:' "$BUILD_LOG" | head -20 || tail -40 "$BUILD_LOG"
@@ -158,7 +160,7 @@ if dry; then
 else
   step "Signing the app inside-out with \"$DIST_IDENTITY\""
   note "If macOS asks to let codesign use the Developer ID key, choose \"Always Allow\" (once)"
-  "$ROOT/scripts/sign-app.sh" "$APP" "$DIST_IDENTITY" --entitlements "$ROOT/Captylo/Captylo.entitlements"
+  "$ROOT/scripts/sign-app.sh" "$APP" "$DIST_IDENTITY" --entitlements "$ROOT/Brulion/Brulion.entitlements"
 fi
 
 # notarize FILE LABEL: submits to Apple and waits; anything but Accepted prints the log and stops.

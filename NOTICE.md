@@ -1,20 +1,20 @@
 # Notices
 
-Szpak is a fork of Captylo 1.0.17 by CRAFTWEB Sp. z o.o. Based on Captylo, Copyright (c) 2026 Dawid Kawalec. The source code is licensed under the GNU General Public License v3.0 (see [LICENSE](LICENSE)), except for the parts listed below, which keep their own terms.
+Brulion is a fork of Captylo 1.0.17 by CRAFTWEB Sp. z o.o. Based on Captylo, Copyright (c) 2026 Dawid Kawalec. The source code is licensed under the GNU General Public License v3.0 (see [LICENSE](LICENSE)), except for the parts listed below, which keep their own terms.
 
 ## Not covered by the GPL: the brands
 
-The names "Captylo" and "Szpak", their logos, wordmarks, app and menu bar icons and other brand artwork are not licensed under the GPL or any other open licence. All rights reserved. For Szpak this covers the mark (a starling singing on a twig), the icon sets in `Captylo/Resources/` and the files in `docs/brand/`, all drawn for Szpak by `scripts/make-szpak-brand.swift` (the script itself is GPL code like the rest). Szpak no longer ships any Captylo artwork. You may show the Szpak mark to refer to Szpak, but any other fork or product must use its own name and icons. The colours follow the public design system of bielik.ai; the Szpak mark is not the Bielik or SpeakLeash logo and implies no endorsement by SpeakLeash.
+The names "Captylo" and "Brulion", their logos, wordmarks, app and menu bar icons and other brand artwork are not licensed under the GPL or any other open licence. All rights reserved. For Brulion this covers the mark (a lowercase "b" whose stem is a pencil and whose bowl is a speech bubble, both standing on one straight baseline), the "brulion" wordmark, the icon sets in `Brulion/Resources/` and the files in `docs/brand/`, all drawn for Brulion by `scripts/make-brulion-brand.swift` (the script itself is GPL code like the rest). Brulion no longer ships any Captylo artwork. You may show the Brulion mark to refer to Brulion, but any other fork or product must use its own name and icons. The colours follow the public design system of bielik.ai; the Brulion mark is our own drawing, not the Bielik or SpeakLeash logo, and implies no endorsement by SpeakLeash.
 
-The "Zmierzch" background video made from our own photo (`Captylo/Resources/Video/`) is not licensed for reuse either.
+The "Zmierzch" background video made from our own photo (`Brulion/Resources/Video/`) is not licensed for reuse either.
 
 ## Separately licensed code
 
 ### Grainient shader (React Bits)
 
-The animated grain gradient is the "Grainient" component from [React Bits](https://github.com/DavidHDev/react-bits), ported to Metal and WebGL2. It is **not** covered by Captylo's GPLv3 and stays under its own licence, "MIT + Commons Clause License Condition v1.0", Copyright (c) 2026 David Haz. That licence allows using it as part of an application, website or product, but not selling, sublicensing or redistributing the component itself, alone, in a bundle or as a ported version.
+The animated grain gradient is the "Grainient" component from [React Bits](https://github.com/DavidHDev/react-bits), ported to Metal and WebGL2. It is **not** covered by Brulion's GPLv3 and stays under its own licence, "MIT + Commons Clause License Condition v1.0", Copyright (c) 2026 David Haz. That licence allows using it as part of an application, website or product, but not selling, sublicensing or redistributing the component itself, alone, in a bundle or as a ported version.
 
-Files: `Captylo/UI/Glass/Grainient.metal`, the shader in `docs/design/lab/brand/index.html`.
+Files: `Brulion/UI/Glass/Grainient.metal`, the shader in `docs/design/lab/brand/index.html`.
 
 **Additional permission under GNU GPL version 3 section 7:** If you modify this Program, or any covered work, by linking or combining it with the Grainient shader (or a modified version of it), containing parts covered by the terms of the MIT + Commons Clause License Condition v1.0, the licensors of this Program grant you additional permission to convey the resulting work. Corresponding Source for a non-source form of such a combination shall include the source code for the parts of the Grainient shader used as well as that of the covered work. The shader itself stays under its own licence, so a fork may not sell or redistribute it on its own.
 
@@ -35,9 +35,9 @@ Files: `Captylo/UI/Glass/Grainient.metal`, the shader in `docs/design/lab/brand/
 
 ## Prior work
 
-Szpak is a fork of Captylo 1.0.17 (commit `9371dd7`) with Captylo's cloud services removed: no account, payments, update feed or server of its own. Captylo is a clean rewrite of VocaType 1, a private fork of [VoiceInk](https://github.com/Beingpax/VoiceInk) by Prakash Joshi Pax (GPLv3).
+Brulion is a fork of Captylo 1.0.17 (commit `9371dd7`) with Captylo's cloud services removed: no account, payments, update feed or server of its own. Captylo is a clean rewrite of VocaType 1, a private fork of [VoiceInk](https://github.com/Beingpax/VoiceInk) by Prakash Joshi Pax (GPLv3).
 
 ## Other assets
 
 - The sound cues in the app are synthesized for Captylo.
-- The Szpak mark, icons and `docs/brand/` files: see "Not covered by the GPL: the brands" above.
+- The Brulion mark, icons and `docs/brand/` files: see "Not covered by the GPL: the brands" above.

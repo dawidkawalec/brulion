@@ -1,17 +1,17 @@
-# Szpak na Bieliku: pomiary
+# Brulion na Bieliku: pomiary
 
-Pomiary do zgłoszenia na Bielik Awards 2026 (kategoria c, SLM poniżej 10 mld parametrów). Mierzymy, jak Szpak radzi sobie wtedy, gdy cała warstwa językowa działa na Bieliku na Macu użytkownika: korektę dyktowania, tryby AI, notatki ze spotkań i pytania o spotkanie, a do tego pamięć, dysk i brak ruchu sieciowego.
+Pomiary do zgłoszenia na Bielik Awards 2026 (kategoria c, SLM poniżej 10 mld parametrów). Mierzymy, jak Brulion radzi sobie wtedy, gdy cała warstwa językowa działa na Bieliku na Macu użytkownika: korektę dyktowania, tryby AI, notatki ze spotkań i pytania o spotkanie, a do tego pamięć, dysk i brak ruchu sieciowego.
 
-Punktem odniesienia jest "Captylo AI (chmura)", czyli warstwa AI wydanego Captylo, z którego wyrósł Szpak. Jej wyniki dla tych samych dyktowań są zapisane w historii aplikacji.
+Punktem odniesienia jest "Captylo AI (chmura)", czyli warstwa AI wydanego Captylo, z którego wyrósł Brulion. Jej wyniki dla tych samych dyktowań są zapisane w historii aplikacji.
 
 ## Sprzęt, wersje, metoda
 
 - **Mac:** MacBook Pro M3 Pro (Mac15,7), 36 GB RAM, macOS 26.5.2.
-- **Szpak:** 0.9.0, build Release.
+- **Brulion:** 0.9.0, build Release.
 - **Silnik:** llama.cpp v0.9.0 (commit `cd959bae`), `llama-server` wbudowany w aplikację, Metal, wszystkie warstwy na GPU.
 - **Modele** z oficjalnych repozytoriów SpeakLeash na Hugging Face:
 
-  | Model | Plik | Rola w Szpaku | Kontekst serwera |
+  | Model | Plik | Rola w Brulionie | Kontekst serwera |
   |---|---|---|---|
   | Bielik 1.5B v3.0 Instruct, Q8_0 | 1,70 GB | korekta dyktowania, poprawki transkryptu | 8192 |
   | Bielik Minitron 7B v3.0 Instruct, Q4_K_M | 4,50 GB | tryby AI, notatki, Zapytaj | 24576 |
@@ -22,7 +22,7 @@ Punktem odniesienia jest "Captylo AI (chmura)", czyli warstwa AI wydanego Captyl
 Pomiary mają dwa poziomy:
 
 1. **F0, serwer:** te same prompty co w aplikacji, wysyłane prosto do `llama-server` ze streamingiem. Mierzy też czas do pierwszego tokenu.
-2. **F3, aplikacja:** Szpak.app uruchomiony bez okna, przez flagi `--transcribe` i `--meeting-ai`, na osobnym folderze danych. Każdy wynik przechodzi przez prawdziwe trasy AI, strażnika korekty, limity czasu i helper `llama-server`. W trakcie każdego przebiegu co 0,5 s próbkowaliśmy pamięć procesów (`ps`, `vmmap`) i ich gniazda sieciowe (`lsof`).
+2. **F3, aplikacja:** Brulion.app uruchomiony bez okna, przez flagi `--transcribe` i `--meeting-ai`, na osobnym folderze danych. Każdy wynik przechodzi przez prawdziwe trasy AI, strażnika korekty, limity czasu i helper `llama-server`. W trakcie każdego przebiegu co 0,5 s próbkowaliśmy pamięć procesów (`ps`, `vmmap`) i ich gniazda sieciowe (`lsof`).
 
 ## Zbiór testowy
 
@@ -46,10 +46,10 @@ WER liczymy wobec tekstu Captylo AI (chmura). Surowy Whisper różni się od nie
 |---|---|---|---|
 | Surowy Whisper | 0,176 | 0,82 | - |
 | 1.5B, prosty prompt | 0,771 | 0,85 | 18 z 60 |
-| 1.5B, prompt Szpaka (polski, 2 przykłady, `<tekst>`) | 0,260 | 0,91 | 3 z 60 |
-| **1.5B, prompt Szpaka + strażnik słów** (domyślnie) | **0,183** | **0,89** | **0 z 60** |
-| 4.5B, prompt Szpaka + strażnik | 0,181 | 0,90 | 0 z 60 |
-| Minitron 7B, prompt Szpaka + strażnik | 0,191 | 0,88 | 0 z 60 |
+| 1.5B, prompt Brulionu (polski, 2 przykłady, `<tekst>`) | 0,260 | 0,91 | 3 z 60 |
+| **1.5B, prompt Brulionu + strażnik słów** (domyślnie) | **0,183** | **0,89** | **0 z 60** |
+| 4.5B, prompt Brulionu + strażnik | 0,181 | 0,90 | 0 z 60 |
+| Minitron 7B, prompt Brulionu + strażnik | 0,191 | 0,88 | 0 z 60 |
 
 \* Podobieństwo do surowego tekstu poniżej 0,4, czyli streszczenie, odpowiedź na treść albo pętla zamiast korekty.
 
@@ -91,10 +91,10 @@ Trzy tryby wbudowane, każdy na tych samych 12 dyktowaniach (po 4 krótkie, śre
 | Uporządkuj myśli | 3 z 12 | **2 z 12** | 10,3 s / 24,9 s | 12,3 s / 27,5 s |
 
 - **Czas zależy od długości odpowiedzi, nie dyktowania:** ok. 2 s plus ok. 0,2 s na każde słowo odpowiedzi. E-mail z pięciu słów potrafi mieć 44 słowa.
-- **Limit:** pierwszy pomiar z limitem "3 s + słowa wejścia × 0,23 s × 1,5" zostawił bez wyniku 9 z 36 krótkich dyktowań. Po podniesieniu stałej do 10 s (sufit dalej 30 s) zostały 3 z 36, w tym przypadki, w których model sam się rozgadał. Po przekroczeniu limitu Szpak wkleja surowy tekst z komunikatem, nic się nie zawiesza.
+- **Limit:** pierwszy pomiar z limitem "3 s + słowa wejścia × 0,23 s × 1,5" zostawił bez wyniku 9 z 36 krótkich dyktowań. Po podniesieniu stałej do 10 s (sufit dalej 30 s) zostały 3 z 36, w tym przypadki, w których model sam się rozgadał. Po przekroczeniu limitu Brulion wkleja surowy tekst z komunikatem, nic się nie zawiesza.
 - **Zimny start:** pierwsze dyktowanie trwało 3,0-7,5 s, bo serwer Minitrona startuje razem z nagrywaniem, a krótkie dyktowanie daje mu mało czasu na wczytanie modelu.
 
-Szpak nie streamuje odpowiedzi do okna, tylko wkleja cały tekst naraz. Dla użytkownika liczy się więc czas całości, a nie pierwszego tokenu. Na serwerze Minitron ma pierwszy token po 0,41 s (p50), przetwarza prompt z prędkością ok. 212 tok/s i generuje ok. 18 tok/s.
+Brulion nie streamuje odpowiedzi do okna, tylko wkleja cały tekst naraz. Dla użytkownika liczy się więc czas całości, a nie pierwszego tokenu. Na serwerze Minitron ma pierwszy token po 0,41 s (p50), przetwarza prompt z prędkością ok. 212 tok/s i generuje ok. 18 tok/s.
 
 ## 3. Spotkania
 
@@ -122,7 +122,7 @@ Po zakończeniu spotkania wszystko liczy się w tle, bez limitu czasu i z paskie
 |---|---|---|---|
 | `llama-server` z Bielikiem 1.5B (`-c 8192`) | 1,70 GB | 2,0 GB | 0,40-0,42 GB |
 | `llama-server` z Minitronem 7B (`-c 24576`) | 4,50 GB | 8,3-8,45 GB | 4,0-4,4 GB |
-| Szpak (aplikacja z Whisperem) | 59 MB aplikacja + 1,5 GB model Whispera | 0,1-0,3 GB, chwilowo do 1,35 GB przy ładowaniu Whispera | - |
+| Brulion (aplikacja z Whisperem) | 59 MB aplikacja + 1,5 GB model Whispera | 0,1-0,3 GB, chwilowo do 1,35 GB przy ładowaniu Whispera | - |
 
 - **RSS** obejmuje zmapowany plik modelu, który macOS może zwolnić bez swapu. **Footprint** to pamięć robocza: KV cache i bufory Metal.
 - **Wymagania:** pełna lokalna AI to Mac z Apple Silicon i co najmniej 16 GB RAM oraz ok. 7,2 GB wolnego miejsca (6,2 GB modeli plus 1 GB zapasu przy pobieraniu). Poniżej 16 GB działa tryb eksperymentalny: korekta lokalnie, a funkcje AI na 1.5B albo na Bieliku w chmurze, na kluczu użytkownika do CloudFerro Sherlock. Nie testowaliśmy go na Macu z 8 GB, więc w zgłoszeniu go nie obiecujemy.
@@ -138,12 +138,12 @@ Po zakończeniu spotkania wszystko liczy się w tle, bez limitu czasu i z paskie
   - spotkanie od początku do końca: poprawki, notatki i Zapytaj.
 
   Kontrola: w tej samej klatce `curl` do huggingface.co nie łączy się wcale.
-- **Z czym łączy się Szpak:** z huggingface.co tylko przy pobieraniu modeli, a z CloudFerro Sherlock tylko wtedy, gdy użytkownik sam go włączy i poda klucz. Nie ma telemetrii, automatycznych aktualizacji ani naszego serwera.
+- **Z czym łączy się Brulion:** z huggingface.co tylko przy pobieraniu modeli, a z CloudFerro Sherlock tylko wtedy, gdy użytkownik sam go włączy i poda klucz. Nie ma telemetrii, automatycznych aktualizacji ani naszego serwera.
 - **Do zrobienia:** test na czystym Macu, czyli instalacja z DMG, pobranie modeli w onboardingu i dyktowanie po polsku przy wyłączonym Wi-Fi.
 
 ## 6. Realne użycie
 
-Szpak liczy lokalnie, bez telemetrii:
+Brulion liczy lokalnie, bez telemetrii:
 - dyktowania;
 - korekty przyjęte i odrzucone przez strażnika;
 - średni czas;
@@ -155,18 +155,18 @@ Licznik widać w aplikacji, a do zgłoszenia eksportuje się go ręcznie do JSON
 
 ```bash
 # osobny folder danych z modelami (dowiązania), żeby nie mieszać pomiarów z własnym licznikiem użycia
-mkdir -p ~/szpak-bench
-ln -s ~/Library/Application\ Support/Szpak/LocalModels ~/szpak-bench/LocalModels
-ln -s ~/Library/Application\ Support/Szpak/WhisperModels ~/szpak-bench/WhisperModels
-APP=/Applications/Szpak.app/Contents/MacOS/Szpak
+mkdir -p ~/brulion-bench
+ln -s ~/Library/Application\ Support/Brulion/LocalModels ~/brulion-bench/LocalModels
+ln -s ~/Library/Application\ Support/Brulion/WhisperModels ~/brulion-bench/WhisperModels
+APP=/Applications/Brulion.app/Contents/MacOS/Brulion
 
 # dyktowania: kilka plików w jednym procesie (pierwszy to zimny start), tryb na jedno uruchomienie
-CAPTYLO_DATA_DIR=~/szpak-bench $APP --transcribe a.wav b.wav --mode cleanup --language pl -ai.enabled YES
-CAPTYLO_DATA_DIR=~/szpak-bench $APP --transcribe a.wav b.wav --mode email --language pl -ai.enabled YES
+BRULION_DATA_DIR=~/brulion-bench $APP --transcribe a.wav b.wav --mode cleanup --language pl -ai.enabled YES
+BRULION_DATA_DIR=~/brulion-bench $APP --transcribe a.wav b.wav --mode email --language pl -ai.enabled YES
 
 # spotkania: transkrypt z posiedzenia Sejmu, poprawki, notatki i pytania
 python3 -I scripts/benchmark/sejm_meeting.py 10 67 2026-10-21 09:25 60 sejm-60.json
-CAPTYLO_DATA_DIR=~/szpak-bench $APP --meeting-ai sejm-60.json --fix --ask "Jakie stanowiska przedstawiły kluby?" -ai.enabled YES
+BRULION_DATA_DIR=~/brulion-bench $APP --meeting-ai sejm-60.json --fix --ask "Jakie stanowiska przedstawiły kluby?" -ai.enabled YES
 ```
 
 - `-ai.enabled YES` włącza AI tylko dla tego jednego procesu (argument domeny ustawień macOS).

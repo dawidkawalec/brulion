@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds the llama-server helper of the local AI (Captylo/LocalAI, docs/local-ai.md) from the
+# Builds the llama-server helper of the local AI (Brulion/LocalAI, docs/local-ai.md) from the
 # pinned llama.cpp commit and prints the binary's path on stdout (progress goes to stderr).
 #
 #   scripts/build-llama-server.sh          build when needed, print the path
@@ -8,7 +8,7 @@
 # The pinned commit is LLAMA_CPP_COMMIT in project.yml (one place for the script and the
 # "Embed llama-server" build phase). The build lives outside the repo in a shared cache, so
 # worktrees and clean checkouts reuse it:
-#   SZPAK_LLAMA_CACHE     cache root (default ~/Library/Caches/Szpak/llama.cpp);
+#   BRULION_LLAMA_CACHE   cache root (default ~/Library/Caches/Brulion/llama.cpp);
 #                         a different root also needs LLAMA_SERVER_PATH for xcodebuild
 #   LLAMA_CPP_SOURCE      an existing llama.cpp checkout at the pinned commit to build from
 #                         (default: a shallow clone of just that commit inside the cache)
@@ -31,7 +31,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 COMMIT="$(sed -n 's/^[[:space:]]*LLAMA_CPP_COMMIT:[[:space:]]*"\{0,1\}\([0-9a-f]\{40\}\)"\{0,1\}.*/\1/p' "$ROOT/project.yml" | head -n 1)"
 [ -n "$COMMIT" ] || { echo "LLAMA_CPP_COMMIT not found in project.yml" >&2; exit 1; }
 REPO_URL="https://github.com/ggml-org/llama.cpp.git"
-CACHE_ROOT="${SZPAK_LLAMA_CACHE:-$HOME/Library/Caches/Szpak/llama.cpp}"
+CACHE_ROOT="${BRULION_LLAMA_CACHE:-$HOME/Library/Caches/Brulion/llama.cpp}"
 WORK="$CACHE_ROOT/$COMMIT"
 BUILD="$WORK/build"
 BIN="$BUILD/bin/llama-server"

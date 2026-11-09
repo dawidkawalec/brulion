@@ -31,7 +31,7 @@ done
 [ -d "$APP/Contents" ] || { echo "Not an app bundle: $APP" >&2; exit 1; }
 case "$OUT" in *.dmg) ;; *) echo "The output must end in .dmg: $OUT" >&2; exit 1 ;; esac
 
-STAGE="$(mktemp -d "${TMPDIR:-/tmp}/captylo-dmg.XXXXXX")"
+STAGE="$(mktemp -d "${TMPDIR:-/tmp}/brulion-dmg.XXXXXX")"
 trap 'rm -rf "$STAGE"' EXIT
 
 echo "Staging $(basename "$APP") and an Applications shortcut"

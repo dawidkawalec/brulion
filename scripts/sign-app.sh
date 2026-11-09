@@ -17,7 +17,7 @@
 # keep whatever their framework shipped them with.
 #
 # A secure timestamp is on by default (Developer ID and notarization need it); `--no-timestamp`
-# or DRY_RUN=1 turns it off for the self-signed "Captylo Dev" identity, which cannot get one.
+# or DRY_RUN=1 turns it off for the self-signed "Brulion Dev" identity, which cannot get one.
 # `--keychain` points codesign at a keychain that is not in the search list (`make sign`).
 set -euo pipefail
 

@@ -1,8 +1,8 @@
 # Accessibility coverage (self-learning spike, CAPTYLO-34)
 
-Which apps let Captylo read back the text field it pasted into. The edit watcher (self-learning stage 3) only learns where this works; elsewhere it stays silent.
+Which apps let Brulion read back the text field it pasted into (measured in Captylo before the fork; the edit watcher is the same). The edit watcher (self-learning stage 3) only learns where this works; elsewhere it stays silent.
 
-How to measure: run `Captylo --ax-probe --show-text` from a build that has the Accessibility grant, focus a text field in the app, paste a sentence, edit one word, and watch whether `length`, `selection` and `tail` follow the edit. End to end: focus the field, run `CAPTYLO_DATA_DIR=<scratch> Captylo --watch-paste "Wrzucam to na supa bejs w piątek."`, fix "supa bejs" to "Supabase", click another app; the second run prints the learned rule.
+How to measure: run `Brulion --ax-probe --show-text` from a build that has the Accessibility grant, focus a text field in the app, paste a sentence, edit one word, and watch whether `length`, `selection` and `tail` follow the edit. End to end: focus the field, run `BRULION_DATA_DIR=<scratch> Brulion --watch-paste "Wrzucam to na supa bejs w piątek."`, fix "supa bejs" to "Supabase", click another app; the second run prints the learned rule.
 
 | App | Bundle id | Role of the field | Readable | Follows edits | Notes |
 |---|---|---|---|---|---|

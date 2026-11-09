@@ -34,7 +34,7 @@ Najlepsze użycie modelu SLM (<10B)
 ### Krótki opis (100-1500 znaków)
 
 <!-- krotki:start -->
-Brulion to aplikacja na Maca do dyktowania i notatek ze spotkań po polsku, w której cała warstwa językowa działa na Bieliku, lokalnie na komputerze użytkownika. Przytrzymujesz klawisz i mówisz: Whisper zamienia mowę na tekst, Bielik 1.5B dokłada interpunkcję, wielkie litery i polskie znaki, a gotowy tekst ląduje przy kursorze w dowolnej aplikacji. Bielik Minitron 7B pisze z dyktowania maile i listy zadań, robi notatki ze spotkań z cytatami [mm:ss] i odpowiada na pytania o rozmowy. Oba modele działają w llama.cpp na GPU Maca, bez konta, abonamentu i wysyłania tekstu w sieć.
+Brulion to aplikacja na Maca do dyktowania i notatek ze spotkań po polsku, w której cała warstwa językowa działa na Bieliku, lokalnie na komputerze użytkownika. Przytrzymujesz klawisz i mówisz: Whisper zamienia mowę na tekst, Bielik 1.5B dokłada interpunkcję, wielkie litery i polskie znaki, a gotowy tekst ląduje przy kursorze w dowolnej aplikacji. Opcjonalnie Bielik Minitron 7B pisze z dyktowania maile i listy zadań oraz inne definiowane promptem edycje nagrania, robi notatki ze spotkań z cytatami [mm:ss] i odpowiada na pytania o rozmowy. Oba modele działają w llama.cpp na GPU Maca, bez konta, abonamentu i wysyłania tekstu w sieć.
 
 Pomiary na MacBooku Pro M3 Pro i 60 prawdziwych dyktowaniach: korekta trwa 1,37 s (mediana dla dyktowań do 60 słów), trafność interpunkcji rośnie z 0,82 do 0,89, a nasz strażnik słów sprawia, że mały model nie zmienia sensu (60 z 60 dyktowań). Godzina rozmowy daje notatki po ok. 6 minutach. W trakcie pracy aplikacja łączy się tylko z 127.0.0.1, co sprawdziliśmy też w klatce bez internetu.
 
@@ -82,9 +82,6 @@ JAKOŚĆ TECHNICZNA
 
 DOJRZAŁOŚĆ WDROŻENIA
 Brulion stoi na wydanej aplikacji (Captylo: podpis Developer ID, notaryzacja Apple, użytkownicy od września 2026), a nie na prototypie. Ma podpisany i poświadczony przez Apple instalator razem z helperem llama-server, otwarty kod na GPLv3, stronę z pomiarami, przewodnik pierwszego uruchomienia, który pobiera modele dobrane do Maca, i instrukcję budowania. Działa obok Captylo, z osobnymi danymi.
-
-CO DALEJ
-Tryb lokalny jako opcja w Captylo dla wszystkich użytkowników, kolejne wersje Bielika i test na Macu z 8 GB RAM.
 
 LINKI
 - Strona: https://kawalec.pl/brulion/

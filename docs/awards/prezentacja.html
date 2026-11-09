@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Brulion - Bielik Awards 2026</title>
+<!-- Source of the contest presentation. Render: scripts/render-awards-pdf.sh (docs/bielik-awards-zgloszenie.md). -->
+<style>
+@font-face { font-family: "Geologica"; src: url("../../site/assets/fonts/Geologica-Bold.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "Inter"; src: url("../../site/assets/fonts/Inter-Regular.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "Inter"; src: url("../../site/assets/fonts/Inter-Medium.woff2") format("woff2"); font-weight: 500; }
+@font-face { font-family: "Inter"; src: url("../../site/assets/fonts/Inter-SemiBold.woff2") format("woff2"); font-weight: 600; }
+
+:root {
+  --bg: #0B0B09;
+  --panel: #10100D;
+  --panel-2: #161612;
+  --rhubarb: #F66953;
+  --rhubarb-light: #FF9B88;
+  --local: #E5604A;
+  --cloud: #5A93C9;
+  --ok: #4CD68A;
+  --fg: #FFF9F5;
+  --fg-2: rgba(255, 249, 245, 0.66);
+  --fg-3: rgba(255, 249, 245, 0.52);
+  --dim: rgba(255, 249, 245, 0.42);
+  --line: rgba(255, 249, 245, 0.1);
+  --line-2: rgba(255, 249, 245, 0.18);
+  --pen: #C23A1E;
+  --sans: "Inter", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --brand: "Geologica", "Inter", sans-serif;
+}
+
+@page { size: 1920px 1080px; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); }
+body {
+  color: var(--fg);
+  font: 400 25px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+p { margin: 0; }
+h1, h2, h3 { margin: 0; font-weight: 400; }
+ul { margin: 0; padding: 0; list-style: none; }
+
+.slide {
+  width: 1920px; height: 1080px; position: relative; overflow: hidden;
+  break-after: page; page-break-after: always;
+  padding: 72px 112px 64px; display: flex; flex-direction: column;
+  background: var(--bg);
+}
+.slide:last-child { break-after: auto; page-break-after: auto; }
+
+.top { display: flex; justify-content: space-between; align-items: center; }
+.lockup { display: flex; align-items: center; gap: 12px; font: 700 30px/1 var(--brand); letter-spacing: -0.01em; color: var(--fg); }
+.lockup img { width: 36px; height: 36px; display: block; }
+.meta { font: 500 18px/1 var(--mono); color: var(--fg-3); }
+.foot { display: flex; justify-content: space-between; font: 500 17px/1 var(--mono); color: var(--fg-3); margin-top: auto; padding-top: 28px; }
+
+.label { display: inline-flex; align-items: center; gap: 12px; font: 500 19px/1.3 var(--mono); color: var(--fg-2); }
+.label::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--rhubarb); flex: none; }
+.h2 { font: 400 66px/1.07 var(--sans); letter-spacing: -0.028em; margin-top: 22px; white-space: nowrap; }
+.dim { color: var(--dim); }
+.lead { font-size: 27px; line-height: 1.5; color: var(--fg-2); max-width: 1080px; margin-top: 22px; }
+.main { margin-top: 48px; flex: 1; min-height: 0; }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 22px; padding: 34px 38px; }
+.panel h3 { font: 500 19px/1.3 var(--mono); color: var(--fg-2); margin-bottom: 18px; }
+.mono { font-family: var(--mono); }
+.note { font-size: 20px; line-height: 1.5; color: var(--fg-3); }
+.list li { position: relative; padding-left: 26px; margin-top: 12px; color: var(--fg-2); }
+.list li::before { content: ""; position: absolute; left: 2px; top: 0.66em; width: 8px; height: 8px; border-radius: 2px; background: var(--line-2); }
+.list li b { color: var(--fg); font-weight: 500; }
+
+/* 1. Cover */
+.cover { padding: 28px; }
+.cover__field {
+  position: relative; flex: 1; border-radius: 26px; overflow: hidden;
+  background: #1D1D17 url("img/hero-tlo.jpg") center / cover no-repeat;
+  display: grid; grid-template-columns: minmax(0, 1fr) 500px; align-items: center; column-gap: 96px;
+  padding: 0 110px 0 96px;
+}
+.cover__field::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(11, 11, 9, 0.9) 0%, rgba(11, 11, 9, 0.72) 42%, rgba(11, 11, 9, 0.18) 78%, rgba(11, 11, 9, 0.05) 100%);
+}
+.cover__field > * { position: relative; }
+.cover .lockup { position: absolute; top: 64px; left: 96px; font-size: 34px; }
+.cover .lockup img { width: 42px; height: 42px; }
+.cover__meta { position: absolute; top: 72px; right: 110px; font: 500 19px/1.4 var(--mono); color: rgba(255, 249, 245, 0.78); text-align: right; }
+.cover h1 { font: 400 116px/1.0 var(--sans); letter-spacing: -0.04em; margin-top: 26px; }
+.cover h1 .dim { color: rgba(255, 249, 245, 0.6); display: block; }
+.cover__lead { font-size: 30px; line-height: 1.45; color: rgba(255, 249, 245, 0.84); max-width: 860px; margin-top: 34px; }
+.runs { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
+.runs span { font: 500 19px/1 var(--mono); padding: 12px 16px; border-radius: 999px; background: rgba(11, 11, 9, 0.55); border: 1px solid var(--line-2); color: var(--fg); }
+.cover__by { position: absolute; left: 96px; bottom: 60px; font: 500 19px/1.5 var(--mono); color: rgba(255, 249, 245, 0.78); }
+.cover__sheet { width: 500px; border-radius: 22px; box-shadow: 0 40px 90px rgba(0, 0, 0, 0.5); display: block; }
+.cover__sheet-note { font: 500 16px/1.4 var(--mono); color: rgba(255, 249, 245, 0.7); margin-top: 14px; text-align: center; }
+
+/* 2. Architecture */
+.mac { border: 1px solid var(--line-2); border-radius: 26px; background: var(--panel); padding: 28px 40px 24px; }
+.mac__tag { font: 500 19px/1 var(--mono); color: var(--fg-2); display: flex; justify-content: space-between; }
+.flow {
+  display: grid; margin-top: 24px;
+  grid-template-columns: 320px 64px 350px 64px 360px 64px 320px;
+  grid-template-rows: auto auto; row-gap: 34px; justify-content: space-between;
+}
+.node { border: 1px solid var(--line-2); border-radius: 18px; padding: 18px 22px; background: var(--panel-2); }
+.node b { display: block; font-weight: 500; font-size: 24px; line-height: 1.25; }
+.node span { display: block; font-size: 19px; line-height: 1.4; color: var(--fg-3); margin-top: 6px; }
+.node--ai { border-color: rgba(246, 105, 83, 0.55); background: linear-gradient(180deg, rgba(246, 105, 83, 0.13), rgba(246, 105, 83, 0.04)); }
+.arrow { align-self: center; height: 2px; background: var(--line-2); position: relative; margin: 0 8px; }
+.arrow::after { content: ""; position: absolute; right: -2px; top: -6px; border: 7px solid transparent; border-left: 10px solid rgba(255, 249, 245, 0.4); border-right: 0; }
+.elbow { grid-row: 2; grid-column: 3 / 5; margin-left: 175px; margin-top: -34px; height: calc(50% + 34px); border-left: 2px solid var(--line-2); border-bottom: 2px solid var(--line-2); border-bottom-left-radius: 20px; position: relative; margin-right: 8px; }
+.elbow::after { content: ""; position: absolute; right: -2px; bottom: -8px; border: 7px solid transparent; border-left: 10px solid rgba(255, 249, 245, 0.4); border-right: 0; }
+.mac__server { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); font: 500 18px/1.5 var(--mono); color: var(--fg-2); }
+.outside { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 24px; }
+.outside .panel { padding: 20px 28px; font-size: 20px; line-height: 1.45; color: var(--fg-2); }
+.outside .panel b { color: var(--fg); font-weight: 500; display: block; margin-bottom: 6px; }
+
+/* 3. Models */
+.models { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.model { padding: 36px 40px; }
+.model__name { font: 400 44px/1.1 var(--sans); letter-spacing: -0.02em; }
+.model__role { font-size: 24px; color: var(--fg-2); margin-top: 12px; }
+.specs { display: grid; grid-template-columns: 260px 1fr; margin-top: 26px; border-top: 1px solid var(--line); }
+.specs dt, .specs dd { margin: 0; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 22px; }
+.specs dt { font-family: var(--mono); font-size: 19px; color: var(--fg-3); padding-top: 16px; }
+.tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 32px; }
+.tier { border-top: 2px solid var(--line-2); padding-top: 18px; }
+.tier b { display: block; font: 500 21px/1.3 var(--mono); color: var(--fg); }
+.tier span { display: block; margin-top: 8px; font-size: 22px; color: var(--fg-2); }
+
+/* 4. Guard */
+.guard { display: grid; grid-template-columns: 1fr 820px; gap: 56px; }
+.example { background: #FFF9F5; color: #2A2823; border-radius: 20px; padding: 28px 32px; font-size: 27px; line-height: 1.6; }
+.example small { display: block; font: 500 17px/1 var(--mono); color: #6B655B; margin-bottom: 14px; }
+.example .raw { color: #5F5A52; }
+.example s { color: #8C857A; text-decoration-color: var(--pen); text-decoration-thickness: 2px; }
+.example .pen { color: var(--pen); font-weight: 600; }
+.example hr { border: 0; border-top: 1px dashed #D9D0C6; margin: 18px 0; }
+.passes { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 28px; }
+.passes h3 { font: 500 19px/1.3 var(--mono); color: var(--fg-2); }
+.passes .list li { font-size: 22px; margin-top: 8px; }
+.passes .no li::before { background: var(--pen); }
+.passes .yes li::before { background: var(--ok); }
+
+.chart { padding: 34px 38px 30px; }
+.chart__title { font-size: 26px; font-weight: 500; }
+.chart__sub { font-size: 20px; color: var(--fg-3); margin-top: 6px; }
+.bars { margin-top: 30px; position: relative; }
+.bars__row { display: grid; grid-template-columns: 300px 1fr 64px; align-items: center; gap: 18px; height: 70px; }
+.bars__label { font-size: 21px; line-height: 1.25; color: var(--fg-2); }
+.bars__label b { color: var(--fg); font-weight: 500; }
+.bars__track { position: relative; height: 26px; }
+.bars__fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--local); border-radius: 0 4px 4px 0; }
+.bars__zero { position: absolute; left: 0; top: -4px; bottom: -4px; width: 2px; background: var(--fg-2); }
+.bars__val { font: 500 24px/1 var(--mono); text-align: right; }
+.bars__grid { position: absolute; top: 0; bottom: 0; left: 318px; right: 82px; pointer-events: none; }
+.bars__grid i { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
+.bars__axis { display: grid; grid-template-columns: 300px 1fr 64px; gap: 18px; margin-top: 8px; }
+.bars__axis div { position: relative; height: 22px; font: 500 16px/1 var(--mono); color: var(--fg-3); }
+.bars__axis div span { position: absolute; transform: translateX(-50%); }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 28px; }
+.stat b { display: block; font: 400 58px/1 var(--sans); letter-spacing: -0.03em; }
+.stat span { display: block; font-size: 21px; line-height: 1.4; color: var(--fg-2); margin-top: 10px; }
+
+/* 5. Time */
+.time { display: grid; grid-template-columns: 1fr 620px; gap: 48px; }
+.range { padding: 30px 40px 26px; }
+.range__row { margin-top: 22px; }
+.range__head { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; }
+.range__head b { font-weight: 500; font-size: 23px; color: var(--fg); }
+.range__head b::before { content: ""; display: inline-block; width: 13px; height: 13px; border-radius: 3px; background: currentColor; margin-right: 12px; vertical-align: 1px; }
+.range__row.is-local .range__head b::before { background: var(--local); }
+.range__row.is-cloud .range__head b::before { background: var(--cloud); }
+.range__head b small { padding-left: 25px; }
+.range__head b small { display: block; font-weight: 400; font-size: 19px; color: var(--fg-3); margin-top: 2px; }
+.range__head .mono { font-size: 21px; color: var(--fg); white-space: nowrap; }
+.range__track { position: relative; height: 34px; margin-top: 12px; }
+.range__track .grid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
+.range__line { position: absolute; top: 16px; height: 2px; }
+.dot { position: absolute; top: 9px; width: 16px; height: 16px; border-radius: 50%; transform: translateX(-50%); }
+.dot--p50 { background: currentColor; box-shadow: 0 0 0 2px var(--panel); }
+.dot--p95 { border: 3px solid currentColor; background: var(--panel); }
+.is-local { color: var(--local); }
+.is-cloud { color: var(--cloud); }
+.range__axis { position: relative; height: 24px; margin-top: 16px; border-top: 1px solid var(--line-2); }
+.range__axis span { position: absolute; top: 8px; transform: translateX(-50%); font: 500 16px/1 var(--mono); color: var(--fg-3); white-space: nowrap; }
+.legend { display: flex; flex-wrap: wrap; gap: 28px; margin-top: 26px; font-size: 19px; color: var(--fg-2); }
+.legend i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; vertical-align: -1px; margin-right: 10px; }
+.legend .ring { border: 3px solid var(--fg-2); }
+.legend .fill { background: var(--fg-2); }
+.legend .sw-local { background: var(--local); border-radius: 3px; }
+.legend .sw-cloud { background: var(--cloud); border-radius: 3px; }
+.tiles { display: grid; gap: 20px; align-content: start; }
+.tile { padding: 24px 30px; }
+.tile b { display: block; font: 400 48px/1 var(--sans); letter-spacing: -0.03em; }
+.tile span { display: block; font-size: 20px; line-height: 1.4; color: var(--fg-2); margin-top: 10px; }
+.tile em { display: block; font: 500 17px/1.3 var(--mono); font-style: normal; color: var(--fg-3); margin-bottom: 12px; }
+
+/* 6. App */
+.shots { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; }
+.shot figure { margin: 0; }
+.shot img { width: 100%; display: block; border-radius: 16px; border: 1px solid var(--line-2); }
+.shot figcaption { margin-top: 16px; font-size: 21px; line-height: 1.45; color: var(--fg-2); }
+.shot figcaption b { color: var(--fg); font-weight: 500; }
+
+/* 7. Privacy */
+.privacy { display: grid; grid-template-columns: 640px 1fr; gap: 48px; }
+.zero > b { display: block; font: 400 200px/0.9 var(--sans); letter-spacing: -0.05em; color: var(--fg); }
+.zero > span { display: block; font-size: 28px; line-height: 1.35; margin-top: 18px; }
+.zero .list li { font-size: 22px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 16px 12px 16px 0; border-bottom: 1px solid var(--line); font-size: 22px; vertical-align: top; }
+th { font: 500 17px/1.3 var(--mono); color: var(--fg-3); padding-bottom: 12px; }
+td:not(:first-child), th:not(:first-child) { text-align: right; white-space: nowrap; }
+td small { display: block; font-size: 18px; color: var(--fg-3); }
+.reqs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 28px; }
+.reqs div { font-size: 21px; color: var(--fg-2); }
+.reqs b { display: block; font: 500 18px/1.3 var(--mono); color: var(--fg-3); margin-bottom: 6px; font-weight: 500; }
+
+/* 8. Maturity */
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+.fact { padding: 30px 34px; }
+.fact b { display: block; font: 400 40px/1.1 var(--sans); letter-spacing: -0.02em; }
+.fact span { display: block; font-size: 21px; line-height: 1.45; color: var(--fg-2); margin-top: 12px; }
+.closing { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin-top: 26px; }
+.closing .panel { padding: 28px 34px; }
+.closing .list li { font-size: 21px; margin-top: 8px; }
+.links { font: 500 22px/1.7 var(--mono); }
+.links span { color: var(--fg-3); display: inline-block; width: 150px; }
+.disclaimer { font-size: 17px; color: var(--fg-3); margin-top: 22px; }
+</style>
+</head>
+<body>
+
+<!-- 1. Cover -->
+<section class="slide cover">
+  <div class="cover__field">
+    <div class="lockup"><img src="../../site/assets/img/brulion-mark.svg" alt="">brulion</div>
+    <p class="cover__meta">Bielik Awards 2026<br>Najlepsze użycie modelu SLM (&lt;10B)</p>
+    <div>
+      <p class="label">Dyktowanie i notatki ze spotkań na Macu</p>
+      <h1><span class="dim">Mówisz na brudno.</span> Dostajesz na&nbsp;czysto.</h1>
+      <p class="cover__lead">Przytrzymujesz klawisz i mówisz, a poprawiony tekst ląduje tam, gdzie piszesz. Cała warstwa językowa działa na Bieliku, lokalnie na komputerze użytkownika.</p>
+      <div class="runs"><span>Bielik 1.5B</span><span>Bielik Minitron 7B</span><span>Whisper</span><span>llama.cpp</span></div>
+    </div>
+    <div>
+      <img class="cover__sheet" src="img/zeszyt.png" alt="Kartka w kratkę: surowe dyktowanie poprawione czerwonym długopisem i czysty tekst pod spodem">
+      <p class="cover__sheet-note">Przykład z kartki na kawalec.pl/brulion</p>
+    </div>
+    <p class="cover__by">CRAFTWEB Sp. z o.o. / Dawid Kawalec<br>kawalec.pl/brulion</p>
+  </div>
+</section>
+
+<!-- 2. How it works -->
+<section class="slide">
+  <div class="top"><div class="lockup"><img src="../../site/assets/img/brulion-mark.svg" alt="">brulion</div><span class="meta">02 / 08</span></div>
+  <div class="main" style="margin-top:40px">
+    <p class="label">Jak to działa</p>
+    <h2 class="h2">Cała AI na Macu. <span class="dim">Sieć tylko przy pobieraniu modeli.</span></h2>
+    <div class="mac" style="margin-top:36px">
+      <div class="mac__tag"><span>Mac użytkownika, Apple Silicon</span><span>zero połączeń w trakcie pracy</span></div>
+      <div class="flow">
+        <div class="node"><b>Mikrofon</b><span>i dźwięk systemu: dyktowanie albo spotkanie, bez bota w rozmowie</span></div>
+        <div class="arrow"></div>
+        <div class="node"><b>Whisper large-v3 turbo</b><span>mowa na tekst, Neural Engine</span></div>
+        <div class="arrow"></div>
+        <div class="node node--ai"><b>Bielik 1.5B</b><span>korekta: interpunkcja, wielkie litery, polskie znaki; strażnik słów</span></div>
+        <div class="arrow"></div>
+        <div class="node"><b>Tekst przy kursorze</b><span>mail, czat, dokument, kod</span></div>
+
+        <div class="elbow"></div>
+        <div class="node node--ai" style="grid-row:2; grid-column:5"><b>Bielik Minitron 7B</b><span>tryby AI, notatki ze spotkań, Zapytaj</span></div>
+        <div class="arrow" style="grid-row:2; grid-column:6"></div>
+        <div class="node" style="grid-row:2; grid-column:7"><b>Mail, zadania, notatki</b><span>z cytatami [mm:ss] do odsłuchania</span></div>
+      </div>
+      <p class="mac__server">llama-server z llama.cpp (Metal) wbudowany w aplikację / tylko 127.0.0.1, losowy port, token / zwalnia pamięć po 10 min bezczynności</p>
+    </div>
+    <div class="outside">
+      <div class="panel"><b>Sieć tylko przy pobieraniu</b>Modele z oficjalnych repozytoriów SpeakLeash na Hugging Face, każdy plik sprawdzany sumą SHA-256.</div>
+      <div class="panel"><b>Opcja, domyślnie wyłączona</b>Bielik 11B w polskiej chmurze (CloudFerro Sherlock, PCSS AI HUB) na kluczu użytkownika. Poza liczbami w zgłoszeniu.</div>
+    </div>
+  </div>
+  <div class="foot"><span>Brulion / Bielik Awards 2026</span><span>kawalec.pl/brulion</span></div>
+</section>
+
+<!-- 3. Two small models -->
+<section class="slide">
+  <div class="top"><div class="lockup"><img src="../../site/assets/img/brulion-mark.svg" alt="">brulion</div><span class="meta">03 / 08</span></div>
+  <div class="main" style="margin-top:40px">
+    <p class="label">Dlaczego małe modele</p>
+    <h2 class="h2">Dwa małe Bieliki. <span class="dim">Każdy do swojej roboty.</span></h2>
+    <div class="models" style="margin-top:44px">
+      <div class="panel model">
+        <p class="model__name">Bielik 1.5B v3.0 Instruct</p>
+        <p class="model__role">Korekta dyktowania i poprawki transkryptu. Musi zdążyć, zanim puścisz klawisz i sięgniesz po myszkę.</p>
+        <dl class="specs">
+          <dt>Plik</dt><dd>Q8_0, 1,70 GB</dd>
+          <dt>Okno serwera</dt><dd>8 192 tokeny</dd>
+          <dt>Pierwszy token</dt><dd>0,07 s (mediana)</dd>
+          <dt>Generowanie</dt><dd>ok. 47 tokenów na sekundę</dd>
+        </dl>
+      </div>
+      <div class="panel model">
+        <p class="model__name">Bielik Minitron 7B v3.0 Instruct</p>
+        <p class="model__role">Tryby AI, notatki z godzinnej rozmowy, pytania o spotkania. Potrzebuje dużego okna i lepszego rozumienia.</p>
+        <dl class="specs">
+          <dt>Plik</dt><dd>Q4_K_M, 4,50 GB</dd>
+          <dt>Okno serwera</dt><dd>24 576 tokenów</dd>
+          <dt>Pierwszy token</dt><dd>0,41 s (mediana)</dd>
+          <dt>Generowanie</dt><dd>ok. 18 tokenów na sekundę, prompt ok. 212</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="tiers">
+      <div class="tier"><b>16 GB RAM</b><span>Obie role lokalnie. Modele działają po kolei, według zmierzonej pamięci.</span></div>
+      <div class="tier"><b>24 GB RAM i więcej</b><span>Oba modele zostają w pamięci, bez przeładowań.</span></div>
+      <div class="tier"><b>Poniżej 16 GB</b><span>Tryb eksperymentalny: korekta lokalnie, funkcje AI na 1.5B albo w chmurze.</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>Mierzone na MacBooku Pro M3 Pro, 36 GB RAM, llama.cpp z Metal</span><span>kawalec.pl/brulion</span></div>
+</section>
+
+<!-- 4. Word guard -->
+<section class="slide">
+  <div class="top"><div class="lockup"><img src="../../site/assets/img/brulion-mark.svg" alt="">brulion</div><span class="meta">04 / 08</span></div>
+  <div class="main" style="margin-top:40px">
+    <p class="label">Strażnik słów</p>
+    <h2 class="h2">Mały model poprawia, <span class="dim">ale nie zmienia Twoich słów.</span></h2>
+    <div class="guard" style="margin-top:44px">
+      <div>
+        <div class="example">
+          <small>Na brudno, z Whispera</small>
+          <p class="raw"><s>yyy</s> <span class="pen">J</span>utro o dziesiątej spotkanie z <span class="pen">M</span>arkiem w sprawie oferty<span class="pen">.</span> <s>no</s> <span class="pen">W</span>yślę ją dziś<span class="pen">.</span></p>
+          <hr>
+          <small>Na czysto, przy kursorze</small>
+          <p>Jutro o dziesiątej spotkanie z Markiem w sprawie oferty. Wyślę ją dziś.</p>
+        </div>
+        <div class="passes">
+          <div><h3>Przepuszcza</h3><ul class="list yes"><li>interpunkcję i wielkie litery</li><li>polskie znaki, drobne literówki</li><li>terminy ze słownika</li><li>usunięte wypełniacze</li></ul></div>
+          <div><h3>Cofa do oryginału</h3><ul class="list no"><li>każdą inną zmianę słowa</li><li>streszczenie, odpowiedź na treść</li><li>zmianę osoby lub rodzaju</li></ul></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel chart">
+          <p class="chart__title">Odpowiedzi daleko od dyktowania</p>
+          <p class="chart__sub">Bielik 1.5B, 60 prawdziwych dyktowań; streszczenie, odpowiedź na treść albo pętla zamiast korekty</p>
+          <div class="bars">
+            <div class="bars__grid"><i style="left:0"></i><i style="left:25%"></i><i style="left:50%"></i><i style="left:75%"></i><i style="left:100%"></i></div>
+            <div class="bars__row"><span class="bars__label">Prosty prompt</span><div class="bars__track"><div class="bars__fill" style="width:90%"></div></div><span class="bars__val">18</span></div>
+            <div class="bars__row"><span class="bars__label">Prompt Brulionu<br>(polski, 2 przykłady)</span><div class="bars__track"><div class="bars__fill" style="width:15%"></div></div><span class="bars__val">3</span></div>
+            <div class="bars__row"><span class="bars__label"><b>Prompt Brulionu<br>i strażnik słów</b></span><div class="bars__track"><div class="bars__zero"></div></div><span class="bars__val">0</span></div>
+          </div>
+          <div class="bars__axis"><span></span><div><span style="left:0">0</span><span style="left:25%">5</span><span style="left:50%">10</span><span style="left:75%">15</span><span style="left:100%">20</span></div><span></span></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><b>60 z 60</b><span>dyktowań z zachowanym sensem. Bez strażnika 1.5B zmieniał sens w 8-15%.</span></div>
+          <div class="stat"><b>0,82 → 0,89</b><span>trafność interpunkcji (F1) wobec chmury, od surowego Whispera do korekty.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Bielik 4.5B po strażniku: WER 0,181 wobec 0,183 dla 1.5B, ale 2,7 raza wolniej. Domyślny jest 1.5B.</span><span>docs/benchmark.md</span></div>
+</section>
+
+<!-- 5. Time -->
+<section class="slide">
+  <div class="top"><div class="lockup"><img src="../../site/assets/img/brulion-mark.svg" alt="">brulion</div><span class="meta">05 / 08</span></div>
+  <div class="main" style="margin-top:40px">
+    <p class="label">Czas</p>
+    <h2 class="h2">Korekta w sekundę. <span class="dim">Notatki z godziny w kilka minut.</span></h2>
+    <div class="time" style="margin-top:44px">
+      <div class="panel range">
+        <p class="chart__title">Dyktowania do 60 słów, w sekundach</p>
+        <p class="chart__sub">Brulion.app bez okna, przez prawdziwe trasy, limity i strażnika; rozgrzany serwer</p>
+
+        <div class="range__row is-local">
+          <div class="range__head"><b>Korekta, Bielik 1.5B</b><span class="mono">1,37 s / 2,49 s</span></div>
+          <div class="range__track">
+            <i class="grid" style="left:0"></i><i class="grid" style="left:25%"></i><i class="grid" style="left:50%"></i><i class="grid" style="left:75%"></i><i class="grid" style="left:100%"></i>
+            <div class="range__line" style="left:17.1%; width:14.0%; background:var(--local)"></div>
+            <span class="dot dot--p50" style="left:17.1%"></span><span class="dot dot--p95" style="left:31.1%"></span>
+          </div>
+        </div>
+        <div class="range__row is-cloud">
+          <div class="range__head"><b>Chmura Captylo AI<small>punkt odniesienia, te same dyktowania</small></b><span class="mono">0,80 s / 1,82 s</span></div>
+          <div class="range__track">
+            <i class="grid" style="left:0"></i><i class="grid" style="left:25%"></i><i class="grid" style="left:50%"></i><i class="grid" style="left:75%"></i><i class="grid" style="left:100%"></i>
+            <div class="range__line" style="left:10%; width:12.75%; background:var(--cloud)"></div>
+            <span class="dot dot--p50" style="left:10%"></span><span class="dot dot--p95" style="left:22.75%"></span>
+          </div>
+        </div>
+        <div class="range__row is-local">
+          <div class="range__head"><b>Od puszczenia klawisza do tekstu<small>Whisper i korekta, 59 dyktowań</small></b><span class="mono">2,77 s / 6,79 s</span></div>
+          <div class="range__track">
+            <i class="grid" style="left:0"></i><i class="grid" style="left:25%"></i><i class="grid" style="left:50%"></i><i class="grid" style="left:75%"></i><i class="grid" style="left:100%"></i>
+            <div class="range__line" style="left:34.6%; width:50.3%; background:var(--local)"></div>
+            <span class="dot dot--p50" style="left:34.6%"></span><span class="dot dot--p95" style="left:84.9%"></span>
+          </div>
+        </div>
+        <div class="range__axis"><span style="left:0">0 s</span><span style="left:25%">2 s</span><span style="left:50%">4 s</span><span style="left:75%">6 s</span><span style="left:100%">8 s</span></div>
+        <div class="legend"><span><i class="fill"></i>mediana</span><span><i class="ring"></i>95% przypadków</span><span><i class="sw-local"></i>Brulion na Bieliku</span><span><i class="sw-cloud"></i>chmura</span></div>
+        <p class="note" style="margin-top:22px">Chmura jest szybsza. Cel z planu, 95% korekt do 3 s, spełniony: 2,49 s.</p>
+      </div>
+      <div class="tiles">
+        <div class="panel tile"><em>Tryby AI, Minitron 7B</em><b>ok. 10 s</b><span>Mediana: e-mail, lista zadań, uporządkuj myśli. Gdy model nie zdąży (3 z 36), wkleja się surowy tekst.</span></div>
+        <div class="panel tile"><em>Notatki AI, Minitron 7B</em><b>2-3 min</b><span>Notatki z 30-44 minut rozmowy, liczone w tle po spotkaniu.</span></div>
+        <div class="panel tile"><em>Notatki AI z godziny</em><b>ok. 6 min</b><span>Długi transkrypt dzielony na części i scalany. Test na stenogramie Sejmu z 23 mówcami.</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>MacBook Pro M3 Pro, 36 GB RAM / 60 dyktowań autora, bez danych klientów</span><span>docs/benchmark.md</span></div>
+</section>
+
+<!-- 6. In the app -->
+<section class="slide">
+  <div class="top"><div class="lockup"><img src="../../site/assets/img/brulion-mark.svg" alt="">brulion</div><span class="meta">06 / 08</span></div>
+  <div class="main" style="margin-top:40px">
+    <p class="label">Spotkania</p>
+    <h2 class="h2">Spotkania bez bota. <span class="dim">Notatki powstają na Macu.</span></h2>
+    <div class="shots" style="margin-top:40px">
+      <figure class="shot"><img src="../../site/assets/img/spotkania-notatki-ai.webp" alt="Notatki AI w Brulionie"><figcaption><b>Notatki AI.</b> Podsumowanie, decyzje i zadania, każdy punkt z cytatem [mm:ss]. Poprawki transkryptu pilnuje strażnik linii: bez niego 1.5B psuł 62 z 306 czystych linii.</figcaption></figure>
+      <figure class="shot"><img src="../../site/assets/img/spotkania-zapytaj.webp" alt="Zapytaj w Brulionie"><figcaption><b>Zapytaj.</b> O jedno spotkanie albo o wszystkie, odpowiedź ze źródłami. Rozmowa dłuższa niż okno modelu idzie jako notatki i fragmenty pasujące do pytania.</figcaption></figure>
+    </div>
+  </div>
+  <div class="foot"><span>Zrzuty z aplikacji. Spotkania i liczby na zrzutach są zmyślone.</span><span>kawalec.pl/brulion</span></div>
+</section>
+
+<!-- 7. Privacy and memory -->
+<section class="slide">
+  <div class="top"><div class="lockup"><img src="../../site/assets/img/brulion-mark.svg" alt="">brulion</div><span class="meta">07 / 08</span></div>
+  <div class="main" style="margin-top:40px">
+    <p class="label">Prywatność, pamięć, koszt</p>
+    <h2 class="h2">Głos zostaje na Macu. <span class="dim">0 zł za użycie, bez konta.</span></h2>
+    <div class="privacy" style="margin-top:44px">
+      <div class="zero">
+        <b>0</b>
+        <span>połączeń z internetem w trakcie pracy</span>
+        <ul class="list" style="margin-top:22px">
+          <li><b>Gniazda co 0,5 s:</b> w ok. 150 dyktowaniach i 4 spotkaniach tylko 127.0.0.1.</li>
+          <li><b>Klatka bez sieci</b> (sandbox-exec): korekta 6 z 6, e-mail 3 z 3, spotkanie od nagrania do Zapytaj.</li>
+          <li><b>Bez telemetrii</b>, automatycznych aktualizacji i naszego serwera. Licznik użycia tylko lokalnie.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Pamięć i dysk, szczyt w pomiarach</h3>
+        <table>
+          <thead><tr><th>Proces</th><th>Plik</th><th>RAM (RSS)</th><th>Pamięć robocza</th></tr></thead>
+          <tbody>
+            <tr><td>Serwer z Bielikiem 1.5B<small>okno 8 192</small></td><td>1,70 GB</td><td>2,0 GB</td><td>0,40-0,42 GB</td></tr>
+            <tr><td>Serwer z Minitronem 7B<small>okno 24 576</small></td><td>4,50 GB</td><td>8,3-8,45 GB</td><td>4,0-4,4 GB</td></tr>
+            <tr><td>Brulion z Whisperem<small>aplikacja 59 MB</small></td><td>1,5 GB</td><td>0,1-0,3 GB</td><td>-</td></tr>
+          </tbody>
+        </table>
+        <p class="note" style="margin-top:14px">RSS obejmuje plik modelu zmapowany w pamięci, który macOS zwalnia bez swapu.</p>
+        <div class="reqs">
+          <div><b>Komputer</b>Mac z Apple Silicon, macOS 14.4+</div>
+          <div><b>Pełna lokalna AI</b>16 GB RAM</div>
+          <div><b>Miejsce</b>ok. 7,2 GB na Bieliki</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Sieć tylko przy pobieraniu modeli z Hugging Face i w opcjonalnym trybie chmury</span><span>docs/benchmark.md</span></div>
+</section>
+
+<!-- 8. Maturity -->
+<section class="slide">
+  <div class="top"><div class="lockup"><img src="../../site/assets/img/brulion-mark.svg" alt="">brulion</div><span class="meta">08 / 08</span></div>
+  <div class="main" style="margin-top:40px">
+    <p class="label">Dojrzałość i otwarty kod</p>
+    <h2 class="h2">Wydana aplikacja, <span class="dim">nie prototyp.</span></h2>
+    <div class="facts" style="margin-top:44px">
+      <div class="panel fact"><b>Z Captylo</b><span>Fork wydanego Captylo 1.0.17 (od 09.2026, Developer ID, notaryzacja). Bez konta, płatności i naszej chmury.</span></div>
+      <div class="panel fact"><b>GPLv3</b><span>Kod, prompty pod Bielika i pomiary są publiczne. Każdy może sprawdzić, co dzieje się z głosem.</span></div>
+      <div class="panel fact"><b>Podpisany DMG</b><span>Instalator podpisany i poświadczony przez Apple, razem z helperem llama-server.</span></div>
+      <div class="panel fact"><b>ok. 1350 testów</b><span>Natywny Swift i SwiftUI, ok. 51 tys. linii. Lokalna AI to osobny moduł.</span></div>
+      <div class="panel fact"><b>Do powtórzenia</b><span>Tryb bez okna przez prawdziwe trasy aplikacji i skrypt pobierający stenogramy Sejmu.</span></div>
+      <div class="panel fact"><b>Obok Captylo</b><span>Osobne dane i skróty. Przewodnik pobiera Bieliki dobrane do pamięci Maca.</span></div>
+    </div>
+    <div class="closing">
+      <div class="panel"><h3>Co dalej</h3><ul class="list"><li>Tryb lokalny jako opcja w Captylo dla wszystkich użytkowników</li><li>Kolejne wersje Bielika i test na Macu z 8 GB RAM</li></ul></div>
+      <div class="panel links"><div><span>Strona</span>kawalec.pl/brulion</div><div><span>Kod</span>github.com/dawidkawalec/brulion</div><div><span>Autor</span>Dawid Kawalec, CRAFTWEB Sp. z o.o.</div></div>
+    </div>
+    <p class="disclaimer">Bielik jest modelem językowym i znakiem Fundacji SpeakLeash. Brulion działa na Bieliku, ale jest niezależnym projektem CRAFTWEB i nie jest produktem SpeakLeash.</p>
+  </div>
+</section>
+
+</body>
+</html>

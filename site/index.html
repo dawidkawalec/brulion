@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brulion: dyktowanie na Macu, działa na Bieliku</title>
+  <meta name="description" content="Mówisz na brudno, dostajesz na czysto. Dyktowanie i notatki ze spotkań na Macu, z AI na Bieliku działającym lokalnie. Bez konta, za darmo, otwarty kod.">
+  <meta name="theme-color" content="#0B0B09">
+  <meta name="color-scheme" content="dark">
+  <link rel="canonical" href="https://kawalec.pl/brulion/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kawalec.pl/brulion/">
+  <meta property="og:locale" content="pl_PL">
+  <meta property="og:site_name" content="Brulion">
+  <meta property="og:title" content="Brulion. Mówisz na brudno. Dostajesz na czysto.">
+  <meta property="og:description" content="Dyktowanie i notatki ze spotkań na Macu. Działa na Bieliku, na Twoim komputerze.">
+  <meta property="og:image" content="https://kawalec.pl/brulion/assets/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Znak Brulionu i hasło: Mówisz na brudno. Dostajesz na czysto.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/img/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/Geologica-Bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/site.css?v=10">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Brulion",
+    "url": "https://kawalec.pl/brulion/",
+    "image": "https://kawalec.pl/brulion/assets/img/og.png",
+    "description": "Dyktowanie i notatki ze spotkań na Macu. Cała warstwa językowa działa na Bieliku, lokalnie na komputerze użytkownika.",
+    "applicationCategory": "ProductivityApplication",
+    "operatingSystem": "macOS 14.4 lub nowszy, Apple Silicon",
+    "inLanguage": "pl",
+    "isAccessibleForFree": true,
+    "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "PLN" },
+    "author": { "@type": "Person", "name": "Dawid Kawalec", "url": "https://kawalec.pl" },
+    "publisher": { "@type": "Organization", "name": "CRAFTWEB Sp. z o.o." }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip" href="#tresc">Przejdź do treści</a>
+
+  <header class="top" data-top>
+    <div class="wrap top__inner">
+      <a class="lockup" href="#" aria-label="Brulion, na górę strony">
+        <svg class="lockup__mark" viewBox="104 108 792 792" aria-hidden="true"><use href="#mark-path"/></svg>
+        <span class="lockup__word">brulion</span>
+      </a>
+      <nav class="pillnav" id="menu" aria-label="Sekcje strony">
+        <a href="#w-skrocie">Brulion</a>
+        <a href="#spotkania">Spotkania</a>
+        <a href="#jak-dziala">Jak działa</a>
+        <a href="#pomiary">Pomiary</a>
+        <a href="#prywatnosc">Prywatność</a>
+        <a href="#autor">Autor</a>
+      </nav>
+      <div class="top__actions">
+        <a class="duo duo--light" href="#pobierz">Pobierz<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+        <a class="duo duo--dark" href="https://github.com/dawidkawalec/brulion">GitHub</a>
+      </div>
+      <button class="burger" type="button" aria-expanded="false" aria-controls="menu" data-burger>
+        <span class="sr">Menu</span><i></i><i></i>
+      </button>
+    </div>
+  </header>
+
+  <main id="tresc">
+
+    <!-- Hero: one framed Grainient field, the headline at the bottom left, the notebook on the right. -->
+    <section class="hero" id="hero" data-grainient data-seed="7" data-zoom="0.95">
+      <canvas class="grainient" aria-hidden="true"></canvas>
+      <div class="wrap hero__inner">
+        <div class="hero__copy">
+          <h1 class="hero__title"><span class="dim">Mówisz na brudno.</span> <span>Dostajesz na&nbsp;czysto.</span></h1>
+          <p class="hero__lead">Dyktowanie i notatki ze spotkań na Macu. Przytrzymujesz klawisz, mówisz, a poprawiony tekst ląduje tam, gdzie piszesz. Działa na Bieliku, w całości na Twoim komputerze.</p>
+          <div class="pair">
+            <a class="duo duo--light duo--big" data-download href="https://github.com/dawidkawalec/brulion/releases/latest">Pobierz na Maca<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+            <a class="duo duo--dark duo--big" href="#jak-dziala">Jak to działa<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+          </div>
+          <p class="hero__note">Za darmo i bez konta. Otwarty kod, GPLv3. macOS 14.4+, Apple Silicon.</p>
+          <div class="runs">
+            <p class="runs__label">Działa na</p>
+            <ul class="runs__list">
+              <li>Bielik 1.5B</li>
+              <li>Bielik Minitron 7B</li>
+              <li>Whisper</li>
+              <li>llama.cpp</li>
+            </ul>
+          </div>
+        </div>
+
+        <figure class="sheet" id="demo" aria-label="Przykład: surowe dyktowanie i tekst po korekcie Bielika">
+          <div class="sheet__tabs" role="group" aria-label="Wybierz przykład">
+            <button type="button" class="sheet__tab" data-example="0" aria-pressed="true">E-mail</button>
+            <button type="button" class="sheet__tab" data-example="1" aria-pressed="false">Wiadomość</button>
+            <button type="button" class="sheet__tab" data-example="2" aria-pressed="false">Notatka</button>
+            <button type="button" class="sheet__replay" data-replay aria-label="Odtwórz przykład jeszcze raz">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg>
+            </button>
+          </div>
+          <div class="sheet__paper">
+            <p class="sheet__label">Na brudno, tak jak mówisz</p>
+            <p class="sheet__rough" data-rough></p>
+          </div>
+          <div class="widget" data-widget data-state="idle" aria-hidden="true">
+            <span class="widget__orb">
+              <svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/></svg>
+            </span>
+            <span class="widget__wave" data-wave></span>
+            <span class="widget__status" data-status>00:00</span>
+          </div>
+          <div class="sheet__clean">
+            <p class="sheet__label sheet__label--clean">Na czysto, przy kursorze</p>
+            <p class="sheet__field" data-clean></p>
+          </div>
+          <figcaption class="sheet__caption">
+            <span class="sheet__summary" data-summary></span>
+            <span class="sheet__fine">Przykład poglądowy. W pomiarach korekta trwała zwykle 1,4 s.</span>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Three framed tiles with the app's moments floating on the field. -->
+    <section class="section" id="w-skrocie" aria-labelledby="skrot-h">
+      <div class="wrap">
+        <p class="eyebrow">Brulion w skrócie</p>
+        <h2 class="h2" id="skrot-h">Mówisz tak, jak myślisz. <span class="dim">Bielik oddaje tekst gotowy do wysłania.</span></h2>
+        <div class="tiles">
+          <article class="tile">
+            <div class="tile__stage" data-grainient data-seed="31" data-zoom="0.7" data-cx="0.18" data-cy="-0.1">
+              <canvas class="grainient" aria-hidden="true"></canvas>
+              <ol class="flow" aria-label="Przebieg dyktowania">
+                <li class="flow__chip"><span class="kbd">⌘</span> Prawy Command</li>
+                <li class="flow__node"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h1M7 9v6M10 6v12M13 9v6M16 7v10M19 11v2"/></svg>Whisper: mowa na tekst</li>
+                <li class="flow__node"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16l-1 4zM14 6l3 3"/></svg>Bielik 1.5B: korekta</li>
+                <li class="flow__node"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M9 4h6M9 20h6"/></svg>Tekst przy kursorze</li>
+              </ol>
+            </div>
+            <h3 class="tile__title">Dyktowanie w każdej aplikacji</h3>
+            <p class="tile__text">Przytrzymaj klawisz i mów. Poprawiony tekst ląduje w mailu, czacie albo dokumencie, zwykle po 1,4 s korekty.</p>
+          </article>
+          <article class="tile">
+            <div class="tile__stage" data-grainient data-seed="57" data-zoom="0.75" data-cx="-0.12" data-cy="0.12">
+              <canvas class="grainient" aria-hidden="true"></canvas>
+              <div class="note" aria-label="Przykładowe notatki AI ze spotkania">
+                <div class="note__head">
+                  <span class="note__avatar"><svg viewBox="104 108 792 792" aria-hidden="true"><use href="#mark-path"/></svg></span>
+                  <span><b>Notatki AI</b><small>Budżet marketingu Q4, 47:12</small></span>
+                </div>
+                <ul class="note__list">
+                  <li>We wrześniu wydaliśmy 32 tys. zł, ponad połowę na reklamy w wyszukiwarce <span class="stamp">0:12</span></li>
+                  <li>Dwutygodniowy test LinkedIn na dwóch grupach odbiorców, do 5 tys. zł <span class="stamp">1:45</span></li>
+                  <li class="note__fade">Wyniki testu porównamy 15 października <span class="stamp">1:58</span></li>
+                </ul>
+              </div>
+            </div>
+            <h3 class="tile__title">Spotkania bez bota</h3>
+            <p class="tile__text">Nagrywa mikrofon i dźwięk systemu, transkrybuje na żywo, a po rozmowie Bielik pisze notatki z cytatami do odsłuchania.</p>
+          </article>
+          <article class="tile">
+            <div class="tile__stage" data-grainient data-seed="83" data-zoom="0.8" data-cx="0.08" data-cy="0.2">
+              <canvas class="grainient" aria-hidden="true"></canvas>
+              <ul class="suggest" aria-label="Przykładowe tryby AI">
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 7l8 6 8-6"/></svg><span>Zrób z tego maila do klienta</span><b>E-mail</b></li>
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h1M4 12h1M4 18h1"/></svg><span>Wypisz, co jest do zrobienia</span><b>Lista zadań</b></li>
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h13"/></svg><span>Ułóż te myśli po kolei</span><b>Uporządkuj</b></li>
+              </ul>
+            </div>
+            <h3 class="tile__title">Tryby AI na Minitronie 7B</h3>
+            <p class="tile__text">Mail, lista zadań, uporządkowane myśli albo angielski, zwykle w około 10 sekund. Możesz dodać własne polecenia.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Use cases: tabs over one framed stage with a real screenshot, the copy on the right. -->
+    <section class="section" id="spotkania" aria-labelledby="spotkania-h">
+      <div class="wrap">
+        <p class="eyebrow">Spotkania</p>
+        <h2 class="h2" id="spotkania-h">Spotkania bez bota. <span class="dim">Notatki powstają na Twoim Macu.</span></h2>
+        <div class="tabs" role="tablist" aria-label="Widoki aplikacji" data-tabs>
+          <button type="button" role="tab" id="tab-0" aria-controls="view-0" aria-selected="true">Notatki AI</button>
+          <button type="button" role="tab" id="tab-1" aria-controls="view-1" aria-selected="false" tabindex="-1">Zapytaj</button>
+          <button type="button" role="tab" id="tab-2" aria-controls="view-2" aria-selected="false" tabindex="-1">Pulpit</button>
+        </div>
+        <div class="usecase">
+          <div class="usecase__stage" data-grainient data-seed="113" data-zoom="0.7" data-cx="0.1" data-cy="0">
+            <canvas class="grainient" aria-hidden="true"></canvas>
+            <img data-view="0" src="assets/img/spotkania-notatki-ai.webp" width="2240" height="1440" loading="lazy" decoding="async" alt="Okno Spotkania w Brulionie: notatki AI ze spotkania Budżet marketingu Q4 z podsumowaniem, decyzjami i znacznikami czasu.">
+            <img data-view="1" src="assets/img/spotkania-zapytaj.webp" width="2240" height="1440" loading="lazy" decoding="async" hidden alt="Zakładka Zapytaj: pytanie o zadania i odpowiedź z listą osób, terminów i znacznikami czasu.">
+            <img data-view="2" src="assets/img/pulpit.webp" width="1800" height="1157" loading="lazy" decoding="async" hidden alt="Pulpit Brulionu: zaoszczędzony czas, kalendarz aktywności i wykres słów z ostatnich dwóch tygodni.">
+          </div>
+          <div class="usecase__copy">
+            <div role="tabpanel" id="view-0" aria-labelledby="tab-0">
+              <p class="mono-label">Notatki AI</p>
+              <p class="usecase__big">Po rozmowie Bielik pisze notatki: podsumowanie, decyzje, zadania i otwarte pytania. Każdy punkt ma znacznik czasu, który odtwarza ten moment.</p>
+            </div>
+            <div role="tabpanel" id="view-1" aria-labelledby="tab-1" hidden>
+              <p class="mono-label">Zapytaj</p>
+              <p class="usecase__big">Zapytaj o jedno spotkanie albo o wszystkie naraz. Odpowiedź ma klikalne źródła, a gdy w rozmowach czegoś nie było, Brulion to mówi, zamiast zgadywać.</p>
+            </div>
+            <div role="tabpanel" id="view-2" aria-labelledby="tab-2" hidden>
+              <p class="mono-label">Pulpit</p>
+              <p class="usecase__big">Zaoszczędzony czas, słowa i dni z rzędu. Każde dyktowanie zostaje w historii z nagraniem, wyszukiwarką i eksportem do CSV.</p>
+            </div>
+            <ul class="small-list">
+              <li>Nikt nie dołącza do Zooma, Meet ani Teams: Brulion nagrywa mikrofon i dźwięk systemu.</li>
+              <li>Wyszukiwarka znajdzie każde zdanie z każdego spotkania, w dowolnej odmianie słowa.</li>
+              <li>Rozpoznaje mówców i poprawia źle usłyszane słowa. Oryginał zawsze możesz przywrócić.</li>
+              <li>Nagrywanie zaczyna się tylko po Twoim kliknięciu.</li>
+            </ul>
+            <p class="fine">Zrzuty z aplikacji. Spotkania i liczby są zmyślone.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works: the steps drive the widget mock on the left. -->
+    <section class="section" id="jak-dziala" aria-labelledby="jak-h">
+      <div class="wrap">
+        <p class="eyebrow">Jak to działa</p>
+        <h2 class="h2" id="jak-h">Jeden klawisz na start, <span class="dim">cztery kroki do czystego tekstu.</span></h2>
+        <div class="how" data-how>
+          <div class="how__stage" data-grainient data-seed="149" data-zoom="0.8" data-cx="-0.1" data-cy="0.15">
+            <canvas class="grainient" aria-hidden="true"></canvas>
+            <div class="compose" data-step="1" data-compose aria-hidden="true">
+              <div class="compose__bar"><i></i><i></i><i></i><span>Nowa wiadomość</span></div>
+              <p class="compose__to">Do: Marek</p>
+              <p class="compose__body">
+                <span class="compose__raw">yyy jutro o dziesiątej spotkanie z markiem w sprawie oferty</span>
+                <span class="compose__fixed">Jutro o dziesiątej spotkanie z Markiem w sprawie oferty.</span>
+              </p>
+              <div class="mini">
+                <span class="mini__key">⌘</span>
+                <span class="mini__wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                <span class="mini__label mini__label--1">Trzymasz prawy ⌘</span>
+                <span class="mini__label mini__label--2">00:03</span>
+                <span class="mini__label mini__label--3">Bielik poprawia</span>
+                <span class="mini__label mini__label--4">Wklejono</span>
+              </div>
+            </div>
+          </div>
+          <ol class="steps">
+            <li><button type="button" class="step" data-go="1" aria-pressed="true">
+              <span class="step__head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4a3 3 0 1 0 3 3V4H7zM17 4a3 3 0 1 1-3 3V4h3zM7 20a3 3 0 1 1 3-3v3H7zM17 20a3 3 0 1 0-3-3v3h3zM10 10h4v4h-4z"/></svg>1 - Przytrzymaj prawy ⌘</span>
+              <span class="step__text">Albo stuknij raz na start i drugi raz na koniec. Skrót zmienisz w ustawieniach.</span>
+            </button></li>
+            <li><button type="button" class="step" data-go="2" aria-pressed="false">
+              <span class="step__head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h1M7 9v6M10 6v12M13 9v6M16 7v10M19 11v2"/></svg>2 - Whisper zapisuje mowę</span>
+              <span class="step__text">Whisper large-v3 turbo zamienia mowę na tekst na Neural Engine Twojego Maca.</span>
+            </button></li>
+            <li><button type="button" class="step" data-go="3" aria-pressed="false">
+              <span class="step__head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16l-1 4zM14 6l3 3"/></svg>3 - Bielik poprawia</span>
+              <span class="step__text">Bielik 1.5B dokłada interpunkcję, wielkie litery i polskie znaki. Strażnik słów cofa każdą zmianę, która mogłaby zmienić sens.</span>
+            </button></li>
+            <li><button type="button" class="step" data-go="4" aria-pressed="false">
+              <span class="step__head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M9 4h6M9 20h6"/></svg>4 - Tekst ląduje przy kursorze</span>
+              <span class="step__text">W mailu, czacie, dokumencie czy w kodzie. Gdy model się spóźni, wklejasz surowy tekst, nic się nie zawiesza.</span>
+            </button></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Benefits grid. -->
+    <section class="section" id="funkcje" aria-labelledby="funkcje-h">
+      <div class="wrap">
+        <p class="eyebrow">Funkcje</p>
+        <h2 class="h2" id="funkcje-h">Co jeszcze jest w środku, <span class="dim">poza dyktowaniem i spotkaniami.</span></h2>
+        <ul class="grid6">
+          <li class="card">
+            <span class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4zM5 17a3 3 0 0 1 3-3h11M9 8h6"/></svg></span>
+            <h3 class="card__title">Słownik i nauka</h3>
+            <p class="card__text">Popraw słowo raz, a Brulion je zapamięta. Nazwiska, firmy i branżowe terminy dodasz do słownika.</p>
+          </li>
+          <li class="card">
+            <span class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5"/></svg></span>
+            <h3 class="card__title">Notatki</h3>
+            <p class="card__text">Pisane, dyktowane i głosowe, w jednym miejscu. Tytuły podpowiada Bielik.</p>
+          </li>
+          <li class="card">
+            <span class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M10 12v5M13 10v9M16 13v3"/></svg></span>
+            <h3 class="card__title">Transkrypcja plików</h3>
+            <p class="card__text">Upuść nagranie audio albo wideo, także głosówkę z WhatsAppa czy Telegrama.</p>
+          </li>
+          <li class="card">
+            <span class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5M12 8v4l3 2"/></svg></span>
+            <h3 class="card__title">Historia i Pulpit</h3>
+            <p class="card__text">Każde dyktowanie z nagraniem, wyszukiwarką i eksportem do CSV. Na Pulpicie zaoszczędzony czas i dni z rzędu.</p>
+          </li>
+          <li class="card">
+            <span class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M9 3v4M15 3v4"/></svg></span>
+            <h3 class="card__title">Kalendarz</h3>
+            <p class="card__text">Spotkania dostają tytuły i uczestników z wydarzeń, a przed rozmową Brulion przypomni o nagraniu. Tylko jeśli go włączysz.</p>
+          </li>
+          <li class="card">
+            <span class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0V8zM12 16v5"/></svg></span>
+            <h3 class="card__title">Serwer MCP</h3>
+            <p class="card__text">Twój asystent AI może czytać spotkania przez lokalny serwer MCP. Tylko do odczytu, domyślnie wyłączony.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Measurements as a row of cards (the template's testimonials). -->
+    <section class="section" id="pomiary" aria-labelledby="pomiary-h">
+      <div class="wrap">
+        <p class="eyebrow">Pomiary</p>
+        <h2 class="h2" id="pomiary-h">Pomiary, nie obietnice. <span class="dim">Tylko modele lokalne poniżej 10B.</span></h2>
+        <p class="lead">MacBook Pro M3 Pro z 36 GB RAM i 60 prawdziwych dyktowań autora, bez danych klientów. Punktem odniesienia jest chmurowe AI Captylo, z którego wyrósł Brulion.</p>
+        <div class="rail" data-rail>
+          <ul class="rail__track" data-rail-track>
+            <li class="metric">
+              <p class="metric__value">1,37 s</p>
+              <p class="metric__text">Mediana korekty dyktowania do 60 słów, 2,49 s w 95% przypadków. Chmura Captylo AI: 0,80 s i 1,82 s, czyli jest szybsza.</p>
+              <p class="metric__foot"><span>Korekta, Bielik 1.5B</span><span>1/7</span></p>
+            </li>
+            <li class="metric">
+              <p class="metric__value">60 z 60</p>
+              <p class="metric__text">Dyktowań z zachowanym sensem po korekcie. Bez strażnika słów Bielik 1.5B zmieniał sens w 8-15% dyktowań.</p>
+              <p class="metric__foot"><span>Strażnik słów</span><span>2/7</span></p>
+            </li>
+            <li class="metric">
+              <p class="metric__value">0,89</p>
+              <p class="metric__text">Trafność interpunkcji (F1 wobec tekstu z chmury). Surowy Whisper bez korekty: 0,82.</p>
+              <p class="metric__foot"><span>Interpunkcja</span><span>3/7</span></p>
+            </li>
+            <li class="metric">
+              <p class="metric__value">ok. 10 s</p>
+              <p class="metric__text">Mediana trybów AI: e-mail, lista zadań, uporządkuj myśli. 3 z 36 bez wyniku w limicie czasu, wtedy wkleja się surowy tekst.</p>
+              <p class="metric__foot"><span>Tryby AI, Minitron 7B</span><span>4/7</span></p>
+            </li>
+            <li class="metric">
+              <p class="metric__value">2-3 min</p>
+              <p class="metric__text">Notatki z 30-44 minut rozmowy, liczone w tle. Godzina rozmowy: około 6 minut.</p>
+              <p class="metric__foot"><span>Notatki AI, Minitron 7B</span><span>5/7</span></p>
+            </li>
+            <li class="metric">
+              <p class="metric__value">2,0 GB</p>
+              <p class="metric__text">Pamięć serwera modelu z Bielikiem 1.5B. Minitron 7B: 8,3-8,5 GB, razem z plikiem modelu zmapowanym w pamięci.</p>
+              <p class="metric__foot"><span>Pamięć</span><span>6/7</span></p>
+            </li>
+            <li class="metric">
+              <p class="metric__value">0</p>
+              <p class="metric__text">Połączeń z internetem w trakcie pracy. Tylko 127.0.0.1, a testy przeszły też w klatce bez dostępu do sieci.</p>
+              <p class="metric__foot"><span>Sieć</span><span>7/7</span></p>
+            </li>
+          </ul>
+          <div class="rail__nav">
+            <p class="fine">Pełna metoda i tabele: <a href="https://github.com/dawidkawalec/brulion/blob/bielik/docs/benchmark.md">docs/benchmark.md</a>.</p>
+            <button type="button" class="round" data-rail-prev aria-label="Poprzednie pomiary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+            <button type="button" class="round" data-rail-next aria-label="Następne pomiary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Open source projects in a grid (the template's logo wall), without logos. -->
+    <section class="section" id="kod" aria-labelledby="kod-h">
+      <div class="wrap">
+        <p class="eyebrow">Otwarty kod</p>
+        <h2 class="h2" id="kod-h">Otwarty kod na GPLv3. <span class="dim">Sprawdź, co dzieje się z Twoim głosem.</span></h2>
+        <p class="lead">Kod, prompty i pomiary są publiczne. Brulion stoi na otwartych projektach, którym dziękujemy, i wyrósł z Captylo 1.0.17.</p>
+        <ul class="wall">
+          <li><b>Bielik</b><span>modele językowe SpeakLeash</span></li>
+          <li><b>llama.cpp</b><span>serwer modelu na Macu</span></li>
+          <li><b>WhisperKit</b><span>rozpoznawanie mowy</span></li>
+          <li><b>FluidAudio</b><span>wykrywanie mowy i mówców</span></li>
+          <li><b>Hugging Face</b><span>pobieranie modeli</span></li>
+          <li><b>Metal</b><span>obliczenia na GPU Maca</span></li>
+          <li><b>Neural Engine</b><span>Whisper na Apple Silicon</span></li>
+          <li><b>SwiftUI</b><span>interfejs aplikacji</span></li>
+          <li><b>Geologica i Inter</b><span>kroje pisma, licencja OFL</span></li>
+          <li><b>GPLv3</b><span>licencja Brulionu</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Where Bielik runs, as the template's three plans. -->
+    <section class="section" id="prywatnosc" aria-labelledby="prywatnosc-h">
+      <div class="wrap">
+        <p class="eyebrow">Prywatność</p>
+        <h2 class="h2" id="prywatnosc-h">Twój głos zostaje na Twoim Macu. <span class="dim">Chmura tylko wtedy, gdy sam ją włączysz.</span></h2>
+        <p class="lead">Nagrania, transkrypty, odpowiedzi AI i notatki ze spotkań nigdzie nie wychodzą. Nie ma konta, abonamentu, telemetrii ani naszego serwera. W ustawieniach „Gdzie działa Bielik” wybierasz jedno z trzech:</p>
+        <div class="plans">
+          <article class="plan plan--main">
+            <div class="plan__top"><h3 class="plan__name">Na tym Macu</h3><span class="badge">Domyślnie</span></div>
+            <p class="plan__price">0 zł<small>na zawsze</small></p>
+            <p class="plan__text">Korekta i funkcje AI na Bielikach pobranych na ten Mac. Działa bez internetu.</p>
+            <a class="pillbtn pillbtn--light" data-download href="https://github.com/dawidkawalec/brulion/releases/latest">Pobierz na Maca</a>
+            <p class="plan__rule"><span>Co dostajesz</span></p>
+            <ul class="checks">
+              <li>Bielik 1.5B do korekty dyktowania</li>
+              <li>Bielik Minitron 7B do funkcji AI</li>
+              <li>Zero połączeń w trakcie pracy</li>
+              <li>Sieć tylko przy pobieraniu modeli, każdy plik sprawdzany sumą SHA-256</li>
+              <li>16 GB RAM do pełnej lokalnej AI</li>
+            </ul>
+          </article>
+          <article class="plan">
+            <div class="plan__top"><h3 class="plan__name">Funkcje AI w chmurze</h3></div>
+            <p class="plan__price">Twój klucz<small>u dostawcy</small></p>
+            <p class="plan__text">Korekta zostaje na Macu, a tryby AI, notatki i Zapytaj idą do Bielika 11B v3.0 w polskiej chmurze.</p>
+            <a class="pillbtn" href="https://github.com/dawidkawalec/brulion#how-it-works-on-bielik">Jak to działa</a>
+            <p class="plan__rule"><span>Co dostajesz</span></p>
+            <ul class="checks">
+              <li>Bielik 11B v3.0 Instruct</li>
+              <li>CloudFerro Sherlock, PCSS AI HUB albo własny serwer</li>
+              <li>Zapytania prosto z Twojego Maca, bez naszego pośrednika</li>
+              <li>Klucz w pęku kluczy macOS</li>
+              <li>Dobre, gdy Mac ma mniej niż 16 GB RAM</li>
+            </ul>
+          </article>
+          <article class="plan">
+            <div class="plan__top"><h3 class="plan__name">Wszystko w chmurze</h3></div>
+            <p class="plan__price">Twój klucz<small>u dostawcy</small></p>
+            <p class="plan__text">Korekta i funkcje AI na Bieliku 11B. Rozpoznawanie mowy dalej działa na Macu.</p>
+            <a class="pillbtn" href="https://github.com/dawidkawalec/brulion#privacy">Prywatność w README</a>
+            <p class="plan__rule"><span>Co dostajesz</span></p>
+            <ul class="checks">
+              <li>Obie role na Bieliku 11B</li>
+              <li>Whisper dalej lokalnie</li>
+              <li>Dane zostają w Polsce</li>
+              <li>Płacisz dostawcy według jego cennika</li>
+              <li>Domyślnie wyłączone</li>
+            </ul>
+          </article>
+        </div>
+        <p class="fine plans__fine">Model 11B jest tylko opcją: liczby na tej stronie pochodzą z modeli lokalnych. Nauka z poprawek nie czyta pól haseł, menedżerów haseł ani terminali. Ta strona też nie śledzi: bez ciasteczek, analityki i zewnętrznych fontów.</p>
+      </div>
+    </section>
+
+    <!-- Download: the FAQ layout, copy on the left, framed boxes on the right. -->
+    <section class="section" id="pobierz" aria-labelledby="pobierz-h">
+      <div class="wrap split">
+        <div class="split__copy">
+          <p class="eyebrow">Pobierz</p>
+          <h2 class="h2" id="pobierz-h">Pobierz Brulion. <span class="dim">Za darmo, bez konta.</span></h2>
+          <p class="lead">Po pobraniu modeli dyktowanie i AI działają bez internetu. Brulion działa też obok Captylo, z osobnymi danymi i skrótami.</p>
+          <div class="pair">
+            <a class="duo duo--light duo--big" data-download href="https://github.com/dawidkawalec/brulion/releases/latest">Pobierz na Maca<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+            <a class="duo duo--dark duo--big" href="https://github.com/dawidkawalec/brulion">Kod na GitHubie<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="box">
+            <h3 class="box__title">Czego potrzebujesz</h3>
+            <dl class="rows">
+              <div><dt>System</dt><dd>macOS 14.4 lub nowszy</dd></div>
+              <div><dt>Komputer</dt><dd>Mac z Apple Silicon, od M1 wzwyż</dd></div>
+              <div><dt>Pełna lokalna AI</dt><dd>16 GB RAM i ok. 7,2 GB wolnego miejsca na Bieliki, do tego 1,5 GB na model Whisper</dd></div>
+              <div><dt>Poniżej 16 GB RAM</dt><dd>Tryb eksperymentalny: korekta na Macu, funkcje AI na Bieliku 1.5B albo w chmurze. Nie testowaliśmy go na Macu z 8 GB.</dd></div>
+            </dl>
+          </div>
+          <div class="box">
+            <h3 class="box__title">Instalacja</h3>
+            <ol class="install">
+              <li>Pobierz plik DMG. Jest podpisany i poświadczony przez Apple.</li>
+              <li>Przeciągnij Brulion do folderu Programy.</li>
+              <li>Otwórz go. Przewodnik poprosi o dostęp do mikrofonu i dostępności, pobierze model mowy i Bieliki dobrane do Twojego Maca.</li>
+            </ol>
+          </div>
+          <div class="box">
+            <h3 class="box__title">Zbuduj sam</h3>
+            <pre class="term" aria-label="Polecenia do samodzielnego zbudowania aplikacji"><code><span class="term__c"># Xcode 26 i Homebrew</span>
+brew install xcodegen cmake
+git clone https://github.com/dawidkawalec/brulion.git
+cd brulion
+make llama     <span class="term__c"># llama-server z przypiętego llama.cpp</span>
+make install   <span class="term__c"># Brulion.app do Programów</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="pytania" aria-labelledby="pytania-h">
+      <div class="wrap split">
+        <div class="split__copy">
+          <p class="eyebrow">Pytania</p>
+          <h2 class="h2" id="pytania-h">Pytania i odpowiedzi, <span class="dim">krótko i konkretnie.</span></h2>
+          <p class="lead">Nie ma tu Twojego pytania? Zajrzyj do <a href="https://github.com/dawidkawalec/brulion">README na GitHubie</a>.</p>
+        </div>
+        <div class="faq">
+          <details open>
+            <summary>Czy Brulion to aplikacja SpeakLeash?</summary>
+            <p>Nie. Brulion działa na Bieliku, otwartym modelu językowym Fundacji SpeakLeash, ale jest niezależnym projektem firmy CRAFTWEB. Nazwa i znak Bielika należą do SpeakLeash.</p>
+          </details>
+          <details>
+            <summary>Ile to kosztuje?</summary>
+            <p>Nic. Nie ma abonamentu ani limitów, bo wszystko liczy Twój Mac. Jeśli włączysz Bielika w chmurze, płacisz bezpośrednio wybranemu dostawcy, według jego cennika.</p>
+          </details>
+          <details>
+            <summary>Czy działa bez internetu?</summary>
+            <p>Tak. Po pobraniu modeli dyktowanie, tryby AI, notatki ze spotkań i Zapytaj działają offline.</p>
+          </details>
+          <details>
+            <summary>Czy zadziała na moim Macu?</summary>
+            <p>Potrzebujesz Maca z Apple Silicon (M1 lub nowszego) i macOS 14.4 lub nowszego. Na Macach z procesorem Intel Brulion nie działa. Pełna lokalna AI wymaga 16 GB RAM, na słabszych Macach działa tryb eksperymentalny.</p>
+          </details>
+          <details>
+            <summary>Skąd mam pewność, że nic nie wysyła?</summary>
+            <p>Kod jest otwarty, a w pomiarach aplikacja i serwer modelu łączyły się tylko z 127.0.0.1. Te same zadania przeszły w klatce, która blokuje wszystkie połączenia z internetem.</p>
+          </details>
+          <details>
+            <summary>Jak dostanę nową wersję?</summary>
+            <p>Brulion sam niczego nie sprawdza w sieci, więc aktualizacji nie ma automatycznie. Nowa wersja to nowe wydanie na GitHubie.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Author -->
+    <section class="section" id="autor" aria-labelledby="autor-h">
+      <div class="wrap author">
+        <figure class="author__photo">
+          <img src="assets/img/dawid-kawalec.webp" width="880" height="1100" loading="lazy" decoding="async" alt="Dawid Kawalec, autor Brulionu">
+          <figcaption><span>Dawid Kawalec</span><span>Autor Brulionu, CRAFTWEB</span></figcaption>
+        </figure>
+        <div class="author__copy">
+          <p class="eyebrow">Autor</p>
+          <h2 class="h2" id="autor-h">Cześć, jestem Dawid. <span class="dim">Brulion zrobiłem najpierw dla siebie.</span></h2>
+          <p class="lead">Od ponad dziesięciu lat robię produkty cyfrowe, a dziś więcej do Maca mówię, niż na nim piszę: maile, prompty, notatki. We wrześniu 2026 wydałem Captylo, aplikację do dyktowania, w której mowa zostawała na Macu, ale AI szło do chmury.</p>
+          <p>Brulion domyka to koło. Chciałem sprawdzić, ile da się zrobić małym polskim modelem na własnym komputerze. Okazało się, że korektę dyktowania, notatki ze spotkań i pytania o rozmowy da się zrobić na Bieliku, bez wysyłania ani jednego słowa w świat.</p>
+          <p>Na co dzień w CRAFTWEB buduję aplikacje z AI: kod piszę razem z agentami, takimi jak Codex, a w projektach klientów pracuję z modelami OpenAI i innymi dużymi modelami w chmurze. Tutaj świadomie postawiłem na jeden model, polski i lokalny.</p>
+          <ul class="author__facts">
+            <li><b>10+ lat</b><span>w produktach cyfrowych</span></li>
+            <li><b>Captylo</b><span>dyktowanie na Macu od 09.2026</span></li>
+            <li><b>Brulion</b><span>cała AI na Bieliku, na Macu</span></li>
+          </ul>
+          <div class="author__links">
+            <a class="pillbtn" href="https://kawalec.pl">kawalec.pl</a>
+            <a class="pillbtn" href="https://www.linkedin.com/in/dawid-kawalec-13aa4016a">LinkedIn</a>
+            <a class="pillbtn" href="mailto:hello@kawalec.pl">hello@kawalec.pl</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Closing call to action on the field. -->
+    <section class="section section--cta" aria-labelledby="cta-h">
+      <div class="wrap">
+        <div class="cta" data-grainient data-seed="191" data-zoom="0.9" data-cy="0.1">
+          <canvas class="grainient" aria-hidden="true"></canvas>
+          <div class="cta__inner">
+            <p class="eyebrow eyebrow--center">Zaczynamy</p>
+            <h2 class="cta__title" id="cta-h">Mów na brudno, <span class="dim">Bielik odda Ci tekst na czysto.</span></h2>
+            <p class="cta__lead">Za darmo, bez konta, z otwartym kodem. Cała AI działa na Twoim Macu.</p>
+            <div class="pair pair--center">
+              <a class="duo duo--light duo--big" data-download href="https://github.com/dawidkawalec/brulion/releases/latest">Pobierz na Maca<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+              <a class="duo duo--dark duo--big" href="https://github.com/dawidkawalec/brulion">Kod na GitHubie<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- The name, at the very bottom. -->
+    <section class="section section--name" id="nazwa" aria-labelledby="nazwa-h">
+      <div class="wrap name">
+        <svg class="name__mark" viewBox="0 120 1000 800" role="img" aria-labelledby="name-mark-t">
+          <title id="name-mark-t">Znak Brulionu: małe b, którego laska jest ołówkiem, a brzuszek dymkiem</title>
+          <use href="#mark-path" transform="translate(58.8 84.8) scale(0.9)"/>
+          <g class="name__notes">
+            <path d="M338 262 C 300 222, 262 212, 226 210"/>
+            <circle cx="338" cy="262" r="7"/>
+            <text x="212" y="224" text-anchor="end">ołówek</text>
+            <path d="M712 600 C 760 560, 790 540, 822 534"/>
+            <circle cx="712" cy="600" r="7"/>
+            <text x="836" y="548">dymek</text>
+          </g>
+        </svg>
+        <div class="name__copy">
+          <p class="eyebrow">Skąd nazwa</p>
+          <h2 class="h2" id="nazwa-h">Brulion to zeszyt na brudno. <span class="dim">Mówisz, Brulion pisze.</span></h2>
+          <p class="lead">Notujesz w nim szybko, bez przecinków i z „yyy”, a potem przepisujesz na czysto. Brulion robi to przepisywanie za Ciebie: mówisz tak, jak myślisz, a Bielik oddaje tekst gotowy do wysłania.</p>
+          <p>Znak to małe „b”. Laska jest ołówkiem, brzuszek dymkiem, z którego płynie mowa.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <div class="foot__grid">
+        <div class="foot__brand">
+          <a class="lockup" href="#" aria-label="Brulion, na górę strony">
+            <svg class="lockup__mark" viewBox="104 108 792 792" aria-hidden="true"><use href="#mark-path"/></svg>
+            <span class="lockup__word">brulion</span>
+          </a>
+          <p>Dyktowanie i notatki ze spotkań na Macu. Działa na Bieliku, na Twoim komputerze.</p>
+          <a class="duo duo--light" data-download href="https://github.com/dawidkawalec/brulion/releases/latest">Pobierz na Maca<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+        </div>
+        <nav class="foot__col" aria-label="Strona">
+          <h3>Strona</h3>
+          <a href="#w-skrocie">Brulion w skrócie</a>
+          <a href="#spotkania">Spotkania</a>
+          <a href="#jak-dziala">Jak działa</a>
+          <a href="#pomiary">Pomiary</a>
+          <a href="#prywatnosc">Prywatność</a>
+          <a href="#pytania">Pytania</a>
+        </nav>
+        <nav class="foot__col" aria-label="Projekt">
+          <h3>Projekt</h3>
+          <a href="https://github.com/dawidkawalec/brulion">Kod na GitHubie</a>
+          <a href="https://github.com/dawidkawalec/brulion/blob/bielik/docs/benchmark.md">Pełne pomiary</a>
+          <a href="https://github.com/dawidkawalec/brulion/blob/bielik/LICENSE">Licencja GPLv3</a>
+          <a href="https://github.com/dawidkawalec/brulion/blob/bielik/NOTICE.md">Komponenty i licencje</a>
+        </nav>
+        <nav class="foot__col" aria-label="Autor">
+          <h3>Autor</h3>
+          <a href="#autor">O autorze</a>
+          <a href="https://kawalec.pl">kawalec.pl</a>
+          <a href="https://www.linkedin.com/in/dawid-kawalec-13aa4016a">LinkedIn</a>
+          <a href="mailto:hello@kawalec.pl">hello@kawalec.pl</a>
+        </nav>
+      </div>
+      <div class="foot__bar">
+        <p class="foot__copy">© 2026 CRAFTWEB Sp. z o.o.<span class="foot__ok">Działa bez internetu</span></p>
+        <div class="foot__icons">
+          <a class="sq" href="https://github.com/dawidkawalec/brulion" aria-label="Brulion na GitHubie"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.86v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg></a>
+          <a class="sq" href="https://www.linkedin.com/in/dawid-kawalec-13aa4016a" aria-label="Dawid Kawalec na LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.75h4V21H3zM9.5 9.75h3.8v1.6h.06c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.77 2.65 4.77 6.1V21h-4v-5c0-1.2-.02-2.73-1.66-2.73-1.66 0-1.92 1.3-1.92 2.64V21h-4z"/></svg></a>
+          <a class="sq" href="https://kawalec.pl" aria-label="kawalec.pl"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg></a>
+        </div>
+      </div>
+      <p class="foot__legal">Bielik jest modelem językowym i znakiem Fundacji SpeakLeash. Brulion jest niezależnym projektem i nie jest produktem SpeakLeash. Nazwa i logo Captylo nie są częścią Brulionu.</p>
+    </div>
+  </footer>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <path id="mark-path" d="M268 326L412 326L412 880L268 880ZM340 128L368.5 196L311.5 196ZM302.3 218.1L377.7 218.1L412 300L268 300ZM732 648L732 880L268 880L268 648C268 519.9 371.9 416 500 416C628.1 416 732 519.9 732 648ZM626 648C626 588.4 577.6 540 518 540C458.4 540 410 588.4 410 648C410 707.6 458.4 756 518 756L626 756L626 648Z" fill="#F66953"/>
+    </defs>
+  </svg>
+
+  <!-- Bump ?v= on every change of these files: the server may cache them. -->
+  <script src="assets/js/grainient.js?v=2" defer></script>
+  <script src="assets/js/site.js?v=2" defer></script>
+</body>
+</html>

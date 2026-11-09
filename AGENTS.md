@@ -40,12 +40,13 @@ The real end-to-end test of the helper and a model (`LocalAIEndToEndTests`, off 
 
 ## Docs
 
-- [docs/PRD.md](docs/PRD.md) - sprint scope, models, phases, decisions; [docs/bielik-awards.md](docs/bielik-awards.md) - the contest entry
+- [docs/PRD.md](docs/PRD.md) - sprint scope, models, phases, decisions; [docs/bielik-awards.md](docs/bielik-awards.md) - the contest rules and checklist; [docs/bielik-awards-zgloszenie.md](docs/bielik-awards-zgloszenie.md) - the ready form fields (texts counted, presentation link); presentation source `docs/awards/prezentacja.html`, rendered by `scripts/render-awards-pdf.sh` into `site/brulion-bielik-awards-2026.pdf`
 - [docs/local-ai.md](docs/local-ai.md) - local AI module, helper, flags, tiers, requirements
 - [docs/architecture.md](docs/architecture.md) - modules, data flow, debug CLI flags
 - [docs/coding-standards.md](docs/coding-standards.md) - Swift 6 rules, UI language, naming
 - [docs/release.md](docs/release.md) - Developer ID release and notarization
 - [docs/design/dusk-glass.md](docs/design/dusk-glass.md) - Dusk Glass design language (binding for all UI)
+- [docs/landing.md](docs/landing.md) - the static landing page in `site/` (design, content rules, assets)
 - [README.md](README.md), [NOTICE.md](NOTICE.md)
 
 ## Critical Rules

@@ -33,12 +33,15 @@
 
 ## Lista do oddania
 
-- [ ] Wydanie publiczne: repo na GitHubie (GPLv3) i release z notaryzowanym DMG
-- [ ] `docs/benchmark.md` z liczbami (PRD sekcja 8) i wykresy
-- [ ] Krótki opis (do 1500 znaków), sprawdzony licznikiem
-- [ ] Szczegółowy opis (do 8000 znaków), z oznaczonymi fragmentami poufnymi
-- [ ] PDF prezentacji (5-8 stron) pod publicznym linkiem do 26.11, np. w GitHub Releases albo na captylo.com
+Gotowe pola formularza: [bielik-awards-zgloszenie.md](bielik-awards-zgloszenie.md).
+
+- [ ] Wydanie publiczne: repo na GitHubie (GPLv3) i release z notaryzowanym DMG Brulionu (Ster t578); oba teksty i PDF odsyłają do kodu i instalatora
+- [x] `docs/benchmark.md` z liczbami (PRD sekcja 8); wykresy są w PDF
+- [x] Krótki opis: 1211 z 1500 znaków (9.11)
+- [x] Szczegółowy opis: 6153 z 8000 znaków, bez fragmentów poufnych (9.11)
+- [x] PDF prezentacji, 8 stron: źródło `docs/awards/prezentacja.html`, render `scripts/render-awards-pdf.sh`, plik `site/brulion-bielik-awards-2026.pdf`, adres https://kawalec.pl/brulion/brulion-bielik-awards-2026.pdf (musi działać do 26.11)
 - [ ] Opcjonalnie film demo 60-90 s (promo-kit), link w PDF
+- [ ] Opcjonalnie liczby z licznika użycia (eksport JSON z aplikacji) dopisane do szczegółowego opisu przed wysłaniem
 - [ ] Formularz wysłany przez Dawida 14.11 i zrzut potwierdzenia zachowany w `docs/`
 
 ## Szkielet szczegółowego opisu (pod kryteria)

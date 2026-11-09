@@ -14,7 +14,7 @@ The "Zmierzch" background video made from our own photo (`Brulion/Resources/Vide
 
 The animated grain gradient is the "Grainient" component from [React Bits](https://github.com/DavidHDev/react-bits), ported to Metal and WebGL2. It is **not** covered by Brulion's GPLv3 and stays under its own licence, "MIT + Commons Clause License Condition v1.0", Copyright (c) 2026 David Haz. That licence allows using it as part of an application, website or product, but not selling, sublicensing or redistributing the component itself, alone, in a bundle or as a ported version.
 
-Files: `Brulion/UI/Glass/Grainient.metal`, the shader in `docs/design/lab/brand/index.html`.
+Files: `Brulion/UI/Glass/Grainient.metal`, the shader in `docs/design/lab/brand/index.html`, the landing page background `site/assets/js/grainient.js`.
 
 **Additional permission under GNU GPL version 3 section 7:** If you modify this Program, or any covered work, by linking or combining it with the Grainient shader (or a modified version of it), containing parts covered by the terms of the MIT + Commons Clause License Condition v1.0, the licensors of this Program grant you additional permission to convey the resulting work. Corresponding Source for a non-source form of such a combination shall include the source code for the parts of the Grainient shader used as well as that of the covered work. The shader itself stays under its own licence, so a fork may not sell or redistribute it on its own.
 

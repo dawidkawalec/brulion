@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="512" height="512">
+  <title>Brulion</title>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4B4B3F"/>
+      <stop offset="0.55" stop-color="#38382E"/>
+      <stop offset="1" stop-color="#24241D"/>
+    </linearGradient>
+    <radialGradient id="ember" cx="0.62" cy="0.76" r="0.6">
+      <stop offset="0" stop-color="#F66953" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#F66953" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF8167"/>
+      <stop offset="1" stop-color="#EC553E"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="230" fill="url(#tile)"/>
+  <rect width="1024" height="1024" rx="230" fill="url(#ember)"/>
+  <path transform="matrix(0.9627659574468085 0 0 0.9627659574468085 30.61702127659578 26.7659574468085)" d="M268 326L412 326L412 880L268 880ZM340 128L368.5 196L311.5 196ZM302.3 218.1L377.7 218.1L412 300L268 300ZM732 648L732 880L268 880L268 648C268 519.9 371.9 416 500 416C628.1 416 732 519.9 732 648ZM626 648C626 588.4 577.6 540 518 540C458.4 540 410 588.4 410 648C410 707.6 458.4 756 518 756L626 756L626 648Z" fill="url(#mark)"/>
+</svg>

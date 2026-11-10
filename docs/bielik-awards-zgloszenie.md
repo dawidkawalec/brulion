@@ -2,7 +2,7 @@
 
 Gotowe pola formularza https://www.bielik.ai/konkurs-bielik-awards-2026 (stan formularza sprawdzony 9.11.2026). Kontekst, regulamin i kryteria: [bielik-awards.md](bielik-awards.md). Liczby pochodzą wyłącznie z [benchmark.md](benchmark.md). Zgłoszenie nie ma fragmentów poufnych: całą treść można opublikować.
 
-Formularz wysyła Dawid (zgłoszenie tylko we własnym imieniu, reCAPTCHA, trzy zgody). Przed wysłaniem: publiczne repo i wydanie z DMG Brulionu, bo oba teksty odsyłają do kodu i instalatora.
+**Wysłane 10.11.2026 o 00:40 przez Dawida, numer zgłoszenia BA2026-0266** ([potwierdzenie](bielik-awards-potwierdzenie.png)). Wcześniej, tego samego dnia: publiczne repo i wydanie v0.9.1 z DMG, bo oba teksty odsyłają do kodu i instalatora. Teksty niżej to wersja wysłana.
 
 ## 01 Kategoria
 
@@ -95,5 +95,6 @@ Trzy pola wymagane: akceptacja regulaminu, przetwarzanie danych osobowych (RODO 
 
 ## Po wysłaniu
 
-- Zrzut potwierdzenia zapisać jako `docs/bielik-awards-potwierdzenie.png`.
-- PDF i strona muszą działać do 26.11.2026.
+- Potwierdzenie ze strony konkursu: [bielik-awards-potwierdzenie.png](bielik-awards-potwierdzenie.png) (kategoria SLM <10B, numer BA2026-0266).
+- Laureatów organizator powiadamia do 20.11.2026 mailem albo telefonicznie.
+- PDF, strona i repo muszą działać co najmniej do 26.11.2026.
